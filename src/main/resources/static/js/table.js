@@ -72,3 +72,21 @@ const table = new DataTable("#files-table", {
 function tableRefresh() {
     table.ajax.reload();
 }
+
+function deleteFile(uniqueFileName) {
+    $.ajax({
+        url: "/api/delete",
+        type: "POST",
+        dataType: 'json',
+        data: {
+            uniqueFileName: uniqueFileName,
+            _csrf: csrfToken
+        }
+    })
+    .done(function (res) {
+
+    })
+    .fail(function () {
+
+    })
+}
