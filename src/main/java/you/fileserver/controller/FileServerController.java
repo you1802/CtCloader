@@ -3,11 +3,10 @@ package you.fileserver.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import me.desair.tus.server.exception.TusException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import you.fileserver.entity.FileDetail;
 import you.fileserver.service.UploaderService;
 
@@ -38,10 +37,22 @@ public class FileServerController {
         return uploaderService.fileDetails();
     }
 
+    //アップロード用エンドポイント
     @RequestMapping(value = UPLOAD_PATH, method = {
             RequestMethod.POST, RequestMethod.PATCH, RequestMethod.HEAD, RequestMethod.DELETE, RequestMethod.OPTIONS
     })
     public void upload(HttpServletRequest request, HttpServletResponse response) throws TusException, IOException {
         uploaderService.upload(request, response);
+    }
+
+    //ダウンロード用エンドポイント
+    @GetMapping(DOWNLOAD_PATH)
+    public ResponseEntity<StreamingResponseBody> download(@RequestParam String uniqueFileName) {
+        return uploaderService.download(uniqueFileName);
+    }
+
+    @PostMapping(DELETE_PATH)
+    public void delete(@RequestParam String uniqueFileName) {
+        System.out.println(uploaderService.deleteFile(uniqueFileName));
     }
 }

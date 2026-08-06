@@ -44,18 +44,18 @@ const table = new DataTable("#files-table", {
                 return data;
             }
         },
-        {data: "lastModifiedDate", title: "最終更新日時"},
+        {data: "uploadDate", title: "アップロード日時"},
         {
-            data: "name", title: "ダウンロード", render: function (data) {
-                return `<a href="/files/api/download?filename=${data}"><img src="img/dl.ico" width="16" height="16" alt="ダウンロード"></a>`
+            data: "uniqueFileName", title: "ダウンロード", render: function (data) {
+                return `<a href="api/download?uniqueFileName=${data}"><img src="img/dl.ico" width="16" height="16" alt="ダウンロード"></a>`
             }
         },
         {
             data: null, title: "削除", render: function (data, type, row) {
-                if (row.owner === true) {
+                if (row.owned === true) {
                     return `
-                        <form action="files/api/delete" method="post">
-                        <input type="hidden" name="filename" value="${row.name}">
+                        <form action="api/delete" method="post">
+                        <input type="hidden" name="uniqueFileName" value="${row.uniqueFileName}">
                         <input type="hidden" name="_csrf" value="${csrfToken}" />
                         <input type="image" src="img/gomibako.ico" width="16" height="16" alt="削除" onclick="return confirm('本当に削除しますか?')">
                         </form>`;

@@ -10,6 +10,7 @@ public class Constants {
     public static final String FILE_DETAILS_JSON_PATH = "/api/file-details.json";
     public static final String UPLOAD_PATH = "/api/upload/**";
     public static final String DOWNLOAD_PATH = "/api/download";
+    public static final String DELETE_PATH = "/api/delete";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";
