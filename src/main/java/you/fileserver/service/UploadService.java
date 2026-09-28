@@ -8,7 +8,6 @@ import me.desair.tus.server.upload.UploadInfo;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import you.fileserver.dto.FileDetail;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.entity.UploadFilePassword;
 import you.fileserver.repository.UploadFileInfoRepository;
