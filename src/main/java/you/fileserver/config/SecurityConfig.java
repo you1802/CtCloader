@@ -1,22 +1,62 @@
 package you.fileserver.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.Map;
+
+import static you.fileserver.config.Constants.LOGIN_PATH;
+import static you.fileserver.config.Constants.LOGOUT_PATH;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    private final ObjectMapper objectMapper;
+
+    public SecurityConfig(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll())
+                        .requestMatchers("/**").permitAll()) //仮置き(すべて許可)
                 .formLogin(login -> login
                         .permitAll())
+                //ログアウトをAPI向けにカスタム
                 .logout(logout -> logout
-                        .permitAll());
+                        .logoutUrl(LOGOUT_PATH)
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                            response.setContentType("application/json");
+                            objectMapper.writeValue(response.getWriter(), Map.of("code", 200));
+                        })
+                        .deleteCookies("JSESSIONID"))
+                //ログインフォームをAPI向けにカスタム
+                .formLogin(login -> login
+                        .loginProcessingUrl(LOGIN_PATH)
+                        .successHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                            response.setContentType("application/json");
+                            objectMapper.writeValue(response.getWriter(), Map.of("code", 200));
+                        })
+                .failureHandler((request, response, authentication) -> {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType("application/json");
+                    objectMapper.writeValue(response.getWriter(), Map.of("code", 401));
+                }));
         return http.build();
+    }
+
+    //パスワードエンコーダー
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

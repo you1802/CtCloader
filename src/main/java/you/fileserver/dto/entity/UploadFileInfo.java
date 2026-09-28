@@ -1,4 +1,4 @@
-package you.fileserver.entity;
+package you.fileserver.dto.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -9,7 +9,7 @@ import lombok.experimental.Tolerate;
 import java.time.LocalDateTime;
 
 /**
- * リポジトリ保存用のアップロードされたファイル情報を保持するクラス
+ * リポジトリ保存用のアップロードされたファイル情報用DTO
  */
 @Data
 @Entity
@@ -22,6 +22,7 @@ public class UploadFileInfo {
     private long size;
     private LocalDateTime uploadDate;
     private boolean visible;
+    private boolean downloadLocked;
 
     @Tolerate //builderを使いたいのでこのアノテーションでディフォルトコンストラクタをLombokに隠ぺいする
     public UploadFileInfo() {}
