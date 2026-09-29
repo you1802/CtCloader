@@ -44,8 +44,8 @@ public class FileServerController {
     //ファイルリスト取得用API
     @GetMapping(FILE_DETAILS_JSON_PATH)
     @ResponseBody
-    public List<FileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return downloadService.fileDetails();
+    public List<FileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        return downloadService.fileDetails(userDetail);
     }
 
     //アップロード用エンドポイント

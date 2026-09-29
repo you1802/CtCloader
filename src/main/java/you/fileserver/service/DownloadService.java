@@ -8,6 +8,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import you.fileserver.authentication.CustomUserDetails;
 import you.fileserver.dto.FileDetail;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.entity.UploadFilePassword;
@@ -121,15 +122,20 @@ public class DownloadService {
      * ユーザーに提示するファイルリストの情報を返す
      * @return ファイルリスト
      */
-    public List<FileDetail> fileDetails() {
+    public List<FileDetail> fileDetails(CustomUserDetails userDetail) {
         List<UploadFileInfo> uploadFileInfoList = uploadFileInfoRepository.findAll();
         List<FileDetail> fileDetails = new ArrayList<>();
 
         for (UploadFileInfo fileInfo : uploadFileInfoList) {
+            boolean owned;
+            if (userDetail == null) {
+                owned = false;
+            } else owned = userDetail.getUsername().equals(fileInfo.getOwner());
+
             fileDetails.add(FileDetail.builder()
                     .uploadDate(fileInfo.getUploadDate())
                     .size(fileInfo.getSize())
-                    .owned(true)
+                    .owned(owned)
                     .name(fileInfo.getOriginalFileName())
                     .uniqueFileName(fileInfo.getUniqueFileName())
                     .downloadLock(fileInfo.isDownloadLocked())
