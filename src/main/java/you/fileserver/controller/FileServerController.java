@@ -44,16 +44,16 @@ public class FileServerController {
     //ファイルリスト取得用API
     @GetMapping(FILE_DETAILS_JSON_PATH)
     @ResponseBody
-    public List<FileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        return downloadService.fileDetails();
+    public List<FileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        return downloadService.fileDetails(userDetail);
     }
 
     //アップロード用エンドポイント
     @RequestMapping(value = UPLOAD_PATH, method = {
             RequestMethod.POST, RequestMethod.PATCH, RequestMethod.HEAD, RequestMethod.DELETE, RequestMethod.OPTIONS
     })
-    public void upload(HttpServletRequest request, HttpServletResponse response) throws TusException, IOException {
-        uploadService.upload(request, response);
+    public void upload(HttpServletRequest request, HttpServletResponse response, @AuthenticationPrincipal CustomUserDetails userDetail) throws TusException, IOException {
+        uploadService.upload(request, response, userDetail);
     }
 
     //ダウンロード用のトークン発行するAPI
@@ -80,6 +80,13 @@ public class FileServerController {
     @ResponseBody
     public Map<String, Object> register(@RequestParam String username, @RequestParam String password) {
         return authService.register(username, password);
+    }
+
+    //ユーザーネームが登録済みかをチェックするAPI
+    @GetMapping(USER_NAME_EXISTS_PATH)
+    @ResponseBody
+    public Map<String, Object> UserNameExists(@RequestParam String username) {
+        return authService.userNameExists(username);
     }
 
     //ログイン中のユーザー名取得用API

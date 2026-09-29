@@ -1,5 +1,6 @@
 package you.fileserver.authentication;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,7 +22,8 @@ public class UserDetailServiceImpl implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    @NonNull
+    public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         UserAccount account = userAccountRepository.findById(username).orElseThrow(() -> new UsernameNotFoundException(username));
         return new CustomUserDetails(account);
     }

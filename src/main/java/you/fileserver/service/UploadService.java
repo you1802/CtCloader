@@ -8,6 +8,7 @@ import me.desair.tus.server.upload.UploadInfo;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import you.fileserver.authentication.CustomUserDetails;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.entity.UploadFilePassword;
 import you.fileserver.repository.UploadFileInfoRepository;
@@ -39,7 +40,7 @@ public class UploadService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public void upload(HttpServletRequest request, HttpServletResponse response) throws IOException, TusException {
+    public void upload(HttpServletRequest request, HttpServletResponse response, CustomUserDetails userDetail) throws IOException, TusException {
         tusFileUploadService.process(request, response);
 
         String uploadUri = request.getRequestURI();
@@ -66,9 +67,16 @@ public class UploadService {
 
             Files.copy(is, Path.of(FILE_PATH, uniqueFileName)); //保存用ファイル名でファイルを保存
 
+            String ownerName; //ログイン中のユーザー名を取得
+            if (userDetail != null) {
+                ownerName = userDetail.getUsername();
+            } else {
+                ownerName = null;
+            }
+
             //データベースにファイル情報を登録
             UploadFileInfo fileInfo = UploadFileInfo.builder()
-                    .owner("test")
+                    .owner(ownerName)
                     .originalFileName(originalFileName)
                     .uniqueFileName(uniqueFileName)
                     .size(uploadInfo.getLength())

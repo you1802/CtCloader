@@ -73,28 +73,25 @@ function deleteFile(targetFileName, fileControlPassword) {
         })
 }
 
+//csrfトークンを取得する関数
+function getCsrfToken() {
+    return $("meta[name='_csrf']").attr("content");
+}
+
 /*
 以下はHTMLを読み込み後に呼ばれる
  */
 $(function () {
     'use strict';
 
-    //ヘッダーにあるcsrfトークンを取得
-    let csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    //ヘッダーにあるcsrfトークン用ヘッダーを取得
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-    /*
     //GET以外のすべてのajaxのヘッダーにcsrfトークンを入れる
-    function setCsrfToken(csrfToken) {
-        $(document).ajaxSend(function (event, xhr, settings) {
-            if (settings.type !== "GET") {
-                xhr.setRequestHeader(csrfHeader, csrfToken);
-            }
-        })
-    }
-
-    setCsrfToken(csrfToken);
-     */
+    $(document).ajaxSend(function (event, xhr, settings) {
+        if (settings.type !== "GET") {
+            xhr.setRequestHeader(csrfHeader, `${getCsrfToken()}`);
+        }
+    })
 
     /*
     以下テーブル関係
@@ -238,7 +235,9 @@ $(function () {
         })
         .use(Tus, { //Tusプロトコルを指定
             endpoint: "/api/upload", //エンドポイントの指定
-            headers: {[csrfHeader]: csrfToken}, //csrf対策用のトークンをヘッダーに入れる
+            headers: (file) => {
+                return  {[csrfHeader]: getCsrfToken()}
+            }
         });
 
     //アップロード用関数
@@ -464,7 +463,6 @@ $(function () {
             url: "/api/register",
             method: "POST",
             dataType: "json",
-            headers: {[csrfHeader]: csrfToken},
             data: {
                 username: $("#userName").val(),
                 password: $("#userPassword").val()
@@ -495,14 +493,13 @@ $(function () {
         $.ajax({
             url: "/api/login",
             method: "POST",
-            headers: {[csrfHeader]: csrfToken},
             data: {
                 username: $("#loginUserName").val(),
                 password: $("#loginUserPassword").val(),
             }
         }).done(function (data) {
             if (data.code === 200) {
-                csrfToken = data.csrfToken;
+                $("meta[name='_csrf']").attr("content", data.csrfToken);
                 showToast("ログインに成功しました", "success");$("#loginModal").modal("hide");
             } else {
                 showToast("ユーザー名またはパスワードが一致しません", "danger");$("#loginModal").modal("hide");
@@ -528,7 +525,6 @@ $(function () {
             url: "/api/logout",
             method: "POST",
             dataType: "json",
-            headers: {[csrfHeader]: csrfToken}
         }).done(function () {
             $("#logoutModal").modal("hide");
             window.location.reload();
