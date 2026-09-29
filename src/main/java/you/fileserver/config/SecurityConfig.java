@@ -28,8 +28,6 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http.authorizeHttpRequests(auth -> auth
                         .requestMatchers("/**").permitAll()) //仮置き(すべて許可)
-                .formLogin(login -> login
-                        .permitAll())
                 //ログアウトをAPI向けにカスタム
                 .logout(logout -> logout
                         .logoutUrl(LOGOUT_PATH)
