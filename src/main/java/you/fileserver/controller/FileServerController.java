@@ -52,8 +52,8 @@ public class FileServerController {
     @RequestMapping(value = UPLOAD_PATH, method = {
             RequestMethod.POST, RequestMethod.PATCH, RequestMethod.HEAD, RequestMethod.DELETE, RequestMethod.OPTIONS
     })
-    public void upload(HttpServletRequest request, HttpServletResponse response) throws TusException, IOException {
-        uploadService.upload(request, response);
+    public void upload(HttpServletRequest request, HttpServletResponse response, @AuthenticationPrincipal CustomUserDetails userDetail) throws TusException, IOException {
+        uploadService.upload(request, response, userDetail);
     }
 
     //ダウンロード用のトークン発行するAPI
