@@ -82,6 +82,13 @@ public class FileServerController {
         return authService.register(username, password);
     }
 
+    //ユーザーネームが登録済みかをチェックするAPI
+    @GetMapping(USER_NAME_EXISTS_PATH)
+    @ResponseBody
+    public Map<String, Object> UserNameExists(@RequestParam String username) {
+        return authService.userNameExists(username);
+    }
+
     //ログイン中のユーザー名取得用API
     @GetMapping(USER_ID_PATH)
     @ResponseBody
