@@ -33,7 +33,7 @@ public class SecurityConfig {
                 //ログアウトをAPI向けにカスタム
                 .logout(logout -> logout
                         .logoutUrl(LOGOUT_PATH)
-                        .logoutSuccessHandler((request, response, authentication) -> {
+                        .logoutSuccessHandler((_, response, _) -> {
                             response.setStatus(HttpServletResponse.SC_OK);
                             response.setContentType("application/json");
                             objectMapper.writeValue(response.getWriter(), Map.of("code", 200));
@@ -42,13 +42,13 @@ public class SecurityConfig {
                 //ログインフォームをAPI向けにカスタム
                 .formLogin(login -> login
                         .loginProcessingUrl(LOGIN_PATH)
-                        .successHandler((request, response, authentication) -> {
+                        .successHandler((request, response, _) -> {
                             CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
                             response.setStatus(HttpServletResponse.SC_OK);
                             response.setContentType("application/json");
                             objectMapper.writeValue(response.getWriter(), Map.of("code", 200, "csrfToken", csrfToken.getToken()));
                         })
-                .failureHandler((request, response, authentication) -> {
+                .failureHandler((_, response, _) -> {
                     response.setStatus(HttpServletResponse.SC_OK);
                     response.setContentType("application/json");
                     objectMapper.writeValue(response.getWriter(), Map.of("code", 401));
