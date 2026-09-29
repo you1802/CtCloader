@@ -76,7 +76,7 @@ public class FileServerController {
     }
 
     //ユーザー登録用API
-    @PostMapping(Register_PATH)
+    @PostMapping(REGISTER_PATH)
     @ResponseBody
     public Map<String, Object> register(@RequestParam String username, @RequestParam String password) {
         return authService.register(username, password);

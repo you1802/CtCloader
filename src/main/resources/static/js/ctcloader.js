@@ -1,21 +1,104 @@
+/*
+テーブルから呼び出す関数
+ */
+//ファイル削除用モーダルを呼び出す
+function fileDeleteModal(targetFileName) {
+    $("#targetFileName").val(targetFileName);
+    $("#fileControlModalTitle").text("ファイルの削除");
+    $("#fileControlExecuteButton").text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
+        deleteFile($('#targetFileName').val(), $('#fileControlPassword').val());
+    })
+    $("#fileControlModal").modal("show");
+}
+
+//パスワードロックされたファイルダウンロード用モーダルを呼び出す
+function lockedFileDownloadModal(targetFileName) {
+    $("#targetFileName").val(targetFileName);
+    $("#fileControlModalTitle").text("ファイルのダウンロード");
+    $("#fileControlExecuteButton").text("ダウンロード").removeClass("btn-danger").addClass("btn-success").off().on("click", function () {
+        downloadFile($('#targetFileName').val(), $('#fileControlPassword').val());
+    })
+    $("#fileControlModal").modal("show");
+}
+
+/**
+ * パスワードが一致する場合、サーバー側からワンタイムトークンを受け取りファイルをダウンロードする
+ * @param targetFileName ダウンロードするファイル名
+ * @param fileControlPassword ダウンロードするファイルのパスワード
+ */
+function downloadFile(targetFileName, fileControlPassword) {
+    $.ajax({
+        url: "/api/download/auth",
+        type: "POST",
+        dataType: "json",
+        data: {
+            targetFileName: targetFileName,
+            fileControlPassword: fileControlPassword
+        }
+    }).done(function (data) {
+        if (data.code === 200) {
+            window.location.href = `/api/download?targetFileName=${targetFileName}&token=${data.token}`;
+        } else {
+            showToast(data.message, "danger");
+        }
+    }).fail(function () {
+        showToast("通信エラー", "danger");
+    })
+}
+
+/**
+ * 削除用関数
+ * @param targetFileName 削除するファイル名
+ * @param fileControlPassword 削除用パスワード
+ */
+function deleteFile(targetFileName, fileControlPassword) {
+    $.ajax({
+        url: "/api/delete",
+        type: "POST",
+        dataType: 'json',
+        data: {
+            targetFileName: targetFileName,
+            fileControlPassword: fileControlPassword
+        }
+    }).done(function (data) {
+        if (data.code === 200) {
+            showToast(data.message, "success");
+        } else {
+            showToast(data.message, "danger");
+        }
+        tableRefresh()
+    })
+        .fail(function () {
+            showToast("通信エラー", "danger");
+        })
+}
+
+/*
+以下はHTMLを読み込み後に呼ばれる
+ */
 $(function () {
     'use strict';
 
     //ヘッダーにあるcsrfトークンを取得
-    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    let csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
+    /*
     //GET以外のすべてのajaxのヘッダーにcsrfトークンを入れる
-    $(document).ajaxSend(function (event, xhr, settings) {
-        if (settings.type !== "GET") {
-            xhr.setRequestHeader(csrfHeader, csrfToken);
-        }
-    })
+    function setCsrfToken(csrfToken) {
+        $(document).ajaxSend(function (event, xhr, settings) {
+            if (settings.type !== "GET") {
+                xhr.setRequestHeader(csrfHeader, csrfToken);
+            }
+        })
+    }
+
+    setCsrfToken(csrfToken);
+     */
 
     /*
     以下テーブル関係
      */
-
     //テーブル自体の設定
     const table = new DataTable("#files-table", {
         language: {
@@ -80,26 +163,6 @@ $(function () {
         $("#fileControlPassword").val("");
     })
 
-//ファイル削除用モーダルの設定
-    function fileDeleteModal(targetFileName) {
-        $("#targetFileName").val(targetFileName);
-        $("#fileControlModalTitle").text("ファイルの削除");
-        $("#fileControlExecuteButton").text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
-            deleteFile($('#targetFileName').val(), $('#fileControlPassword').val());
-        })
-        $("#fileControlModal").modal("show");
-    }
-
-//パスワードロックされたファイルダウンロード用モーダルを設定
-    function lockedFileDownloadModal(targetFileName) {
-        $("#targetFileName").val(targetFileName);
-        $("#fileControlModalTitle").text("ファイルのダウンロード");
-        $("#fileControlExecuteButton").text("ダウンロード").removeClass("btn-danger").addClass("btn-success").off().on("click", function () {
-            downloadFile($('#targetFileName').val(), $('#fileControlPassword').val());
-        })
-        $("#fileControlModal").modal("show");
-    }
-
     /**
      * 与えられたbytesを見やすい形にする(1 KBなど)
      * decimalsは小数点以下何位まで表示するか、デフォルトは2桁
@@ -116,58 +179,6 @@ $(function () {
         return (bytes / Math.pow(k, i)) //bytesをkのi乗でわる
                 .toFixed(decimals) //小数点以下を設定どおりに切り捨て
             + ' ' + sizes[i]; //サイズの文字を追加
-    }
-
-    /**
-     * パスワードが一致する場合、サーバー側からワンタイムトークンを受け取りファイルをダウンロードする
-     * @param targetFileName ダウンロードするファイル名
-     * @param fileControlPassword ダウンロードするファイルのパスワード
-     */
-    function downloadFile(targetFileName, fileControlPassword) {
-        $.ajax({
-            url: "/api/download/auth",
-            type: "POST",
-            dataType: "json",
-            data: {
-                targetFileName: targetFileName,
-                fileControlPassword: fileControlPassword
-            }
-        }).done(function (data) {
-            if (data.code === 200) {
-                window.location.href = `/api/download?targetFileName=${targetFileName}&token=${data.token}`;
-            } else {
-                showToast(data.message, "danger");
-            }
-        }).fail(function () {
-            showToast("通信エラー", "danger");
-        })
-    }
-
-    /**
-     * 削除用関数
-     * @param targetFileName 削除するファイル名
-     * @param fileControlPassword 削除用パスワード
-     */
-    function deleteFile(targetFileName, fileControlPassword) {
-        $.ajax({
-            url: "/api/delete",
-            type: "POST",
-            dataType: 'json',
-            data: {
-                targetFileName: targetFileName,
-                fileControlPassword: fileControlPassword
-            }
-        }).done(function (data) {
-            if (data.code === 200) {
-                showToast(data.message, "success");
-            } else {
-                showToast(data.message, "danger");
-            }
-            tableRefresh()
-        })
-            .fail(function () {
-                showToast("通信エラー", "danger");
-            })
     }
 
     /**
@@ -440,6 +451,7 @@ $(function () {
             url: "/api/register",
             method: "POST",
             dataType: "json",
+            headers: {[csrfHeader]: csrfToken},
             data: {
                 username: $("#userName").val(),
                 password: $("#userPassword").val()
@@ -470,14 +482,15 @@ $(function () {
         $.ajax({
             url: "/api/login",
             method: "POST",
+            headers: {[csrfHeader]: csrfToken},
             data: {
                 username: $("#loginUserName").val(),
-                password: $("#loginUserPassword").val()
+                password: $("#loginUserPassword").val(),
             }
         }).done(function (data) {
             if (data.code === 200) {
+                csrfToken = data.csrfToken;
                 showToast("ログインに成功しました", "success");$("#loginModal").modal("hide");
-                window.location.reload();
             } else {
                 showToast("ユーザー名またはパスワードが一致しません", "danger");$("#loginModal").modal("hide");
             }
@@ -501,7 +514,8 @@ $(function () {
         $.ajax({
             url: "/api/logout",
             method: "POST",
-            dataType: "json"
+            dataType: "json",
+            headers: {[csrfHeader]: csrfToken}
         }).done(function () {
             $("#logoutModal").modal("hide");
             window.location.reload();

@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfToken;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
@@ -27,12 +28,10 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http.authorizeHttpRequests(auth -> auth
                         .requestMatchers("/**").permitAll()) //仮置き(すべて許可)
-                .formLogin(login -> login
-                        .permitAll())
                 //ログアウトをAPI向けにカスタム
                 .logout(logout -> logout
                         .logoutUrl(LOGOUT_PATH)
-                        .logoutSuccessHandler((request, response, authentication) -> {
+                        .logoutSuccessHandler((_, response, _) -> {
                             response.setStatus(HttpServletResponse.SC_OK);
                             response.setContentType("application/json");
                             objectMapper.writeValue(response.getWriter(), Map.of("code", 200));
@@ -41,12 +40,13 @@ public class SecurityConfig {
                 //ログインフォームをAPI向けにカスタム
                 .formLogin(login -> login
                         .loginProcessingUrl(LOGIN_PATH)
-                        .successHandler((request, response, authentication) -> {
+                        .successHandler((request, response, _) -> {
+                            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
                             response.setStatus(HttpServletResponse.SC_OK);
                             response.setContentType("application/json");
-                            objectMapper.writeValue(response.getWriter(), Map.of("code", 200));
+                            objectMapper.writeValue(response.getWriter(), Map.of("code", 200, "csrfToken", csrfToken.getToken()));
                         })
-                .failureHandler((request, response, authentication) -> {
+                .failureHandler((_, response, _) -> {
                     response.setStatus(HttpServletResponse.SC_OK);
                     response.setContentType("application/json");
                     objectMapper.writeValue(response.getWriter(), Map.of("code", 401));
