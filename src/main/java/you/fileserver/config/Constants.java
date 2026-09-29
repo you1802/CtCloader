@@ -12,7 +12,7 @@ public class Constants {
     public static final String DOWNLOAD_AUTH_PATH = "/api/download/auth";
     public static final String DOWNLOAD_PATH = "/api/download";
     public static final String DELETE_PATH = "/api/delete";
-    public static final String Register_PATH = "/api/register";
+    public static final String REGISTER_PATH = "/api/register";
     public static final String LOGIN_PATH = "/api/login";
     public static final String LOGOUT_PATH = "/api/logout";
     public static final String USER_ID_PATH = "/api/user";

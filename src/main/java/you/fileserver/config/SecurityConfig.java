@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfToken;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
@@ -42,9 +43,10 @@ public class SecurityConfig {
                 .formLogin(login -> login
                         .loginProcessingUrl(LOGIN_PATH)
                         .successHandler((request, response, authentication) -> {
+                            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
                             response.setStatus(HttpServletResponse.SC_OK);
                             response.setContentType("application/json");
-                            objectMapper.writeValue(response.getWriter(), Map.of("code", 200));
+                            objectMapper.writeValue(response.getWriter(), Map.of("code", 200, "csrfToken", csrfToken.getToken()));
                         })
                 .failureHandler((request, response, authentication) -> {
                     response.setStatus(HttpServletResponse.SC_OK);

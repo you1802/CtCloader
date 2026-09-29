@@ -1,21 +1,52 @@
+/*
+テーブルから呼び出す関数
+ */
+//ファイル削除用モーダルを呼び出す
+function fileDeleteModal(targetFileName) {
+    $("#targetFileName").val(targetFileName);
+    $("#fileControlModalTitle").text("ファイルの削除");
+    $("#fileControlExecuteButton").text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
+        deleteFile($('#targetFileName').val(), $('#fileControlPassword').val());
+    })
+    $("#fileControlModal").modal("show");
+}
+
+//パスワードロックされたファイルダウンロード用モーダルを呼び出す
+function lockedFileDownloadModal(targetFileName) {
+    $("#targetFileName").val(targetFileName);
+    $("#fileControlModalTitle").text("ファイルのダウンロード");
+    $("#fileControlExecuteButton").text("ダウンロード").removeClass("btn-danger").addClass("btn-success").off().on("click", function () {
+        downloadFile($('#targetFileName').val(), $('#fileControlPassword').val());
+    })
+    $("#fileControlModal").modal("show");
+}
+
+/*
+以下はHTMLを読み込み後に呼ばれる
+ */
 $(function () {
     'use strict';
 
     //ヘッダーにあるcsrfトークンを取得
-    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    let csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
+    /*
     //GET以外のすべてのajaxのヘッダーにcsrfトークンを入れる
-    $(document).ajaxSend(function (event, xhr, settings) {
-        if (settings.type !== "GET") {
-            xhr.setRequestHeader(csrfHeader, csrfToken);
-        }
-    })
+    function setCsrfToken(csrfToken) {
+        $(document).ajaxSend(function (event, xhr, settings) {
+            if (settings.type !== "GET") {
+                xhr.setRequestHeader(csrfHeader, csrfToken);
+            }
+        })
+    }
+
+    setCsrfToken(csrfToken);
+     */
 
     /*
     以下テーブル関係
      */
-
     //テーブル自体の設定
     const table = new DataTable("#files-table", {
         language: {
@@ -79,26 +110,6 @@ $(function () {
     $("#fileControlModal").on("hidden.bs.modal", function () {
         $("#fileControlPassword").val("");
     })
-
-//ファイル削除用モーダルの設定
-    function fileDeleteModal(targetFileName) {
-        $("#targetFileName").val(targetFileName);
-        $("#fileControlModalTitle").text("ファイルの削除");
-        $("#fileControlExecuteButton").text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
-            deleteFile($('#targetFileName').val(), $('#fileControlPassword').val());
-        })
-        $("#fileControlModal").modal("show");
-    }
-
-//パスワードロックされたファイルダウンロード用モーダルを設定
-    function lockedFileDownloadModal(targetFileName) {
-        $("#targetFileName").val(targetFileName);
-        $("#fileControlModalTitle").text("ファイルのダウンロード");
-        $("#fileControlExecuteButton").text("ダウンロード").removeClass("btn-danger").addClass("btn-success").off().on("click", function () {
-            downloadFile($('#targetFileName').val(), $('#fileControlPassword').val());
-        })
-        $("#fileControlModal").modal("show");
-    }
 
     /**
      * 与えられたbytesを見やすい形にする(1 KBなど)
@@ -440,6 +451,7 @@ $(function () {
             url: "/api/register",
             method: "POST",
             dataType: "json",
+            headers: {[csrfHeader]: csrfToken},
             data: {
                 username: $("#userName").val(),
                 password: $("#userPassword").val()
@@ -470,14 +482,15 @@ $(function () {
         $.ajax({
             url: "/api/login",
             method: "POST",
+            headers: {[csrfHeader]: csrfToken},
             data: {
                 username: $("#loginUserName").val(),
-                password: $("#loginUserPassword").val()
+                password: $("#loginUserPassword").val(),
             }
         }).done(function (data) {
             if (data.code === 200) {
+                csrfToken = data.csrfToken;
                 showToast("ログインに成功しました", "success");$("#loginModal").modal("hide");
-                window.location.reload();
             } else {
                 showToast("ユーザー名またはパスワードが一致しません", "danger");$("#loginModal").modal("hide");
             }
@@ -501,7 +514,8 @@ $(function () {
         $.ajax({
             url: "/api/logout",
             method: "POST",
-            dataType: "json"
+            dataType: "json",
+            headers: {[csrfHeader]: csrfToken}
         }).done(function () {
             $("#logoutModal").modal("hide");
             window.location.reload();
