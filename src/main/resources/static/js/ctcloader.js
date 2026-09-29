@@ -439,6 +439,19 @@ $(function () {
     /*
     ユーザー登録関係
      */
+
+    //ログイン状態による表示ボタンの切替
+    function navbarChange(isLoggedIn) {
+        if (isLoggedIn) {
+            $("#notLoggedIn").addClass("d-none");
+            $("#loggedIn").removeClass("d-none");
+
+        } else {
+            $("#notLoggedIn").removeClass("d-none");
+            $("#loggedIn").addClass("d-none");
+        }
+    }
+
     //ユーザー登録ボタンのリスナー
     $("#registrationButton").on("click", () => {
         $("#registerModal").modal("show");
@@ -517,4 +530,5 @@ $(function () {
             window.location.reload();
         })
     })
+
 })
