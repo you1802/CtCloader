@@ -20,18 +20,15 @@
     <script src="https://releases.transloadit.com/uppy/locales/v3.3.1/ja_JP.min.js"></script>
 
     <!-- bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-            crossorigin="anonymous"></script>
+    <link href="css/bootstrap.css" rel="stylesheet">
+    <script src="js/bootstrap.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 
     <!-- dataTables -->
     <script src="https://cdn.datatables.net/2.3.8/js/dataTables.js"></script>
     <link href="https://cdn.datatables.net/2.3.8/css/dataTables.dataTables.css" rel="stylesheet">
 
-    <script src="/js/ctcloader.js"></script>
+    <script src="js/ctcloader.js"></script>
 
 </head>
 <body>
@@ -41,7 +38,7 @@
         <div class="d-flex align-items-center gap-2">
             <!-- アプリ名 -->
             <span class="navbar-brand d-flex align-items-center gap-2 p-0">
-                <img src="/img/karilogo.png" alt="logo" style="height: 32px; width: auto;">
+                <img src="img/karilogo.png" alt="logo" style="height: 32px; width: auto;">
                 <span class="navbar-brand fw-bold text-dark m-0">CtCloader</span>
             </span>
 
@@ -49,9 +46,14 @@
         </div>
 
         <div class="ms-auto d-flex gap-1">
+            <span id="notLoggedIn">
             <button type="button" class="btn btn-primary" id="registrationButton">ユーザー登録</button>
             <button type="button" class="btn btn-primary" id="loginButton">ログイン</button>
+            </span>
+            <span id="loggedIn">
+            <button type="button" class="btn btn-info fw-semibold">user</button>
             <button type="button" class="btn btn-danger" id="logoutButton">ログアウト</button>
+            </span>
         </div>
     </div>
 </nav>
