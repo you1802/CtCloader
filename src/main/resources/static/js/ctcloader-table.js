@@ -67,11 +67,6 @@ function tableRefresh() {
     table.ajax.reload();
 }
 
-//ファイルのダウンロードまたはアップロードのパスワード入力用モーダルのイベントリスナー
-$("#fileControlModal").on("hidden.bs.modal", function () {
-    $("#fileControlPassword").val("");
-})
-
 /**
  * 与えられたbytesを見やすい形にする(1 KBなど)
  * decimalsは小数点以下何位まで表示するか、デフォルトは2桁
@@ -90,24 +85,38 @@ function formatBytes(bytes, decimals = 2) {
         + ' ' + sizes[i]; //サイズの文字を追加
 }
 
+/*
+ファイルのダウンロードとアップロード関係
+ */
+const $fileControlModal = $("#fileControlModal");
+const $targetFileName = $("#targetFileName");
+const $fileControlModalTitle = $("#fileControlModalTitle");
+const $fileControlExecuteButton = $("#fileControlExecuteButton");
+const $fileControlPassword = $("#fileControlPassword");
+
+//ファイルのダウンロードまたはアップロードのパスワード入力用モーダルのイベントリスナー
+$fileControlModal.on("hidden.bs.modal", function () {
+    $fileControlPassword.val("");
+})
+
 //ファイル削除用モーダルを呼び出す
 function fileDeleteModal(targetFileName) {
-    $("#targetFileName").val(targetFileName);
-    $("#fileControlModalTitle").text("ファイルの削除");
-    $("#fileControlExecuteButton").text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
-        deleteFile($('#targetFileName').val(), $('#fileControlPassword').val());
+    $targetFileName.val(targetFileName);
+    $fileControlModalTitle.text("ファイルの削除");
+    $fileControlExecuteButton.text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
+        deleteFile($targetFileName.val(), $fileControlPassword.val());
     })
-    $("#fileControlModal").modal("show");
+    $fileControlModal.modal("show");
 }
 
 //パスワードロックされたファイルダウンロード用モーダルを呼び出す
 function lockedFileDownloadModal(targetFileName) {
-    $("#targetFileName").val(targetFileName);
-    $("#fileControlModalTitle").text("ファイルのダウンロード");
-    $("#fileControlExecuteButton").text("ダウンロード").removeClass("btn-danger").addClass("btn-success").off().on("click", function () {
-        downloadFile($('#targetFileName').val(), $('#fileControlPassword').val());
+    $targetFileName.val(targetFileName);
+    $fileControlModalTitle.text("ファイルのダウンロード");
+    $fileControlExecuteButton.text("ダウンロード").removeClass("btn-danger").addClass("btn-success").off().on("click", function () {
+        downloadFile($targetFileName.val(), $fileControlPassword.val());
     })
-    $("#fileControlModal").modal("show");
+    $fileControlModal.modal("show");
 }
 
 /**
@@ -196,4 +205,3 @@ function showToast(msg, type) {
         toast.remove();
     })
 }
-
