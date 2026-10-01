@@ -441,16 +441,39 @@ $(function () {
      */
 
     //ログイン状態による表示ボタンの切替
-    function navbarChange(isLoggedIn) {
-        if (isLoggedIn) {
-            $("#notLoggedIn").addClass("d-none");
-            $("#loggedIn").removeClass("d-none");
+    const $forLogin = $("#loggedIn");
+    const $forNotLogin = $("#notLoggedIn");
+    const $userNameButton = $("#loginUserNameButton");
 
+    /**
+     * ナビバーの表示を変更
+     * @param isLoggedIn ログイン状態(true:ログイン済み false:未ログイン)
+     * @param json ユーザー名の情報
+     */
+    function navbarChange(isLoggedIn, json) {
+        if (isLoggedIn) {
+            $forNotLogin.addClass("d-none");
+            $forLogin.removeClass("d-none");
+            (json === undefined) ? $userNameButton.text("👤" + $("#loginUserName").val()) : $userNameButton.text("👤" + json.user);
         } else {
-            $("#notLoggedIn").removeClass("d-none");
-            $("#loggedIn").addClass("d-none");
+            $forNotLogin.removeClass("d-none");
+            $forLogin.addClass("d-none");
         }
     }
+    //ページ読み込み時初回判定
+    let isInitialDetermination = false;
+    $(document).ajaxStop(() => {
+        if (isInitialDetermination) return;
+        isInitialDetermination = true;
+        $.getJSON("/api/user")
+            .done(function (json) {
+                if (json.user === "ゲスト") {
+                    navbarChange(false);
+                } else {
+                    navbarChange(true, json);
+                }
+            })
+    })
 
     //ユーザー登録ボタンのリスナー
     $("#registrationButton").on("click", () => {
@@ -500,6 +523,7 @@ $(function () {
         }).done(function (data) {
             if (data.code === 200) {
                 $("meta[name='_csrf']").attr("content", data.csrfToken);
+                navbarChange(true);
                 showToast("ログインに成功しました", "success");$("#loginModal").modal("hide");
             } else {
                 showToast("ユーザー名またはパスワードが一致しません", "danger");$("#loginModal").modal("hide");
@@ -526,6 +550,7 @@ $(function () {
             method: "POST",
             dataType: "json",
         }).done(function () {
+            navbarChange(false);
             $("#logoutModal").modal("hide");
             window.location.reload();
         })

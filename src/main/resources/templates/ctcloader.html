@@ -34,10 +34,10 @@
 </head>
 <body>
 <nav class="navbar navbar-expand bg-body-tertiary sticky-top border-bottom" data-bs-theme="light">
-    <!-- アップロード用モーダル表示ボタン -->
+    <!-- ナビバー表示ボタン -->
     <div class="container-fluid">
         <div class="d-flex align-items-center gap-2">
-            <!-- アプリ名 -->
+            <!-- ロゴとアプリ名 -->
             <span class="navbar-brand d-flex align-items-center gap-2 p-0">
                 <img src="img/karilogo.png" alt="logo" style="height: 32px; width: auto;">
                 <span class="navbar-brand fw-bold text-dark m-0">CtCloader</span>
@@ -47,12 +47,12 @@
         </div>
 
         <div class="ms-auto d-flex gap-1">
-            <span id="notLoggedIn">
+            <span id="notLoggedIn" class="d-none"><!-- 未ログイン時グループ -->
             <button type="button" class="btn btn-primary" id="registrationButton">ユーザー登録</button>
             <button type="button" class="btn btn-primary" id="loginButton">ログイン</button>
             </span>
-            <span id="loggedIn">
-            <button type="button" class="btn btn-info fw-semibold">user</button>
+            <span id="loggedIn" class="d-none"><!-- ログイン時グループ -->
+            <button type="button" class="btn btn-info fw-semibold d-inline-flex align-items-center px-2" style="padding-left: 4px !important;" id="loginUserNameButton">user</button>
             <button type="button" class="btn btn-danger" id="logoutButton">ログアウト</button>
             </span>
         </div>
