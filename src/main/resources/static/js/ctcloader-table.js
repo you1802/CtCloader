@@ -50,13 +50,11 @@ const table = new DataTable("#files-table", {
         },
         {
             data: null, title: "削除", render: function (data, type, row) {
-                if (row.owned === true) {
-                    return `
+                //if (!row.owned === true) {return null;}
+                return `
                     <button type="button" class="btn btn-link" onclick="fileDeleteModal('${row.uniqueFileName}')">
                     <i class="bi bi-trash"></i>
-                    </button>
-                `;}
-                return null;
+                    </button>`
             }
         }
     ]
