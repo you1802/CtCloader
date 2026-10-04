@@ -1,8 +1,8 @@
 /*
-HTMLを読み込み後に呼ばれる
+以下はHTMLを読み込み後に呼ばれる
  */
 $(function () {
-    'use strict';
+     'use strict';
 
     //GET以外のすべてのajaxのヘッダーにcsrfトークンを入れる
     $(document).ajaxSend(function (event, xhr, settings) {
@@ -20,7 +20,6 @@ $(function () {
     const $setDeletePassword_div = $("#setDeletePassword_div");
     const $confirmSetDeletePassword = $("#confirmSetDeletePassword");
 
-    const $downloadPasswordEnabledLabel = $("#downloadPasswordEnabledLabel");
     const $downloadPasswordEnabled = $("#downloadPasswordEnabled");
 
     const $setDownloadPasswordGroup = $("#setDownloadPasswordGroup");
@@ -174,8 +173,7 @@ $(function () {
                 $setDeletePassword.prop("readOnly", true).addClass("is-valid");
                 $confirmSetDeletePassword.prop("readOnly", true);
 
-                $downloadPasswordEnabledLabel.addClass("is-readonly");
-                $downloadPasswordEnabled.addClass("is-readonly");
+                $downloadPasswordEnabled.prop("disabled", true);
                 $setDownloadPassword.prop("readOnly", true).addClass("is-valid");
                 $confirmSetDownloadPassword.prop("readOnly", true);
 
@@ -190,8 +188,7 @@ $(function () {
                 $setDeletePassword.prop("readOnly", true).addClass("is-valid");
                 $confirmSetDeletePassword.prop("readOnly", true);
 
-                $downloadPasswordEnabledLabel.addClass("is-readonly");
-                $downloadPasswordEnabled.addClass("is-readonly");
+                $downloadPasswordEnabled.prop("disabled", true);
 
                 $uploadButton.prop("disabled", true);
                 $uploadModalCloseButtonHeader.prop("disabled", true);
@@ -208,17 +205,16 @@ $(function () {
 
         $("#uploadForm")[0].reset();
 
-        $setDeletePassword.removeClass("is-valid").prop("readOnly", false);
-        $confirmSetDeletePassword.removeClass("is-valid is-invalid").prop("readOnly", false);
+        $confirmSetDeletePassword.removeClass("is-valid is-invalid");
+        $setDeletePassword.removeClass("is-valid");
         $setDeletePassword_div.removeClass("was-validated");
 
-        $downloadPasswordEnabledLabel.removeClass("is-readonly");
-        $downloadPasswordEnabled.removeClass("is-readonly");
+        $downloadPasswordEnabled.prop("disabled", false);
         $setDownloadPasswordGroup.addClass("d-none");
 
-        $confirmSetDownloadPassword.removeClass("is-valid is-invalid").prop("readOnly", false);
-        $setDownloadPassword.removeClass("is-valid").prop("readOnly", false);
+        $confirmSetDownloadPassword.removeClass("is-valid is-invalid");
         $setDownloadPassword_div.removeClass("was-validated");
+        $setDownloadPassword.removeClass("is-valid");
 
         tableRefresh();
     })
@@ -231,7 +227,6 @@ $(function () {
     const $forLogin = $("#loggedIn");
     const $forNotLogin = $("#notLoggedIn");
     const $userNameButton = $("#loginUserNameButton");
-
     /**
      * ナビバーの表示を変更
      * @param isLoggedIn ログイン状態(true:ログイン済み false:未ログイン)
@@ -259,6 +254,7 @@ $(function () {
                 } else {
                     navbarChange(true, json);
                 }
+                $(document).off('ajaxStop');
             })
     })
 
@@ -342,4 +338,5 @@ $(function () {
             window.location.reload();
         })
     })
+
 })

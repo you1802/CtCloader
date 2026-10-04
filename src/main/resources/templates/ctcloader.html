@@ -43,22 +43,62 @@
                 <img src="img/karilogo.png" alt="logo" style="height: 32px; width: auto;">
                 <span class="navbar-brand fw-bold text-dark m-0">CtCloader</span>
             </span>
-
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">アップロード</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm p-1 py-0" data-bs-toggle="modal" data-bs-target="#siteOverview">このサイトについて</button>
         </div>
 
         <div class="ms-auto d-flex gap-1">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">アップロード</button>
             <span id="notLoggedIn" class="d-none"><!-- 未ログイン時グループ -->
             <button type="button" class="btn btn-primary" id="registrationButton">ユーザー登録</button>
             <button type="button" class="btn btn-primary" id="loginButton">ログイン</button>
             </span>
             <span id="loggedIn" class="d-none"><!-- ログイン時グループ -->
-            <button type="button" class="btn btn-info fw-semibold d-inline-flex align-items-center px-2" style="padding-left: 4px !important;" id="loginUserNameButton">user</button>
+            <span class="navbar-text text-primary border border-dark rounded fw-semibold d-inline-flex align-items-center px-2" style="padding-left: 4px !important;" id="loginUserNameButton">user</span>
+                <!-- <button type="button" class="btn btn-outline-info fw-semibold d-inline-flex align-items-center px-2" style="padding-left: 4px !important;" id="loginUserNameButton">user</button> -->
             <button type="button" class="btn btn-danger" id="logoutButton">ログアウト</button>
             </span>
         </div>
     </div>
 </nav>
+
+<!-- サイト概要モーダル -->
+<div class="modal fade" id="siteOverview" tabindex="-1" aria-labelledby="siteOverviewLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fs-5" id="siteOverviewLabel">サイト概要</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-start">
+          <h6 class="fw-bold mb-2">💡 このサイトについて</h6>
+          <p class="mb-1">本サイトは、小回りの利くWebアップローダーです。</p>
+          <p class="mb-1">パスワード設定やファイル転送機能があります。</p>
+          <p class="text-muted small">個人制作のポートフォリオ作品として開発しました。</p>
+          <hr>
+          <h6 class="fw-bold mb-2">🛠️ 技術スタック</h6>
+          <p class="mb-1"><strong>フロントエンド：</strong> Bootstrap / jQuery</p>
+          <p class="mb-1"><strong>バックエンド：</strong> Java (Spring Boot)</p>
+          <p class="mb-3"><strong>ストレージ：</strong> abc</p>
+          <hr>
+          <h6 class="fw-bold mb-2">👤 作成者</h6>
+          <p class="mb-1"><strong>名前：</strong> mieu</p>
+          <p class="mb-1"><strong>X：</strong> <a href="https://x.com" target="_blank">@account</a></p>
+          <p class="mb-3"><strong>Mail：</strong> <a href="mailto:adles112233@gmail.com">adles112233@gmail.com</a></p>
+          <hr>
+          <div class="p-3 bg-light rounded text-secondary small">
+              <h6 class="fw-bold text-dark mb-1">⚠️ 禁止事項</h6>
+              <p class="mb-2">公序良俗に反するファイル、著作権を侵害するファイル、コンピューターウイルスを含むファイルのアップロードを禁止します。</p>
+              <h6 class="fw-bold text-dark mb-1">📄 免責事項</h6>
+              <p class="mb-0">本サイトはポートフォリオ用の作品です。本サイトの利用により生じた損害やデータの消失について、開発者は一切の責任を負いません。重要なデータの保管には使用しないでください。</p>
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- アップロード用モーダル -->
 <div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
