@@ -40,6 +40,14 @@ public class UploadService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * 条件を満たせばアップロードしデータベースに情報を保存する
+     * @param request コントローラーで受け取ったリクエスト
+     * @param response レスポンス
+     * @param userDetail ログイン中のユーザー情報
+     * @throws IOException ファイル保存関係のエラー
+     * @throws TusException TUS関係のエラー
+     */
     public void upload(HttpServletRequest request, HttpServletResponse response, CustomUserDetails userDetail) throws IOException, TusException {
         tusFileUploadService.process(request, response);
 
