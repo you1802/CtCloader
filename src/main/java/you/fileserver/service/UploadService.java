@@ -71,7 +71,7 @@ public class UploadService {
             if (userDetail != null) {
                 ownerName = userDetail.getUsername();
             } else {
-                ownerName = null;
+                ownerName = "";
             }
 
             //データベースにファイル情報を登録
