@@ -77,8 +77,8 @@ public class FileServerController {
     //削除用API
     @PostMapping(DELETE_PATH)
     @ResponseBody
-    public Map<String, Object> delete(@RequestParam String targetFileName, @RequestParam String fileControlPassword) {
-        return deleteService.deleteFile(targetFileName, fileControlPassword);
+    public Map<String, Object> delete(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
+        return deleteService.deleteFile(targetFileName, fileControlPassword, userDetail);
     }
 
     //ユーザー登録用API

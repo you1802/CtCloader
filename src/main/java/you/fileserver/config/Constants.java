@@ -39,5 +39,5 @@ public class Constants {
     public static final String PASSWORD_REGEX = "^[a-zA-Z0-9]{4,12}$";
 
     //ページのルート
-    public static final String ROOT_URL = "http://localhost:8080/";
+    public static final String ROOT_URL = "http://localhost:8080";
 }
