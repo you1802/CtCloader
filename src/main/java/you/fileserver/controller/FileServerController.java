@@ -58,8 +58,8 @@ public class FileServerController {
 
     //ダウンロード用のトークン発行するAPI
     @PostMapping(DOWNLOAD_AUTH_PATH)
-    public ResponseEntity<?> downloadAuth(@RequestParam String targetFileName, @RequestParam String fileControlPassword) {
-        return downloadService.passwordAuth(targetFileName, fileControlPassword);
+    public ResponseEntity<?> downloadAuth(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
+        return downloadService.passwordAuth(targetFileName, fileControlPassword, userDetail);
     }
 
     //ファイル転送用URLを発行するAPI
