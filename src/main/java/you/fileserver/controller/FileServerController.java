@@ -62,6 +62,12 @@ public class FileServerController {
         return downloadService.passwordAuth(targetFileName, fileControlPassword);
     }
 
+    //ファイル転送用URLを発行するAPI
+    @PostMapping(TRANSFER_PATH)
+    public ResponseEntity<?> transferUrl(@RequestParam String targetFileName, @AuthenticationPrincipal CustomUserDetails userDetail) {
+        return downloadService.createFileTransferUrl(targetFileName, userDetail);
+    }
+
     //ダウンロード用API
     @GetMapping(DOWNLOAD_PATH)
     public ResponseEntity<StreamingResponseBody> download(@RequestParam String targetFileName, @RequestParam String token) {
