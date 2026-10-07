@@ -51,7 +51,7 @@ $(function () {
         })
         .use(Tus, { //Tusプロトコルを指定
             endpoint: "/api/upload", //エンドポイントの指定
-            headers: (file) => {
+            headers: () => {
                 return  {[csrfHeader]: getCsrfToken()}
             }
         });
