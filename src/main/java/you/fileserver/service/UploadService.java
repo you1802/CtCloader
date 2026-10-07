@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static you.fileserver.config.Constants.FILE_PATH;
-import static you.fileserver.config.Constants.PASSWORD_REGEX;
+import static you.fileserver.config.Constants.FILE_PASSWORD_REGEX;
 
 @Service
 public class UploadService {
@@ -61,9 +61,9 @@ public class UploadService {
             boolean downloadPasswordEnabled = metaData.containsKey("downloadPasswordEnabled"); //ダウンロードパスワードが有効かどうか
 
             //パスワードの正規表現最終チェック(通常の使用ではこれを満たすことはない)
-            if (!metaData.get("setDeletePassword").matches(PASSWORD_REGEX)) return;
+            if (!metaData.get("setDeletePassword").matches(FILE_PASSWORD_REGEX)) return;
             if (downloadPasswordEnabled) {
-                if (!metaData.get("setDownloadPassword").matches(PASSWORD_REGEX)) return;
+                if (!metaData.get("setDownloadPassword").matches(FILE_PASSWORD_REGEX)) return;
             }
 
             InputStream is = tusFileUploadService.getUploadedBytes(uploadUri);
