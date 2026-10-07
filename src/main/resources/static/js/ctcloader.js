@@ -9,7 +9,7 @@ $(function () {
         if (settings.type !== "GET") {
             xhr.setRequestHeader(csrfHeader, `${getCsrfToken()}`);
         }
-    })
+    });
 
     /*
     アップローダーの設定
@@ -73,7 +73,7 @@ $(function () {
     uppy.on("error", () => {
         $uploadModalCloseButtonHeader.prop("disabled", false);
         $uploadModalCloseButtonFooter.prop("disabled", false);
-    })
+    });
 
     /*
     アップロードモーダルのUI関係
@@ -89,7 +89,7 @@ $(function () {
         $setDeletePassword_div.addClass("was-validated");
         confirmSetDeletePasswordIsValid();
         switchUploadButton();
-    })
+    });
 
     $confirmSetDeletePassword
     .on("focus", function () {
@@ -97,7 +97,7 @@ $(function () {
     }).on("blur", function () {
         confirmSetDeletePasswordIsValid();
         switchUploadButton();
-    })
+    });
 
     //確認用パスワードの整合性チェック
     function confirmSetDeletePasswordIsValid() {
@@ -117,7 +117,7 @@ $(function () {
             $setDownloadPasswordGroup.addClass("d-none");
         }
         switchUploadButton();
-    })
+    });
 
     //ダウンロード用パスワードのバリデーション
     $setDownloadPassword.on("focus", function () {
@@ -127,7 +127,7 @@ $(function () {
         $setDownloadPassword_div.addClass("was-validated");
         confirmSetDownloadPasswordIsValid();
         switchUploadButton();
-    })
+    });
 
     //確認用パスワードの整合性チェック
     $confirmSetDownloadPassword.on("focus", function () {
@@ -135,7 +135,7 @@ $(function () {
     }).on("blur", function () {
         confirmSetDownloadPasswordIsValid();
         switchUploadButton();
-    })
+    });
 
     //確認用パスワードの整合性チェック
     function confirmSetDownloadPasswordIsValid() {
@@ -157,7 +157,7 @@ $(function () {
                 $uploadButton.prop("disabled", false);
             } else {
                 $uploadButton.prop("disabled", true);
-            }
+            };
         } else {
             if (uppy.getFiles().length > 0 &&  $setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid")) {
                 $uploadButton.prop("disabled", false);
@@ -201,7 +201,7 @@ $(function () {
                 uploadFile();
             }
         }
-    })
+    });
 
     //アップロードモーダルが閉じられた時,モーダル内の情報をリセットしテーブルを更新する
     $uploadModal.on("hidden.bs.modal", function () {
@@ -223,16 +223,83 @@ $(function () {
 
 
         tableRefresh();
-    })
+    });
 
     /*
     ユーザー登録関係
      */
 
+    const $loggedIn = $("#loggedIn");
+    const $notLoggedIn = $("#notLoggedIn");
+    const $loginUserNameButton = $("#loginUserNameButton");
+    const $forms = $(".needs-validation");
+    const $userName = $("#userName");
+    const $userPassword = $("#userPassword");
+    const $confirmUserPassword = $("#confirmUserPassword");
+    const $registerExecuteButton = $("#registerExecuteButton");
+    const $userNameInfo = $("#userNameInfo");
+    const $registerModal = $("#registerModal");
+    const $registerForm = $("#registerForm");
+    const $loginUserName = $("#loginUserName");
+    const $registrationButton = $("#registrationButton");
+
+    //バリデーション系
+    Array.from($forms).forEach(form => {
+        form.addEventListener("submit", e => {
+            if (!form.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            form.classList.add("was-validated");
+        });
+    });
+    //ユーザー名入力検証
+    $userName.on("blur", function () {
+        const userName = $userName.val().trim();
+        const inputEl = $userName[0];   //生のDOM要素を取得（setCustomValidity用）
+        //再判定用にエラークリア
+        inputEl.setCustomValidity("");
+        $userNameInfo.text("");
+
+        if ($userName.is(":invalid")) {
+            $userNameInfo.text("入力内容に誤りがあります。半角で正しく入力されているかご確認ください。");
+            return;
+        }
+        if (userName === "") return;
+        $registerExecuteButton.prop("disabled", true);  //通信の間、ボタン無効
+
+        $.getJSON("/api/user_name_exists?username=" + userName)
+            .done(function (json) {
+                if (json.exists) {
+                    inputEl.setCustomValidity("このユーザー名は既に存在します。");
+                    $userNameInfo.text("このユーザー名は既に存在します");
+                    $userName.addClass("is-invalid");
+                } else {
+                    inputEl.setCustomValidity("");
+                    $userName.removeClass("is-invalid");
+                }
+            })
+            .always(function () {
+                $registerExecuteButton.prop("disabled", false);
+            });
+    });
+    //入力時に判定をクリア
+    $userName.on("input", function () {
+        this.setCustomValidity("");
+        $userName.removeClass("is-invalid");
+        $userNameInfo.text("");
+    });
+
+    function checkConfirmPassword() {
+        const password = $userPassword.val();
+        const confirmPassword = $confirmUserPassword.val();
+        const conPassInputEl = $confirmUserPassword[0];
+
+    }
+
+
+
     //ログイン状態による表示ボタンの切替
-    const $forLogin = $("#loggedIn");
-    const $forNotLogin = $("#notLoggedIn");
-    const $userNameButton = $("#loginUserNameButton");
     /**
      * ナビバーの表示を変更
      * @param isLoggedIn ログイン状態(true:ログイン済み false:未ログイン)
@@ -240,12 +307,12 @@ $(function () {
      */
     function navbarChange(isLoggedIn, json) {
         if (isLoggedIn) {
-            $forNotLogin.addClass("d-none");
-            $forLogin.removeClass("d-none");
-            (json === undefined) ? $userNameButton.text("👤" + $("#loginUserName").val()) : $userNameButton.text("👤" + json.user);
+            $notLoggedIn.addClass("d-none");
+            $loggedIn.removeClass("d-none");
+            (json === undefined) ? $loginUserNameButton.text("👤" + $loginUserName.val()) : $loginUserNameButton.text("👤" + json.user);
         } else {
-            $forNotLogin.removeClass("d-none");
-            $forLogin.addClass("d-none");
+            $notLoggedIn.removeClass("d-none");
+            $loggedIn.addClass("d-none");
         }
     }
     //ページ読み込み時初回判定
@@ -261,44 +328,47 @@ $(function () {
                     navbarChange(true, json);
                 }
                 $(document).off('ajaxStop');
-            })
-    })
+            });
+    });
 
     //ユーザー登録ボタンのリスナー
-    $("#registrationButton").on("click", () => {
-        $("#registerModal").modal("show");
-    })
+    $registrationButton.on("click", () => {
+        $registerModal.modal("show");
+    });
 
     //ユーザー登録実行ボタンのリスナー
-    $("#registerExecuteButton").on("click", function () {
+    $registerExecuteButton.on("click", function () {
         $.ajax({
             url: "/api/register",
             method: "POST",
             dataType: "json",
             data: {
-                username: $("#userName").val(),
-                password: $("#userPassword").val()
+                username: $userName.val(),
+                password: $userPassword.val()
             }
         }).done(function (data) {
             if (data.code === 200) {
-                showToast(data.message, "success");$("#registerModal").modal("hide");
+                showToast(data.message, "success");//$registerModal.modal("hide");
             }  else {
-                showToast(data.message, "danger");$("#registerModal").modal("hide");
+                showToast(data.message, "danger");//$registerModal.modal("hide");
             }
         }).fail(function () {
             showToast("通信エラー", "danger");
-        })
-    })
+        });
+    });
 
     //ユーザー登録モーダルを閉じたときフォームをリセットする
-    $("#registerModal").on("hidden.bs.modal", function () {
-        $("#registerForm")[0].reset();
-    })
+    $registerModal.on("hidden.bs.modal", function () {
+        $registerForm[0].reset();
+        $registerForm.removeClass("was-validated");
+        $registerForm.find(".form-control").removeClass("is-invalid");
+        $userNameInfo.text("エラー");
+    });
 
     //ログインボタンのリスナー
     $("#loginButton").on("click", () => {
         $("#loginModal").modal("show");
-    })
+    });
 
     //ログイン実行ボタンのリスナー
     $("#loginExecuteButton").text("ログイン").off("click").on("click", function () {
@@ -319,18 +389,18 @@ $(function () {
             }
         }).fail(function () {
             showToast("通信エラー", "danger");
-        })
-    })
+        });
+    });
 
     //ログインモーダルを閉じたときフォームをリセット
     $("#loginModal").on("hidden.bs.modal", function () {
         $("#loginForm")[0].reset();
-    })
+    });
 
     //ログアウトボタンのリスナー
     $("#logoutButton").on("click", () => {
         $("#logoutModal").modal("show");
-    })
+    });
 
     //ログアウト実行ボタンのイベントリスナー
     $("#logoutExecuteButton").on("click", () => {
@@ -342,7 +412,7 @@ $(function () {
             navbarChange(false);
             $("#logoutModal").modal("hide");
             window.location.reload();
-        })
-    })
+        });
+    });
 
-})
+});
