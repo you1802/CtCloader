@@ -204,24 +204,27 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="registerForm">
+                <form id="registerForm" class="needs-validation" novalidate>
                     <div class="mb-3">
-                        <label for="userName">ユーザー名</label>
-                        <input type="text" class="form-control registerFormElement" id="userName" required pattern="[a-zA-Z0-9]{4,12}">
+                        <label for="userName">ユーザー名 (半角英数字・記号で 4〜32文字)</label>
+                        <input type="text" class="form-control registerFormElement" id="userName" required pattern="[\x21-\x7E]{4,32}">
+                        <div id="userNameInfo" class="invalid-feedback">エラー</div>
                     </div>
                     <div class="mb-3">
-                        <label for="userPassword">パスワード</label>
-                        <input type="password" class="form-control registerFormElement" id="userPassword" required pattern="[a-zA-Z0-9]{4,12}">
+                        <label for="userPassword">パスワード (半角英数字・記号で 8〜32文字)</label>
+                        <input type="password" class="form-control registerFormElement" id="userPassword" required pattern="[\x21-\x7E]{8,32}">
+                        <div class="invalid-feedback">入力内容に誤りがあります。半角で正しく入力されているかご確認ください。</div>
                     </div>
                     <div class="mb-3">
                         <label for="confirmUserPassword">パスワード(確認用)</label>
                         <input type="password" class="form-control registerFormElement" id="confirmUserPassword" required>
+                        <div class="invalid-feedback">パスワードが違います。</div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-                <button type="button" class="btn btn-primary" id="registerExecuteButton">登録</button>
+                <button type="submit" class="btn btn-primary" id="registerExecuteButton" form="registerForm">登録</button>
             </div>
         </div>
     </div>

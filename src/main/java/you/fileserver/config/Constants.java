@@ -34,6 +34,8 @@ public class Constants {
     //アップロードされたファイル用フォルダ
     public static final String FILE_PATH = "files";
 
+    //ユーザー名用正規表現
+    public static final String USER_NAME_REGEX = "^[\\x21-\\x7E]{4,32}$";
     //パスワード用正規表現
-    public static final String PASSWORD_REGEX = "^[a-zA-Z0-9]{4,12}$";
+    public static final String PASSWORD_REGEX = "^[\\x21-\\x7E]{8,32}$";
 }
