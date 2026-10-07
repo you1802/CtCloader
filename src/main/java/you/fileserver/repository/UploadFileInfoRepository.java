@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,String> {
     public List<UploadFileInfo> findByOwnerOrVisible(String owner, boolean visible);
+    public List<UploadFileInfo> findByVisible(boolean visible);
 }

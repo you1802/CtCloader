@@ -132,7 +132,13 @@ public class DownloadService {
      * @return ファイルリスト
      */
     public List<FileDetail> fileDetails(CustomUserDetails userDetail) {
-        List<UploadFileInfo> uploadFileInfoList = uploadFileInfoRepository.findAll();
+        List<UploadFileInfo> uploadFileInfoList;
+        if (!(userDetail == null)) {
+            if (userDetail.userAccount().getRole().equals(AUTH_ADMIN)) {
+                uploadFileInfoList = uploadFileInfoRepository.findAll(); //ADMINならすべてのファイル
+            } else uploadFileInfoList = uploadFileInfoRepository.findByOwnerOrVisible(userDetail.getUsername(), true); //ログイン中なら自分のファイル+可視設定に応じて
+        } else uploadFileInfoList = uploadFileInfoRepository.findByVisible(true); //非ログインなら可視設定のみ
+
         List<FileDetail> fileDetails = new ArrayList<>();
 
         for (UploadFileInfo fileInfo : uploadFileInfoList) {

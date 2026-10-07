@@ -75,11 +75,14 @@ public class UploadService {
 
             Files.copy(is, Path.of(FILE_PATH, uniqueFileName)); //保存用ファイル名でファイルを保存
 
-            String ownerName; //ログイン中のユーザー名を取得
+            String ownerName; //ログイン中のユーザー名
+            boolean visible; //可視化設定
             if (userDetail != null) {
                 ownerName = userDetail.getUsername();
+                visible = metaData.containsKey("visible");
             } else {
                 ownerName = "";
+                visible = true;
             }
 
             //データベースにファイル情報を登録
@@ -89,7 +92,7 @@ public class UploadService {
                     .uniqueFileName(uniqueFileName)
                     .size(uploadInfo.getLength())
                     .uploadDate(LocalDateTime.now())
-                    .visible(true)
+                    .visible(visible)
                     .downloadLocked(downloadPasswordEnabled)
                     .comment(metaData.get("uploadComment"))
                     .build();
