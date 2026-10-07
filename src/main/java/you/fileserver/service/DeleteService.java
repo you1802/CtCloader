@@ -49,8 +49,9 @@ public class DeleteService {
 
         }
 
-        //リポジトリからファイル情報を削除
+        //リポジトリからファイル情報とパスワードを削除
         uploadFileInfoRepository.delete(uploadFileInfo.get());
+        uploadFileInfoRepository.deleteById(targetFileName);
 
         //ファイル実体を削除
         File file = Path.of(FILE_PATH, targetFileName).toFile();
