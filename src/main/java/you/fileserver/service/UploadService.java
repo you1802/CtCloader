@@ -91,6 +91,7 @@ public class UploadService {
                     .uploadDate(LocalDateTime.now())
                     .visible(true)
                     .downloadLocked(downloadPasswordEnabled)
+                    .comment(metaData.get("uploadComment"))
                     .build();
             uploadFileInfoRepository.save(fileInfo);
 

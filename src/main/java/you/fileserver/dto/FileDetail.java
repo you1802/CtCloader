@@ -18,4 +18,5 @@ public class FileDetail {
     private boolean owned;
     private String uniqueFileName;
     private boolean downloadLock;
+    private String comment;
 }

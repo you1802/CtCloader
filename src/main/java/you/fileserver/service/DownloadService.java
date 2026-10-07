@@ -148,6 +148,7 @@ public class DownloadService {
                     .name(fileInfo.getOriginalFileName())
                     .uniqueFileName(fileInfo.getUniqueFileName())
                     .downloadLock(fileInfo.isDownloadLocked())
+                    .comment(fileInfo.getComment())
                     .build());
         }
         return fileDetails;
