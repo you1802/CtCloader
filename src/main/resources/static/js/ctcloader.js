@@ -21,6 +21,7 @@ $(function () {
     const $confirmSetDeletePassword = $("#confirmSetDeletePassword");
 
     const $downloadPasswordEnabled = $("#downloadPasswordEnabled");
+    const $downloadPasswordEnabledLabel = $("#downloadPasswordEnabledLabel");
 
     const $setDownloadPasswordGroup = $("#setDownloadPasswordGroup");
     const $setDownloadPassword = $("#setDownloadPassword");
@@ -173,7 +174,9 @@ $(function () {
                 $setDeletePassword.prop("readOnly", true).addClass("is-valid");
                 $confirmSetDeletePassword.prop("readOnly", true);
 
-                $downloadPasswordEnabled.prop("disabled", true);
+                $downloadPasswordEnabled.addClass("is-readonly")
+                $downloadPasswordEnabledLabel.addClass("is-readonly");
+
                 $setDownloadPassword.prop("readOnly", true).addClass("is-valid");
                 $confirmSetDownloadPassword.prop("readOnly", true);
 
@@ -188,7 +191,8 @@ $(function () {
                 $setDeletePassword.prop("readOnly", true).addClass("is-valid");
                 $confirmSetDeletePassword.prop("readOnly", true);
 
-                $downloadPasswordEnabled.prop("disabled", true);
+                $downloadPasswordEnabled.addClass("is-readonly")
+                $downloadPasswordEnabledLabel.addClass("is-readonly");
 
                 $uploadButton.prop("disabled", true);
                 $uploadModalCloseButtonHeader.prop("disabled", true);
@@ -205,16 +209,18 @@ $(function () {
 
         $("#uploadForm")[0].reset();
 
-        $confirmSetDeletePassword.removeClass("is-valid is-invalid");
-        $setDeletePassword.removeClass("is-valid");
+        $confirmSetDeletePassword.removeClass("is-valid is-invalid").prop("readOnly", false);
+        $setDeletePassword.removeClass("is-valid").prop("readOnly", false);
         $setDeletePassword_div.removeClass("was-validated");
 
-        $downloadPasswordEnabled.prop("disabled", false);
+        $downloadPasswordEnabled.removeClass("is-readonly");
+        $downloadPasswordEnabledLabel.removeClass("is-readonly");
         $setDownloadPasswordGroup.addClass("d-none");
 
-        $confirmSetDownloadPassword.removeClass("is-valid is-invalid");
+        $setDownloadPassword.removeClass("is-valid").prop("readOnly", false);
+        $confirmSetDownloadPassword.removeClass("is-valid is-invalid").prop("readOnly", false);
         $setDownloadPassword_div.removeClass("was-validated");
-        $setDownloadPassword.removeClass("is-valid");
+
 
         tableRefresh();
     });

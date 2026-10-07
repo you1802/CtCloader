@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import you.fileserver.authentication.CustomUserDetails;
 import you.fileserver.dto.FileDetail;
+import you.fileserver.dto.entity.DownloadTokenInfo;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.entity.UploadFilePassword;
+import you.fileserver.repository.DownloadTokenInfoRepository;
 import you.fileserver.repository.UploadFileInfoRepository;
 import you.fileserver.repository.UploadFilePasswordRepository;
 
@@ -22,11 +24,10 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
-import static you.fileserver.config.Constants.FILE_PATH;
+import static you.fileserver.config.Constants.*;
 
 @Service
 public class DownloadService {
@@ -34,14 +35,19 @@ public class DownloadService {
     private final UploadFileInfoRepository uploadFileInfoRepository;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
     private final ThreadPoolTaskScheduler taskScheduler;
+    private final DownloadTokenInfoRepository downloadTokenInfoRepository;
 
-    private final Map<String, String> tokenInfoMap = new ConcurrentHashMap<>(); //トークン管理用のスレッドセーフなMap(key=token, value=uniqueFileName)
 
-    public DownloadService(PasswordEncoder passwordEncoder, UploadFileInfoRepository uploadFileInfoRepository, UploadFilePasswordRepository uploadFilePasswordRepository, ThreadPoolTaskScheduler threadPoolTaskScheduler) {
+    public DownloadService(PasswordEncoder passwordEncoder,
+                           UploadFileInfoRepository uploadFileInfoRepository,
+                           UploadFilePasswordRepository uploadFilePasswordRepository,
+                           ThreadPoolTaskScheduler threadPoolTaskScheduler,
+                           DownloadTokenInfoRepository downloadTokenInfoRepository) {
         this.passwordEncoder = passwordEncoder;
         this.uploadFileInfoRepository = uploadFileInfoRepository;
         this.uploadFilePasswordRepository = uploadFilePasswordRepository;
         this.taskScheduler = threadPoolTaskScheduler;
+        this.downloadTokenInfoRepository = downloadTokenInfoRepository;
     }
 
     /**
@@ -50,7 +56,7 @@ public class DownloadService {
      * @param password パスワード
      * @return 結果のレスポンス
      */
-    public ResponseEntity<?> passwordAuth (String targetFileName, String password){
+    public ResponseEntity<?> passwordAuth (String targetFileName, String password) {
         //ファイルの存在チェック
         Optional<UploadFileInfo> targetFile = uploadFileInfoRepository.findById(targetFileName);
         if (targetFile.isEmpty()) return ResponseEntity.badRequest().build();
@@ -59,41 +65,44 @@ public class DownloadService {
 
         //ダウンロードパスワード一致時の処理
         if (passwordEncoder.matches(password, targetFilePassword.get().getDownloadPassword())) {
-            String token = UUID.randomUUID().toString(); //UUIDを取得
-            tokenInfoMap.put(token, targetFile.get().getUniqueFileName()); //トークン管理用MAPに登録
-
-            //３０秒後にトークンを自動削除
-            Instant deleteTime = Instant.now().plusSeconds(30);
-            taskScheduler.schedule(() -> {
-                tokenInfoMap.remove(token);
-            }, deleteTime);
-
-            return ResponseEntity.ok(Map.of("code", 200, "token", token)); //トークンをレスポンスとして返す
+            return ResponseEntity.ok(Map.of("code", 200, "token", createToken(targetFileName, 30))); //30秒有効期限のトークンをレスポンスとして返す
         } else {
             return ResponseEntity.ok(Map.of("code", 401, "message", "パスワードが一致しません")); //不一致の時
         }
     }
 
     /**
+     * ファイル転送用のURLをレスポンスに入れて返す
+     * @param targetFileName ダウンロードするファイル名(実態のファイル名)
+     * @param userDetail ログイン中のユーザー情報
+     * @return URL情報が入ったレスポンス
+     */
+    public ResponseEntity<?> createFileTransferUrl(String targetFileName, CustomUserDetails userDetail) {
+        Optional<UploadFileInfo> targetFile = uploadFileInfoRepository.findById(targetFileName);
+        if (targetFile.isEmpty() || userDetail == null || !Objects.equals(targetFile.get().getOwner(), userDetail.getUsername())) return ResponseEntity.badRequest().build(); //ファイルが自身のアップロードしたものでない場合バッドリクエスト
+
+        return ResponseEntity.ok(Map.of("code", 200, "URL", ROOT_URL + DOWNLOAD_PATH + "?targetFileName=" + targetFileName + "&token=" + createToken(targetFileName, 86400))); //DL用URLを組み立てて返す(有効期限１日)
+    }
+
+    /**
      * ダウンロード対象ファイル名とトークンを受け取って条件を満たす場合ダウンロードさせる(ファイルがダウンロードロックされてない場合のトークンは空)
      * @param targetFileName ダウンロードするファイル名(実態のファイル名)
-     * @param token 発行したトークン
+     * @param token トークン
      * @return ファイルデータストリーミングのレスポンス
      */
-    public ResponseEntity<StreamingResponseBody> downloadFile (String targetFileName, String token){
+    public ResponseEntity<StreamingResponseBody> downloadFile(String targetFileName, String token) {
         Optional<UploadFileInfo> targetFileInfo = uploadFileInfoRepository.findById(targetFileName);
+        Optional<DownloadTokenInfo> tokenInfo = downloadTokenInfoRepository.findById(token);
 
         if (targetFileInfo.isEmpty()) return ResponseEntity.status(HttpStatus.GONE).build(); //ファイルが存在しない場合は410 gone
 
-        String targetUniqueFilename = tokenInfoMap.get(token);
-
         if (targetFileInfo.get().isDownloadLocked()) { //ファイルがダウンロードロックされている場合
-            if (targetUniqueFilename == null || !Objects.equals(targetFileInfo.get().getUniqueFileName(), targetUniqueFilename)) {
-                return ResponseEntity.status(HttpStatus.GONE).build(); //トークン情報が存在しないか,トークンに紐づけされているファイル名に一致しない場合 410 gone
+            if (tokenInfo.isEmpty() || !Objects.equals(targetFileName, tokenInfo.get().getUniqueFileName()) || LocalDateTime.now().isAfter(tokenInfo.get().getExpirationDate())) {
+                return ResponseEntity.status(HttpStatus.GONE).build(); //トークンが存在しないまたはトークンに紐づけされているファイル名に一致しない場合またはトークン期限切れの時は 410 gone
             }
         }
 
-        tokenInfoMap.remove(token); //トークン情報を削除
+        downloadTokenInfoRepository.deleteById(token); //トークン情報を削除
 
         File file = Path.of(FILE_PATH, targetFileName).toFile();
 
@@ -142,5 +151,24 @@ public class DownloadService {
                     .build());
         }
         return fileDetails;
+    }
+
+    /**
+     * ダウンロード用トークンを生成しデータベースに保存する
+     * @param uniqueFileName DL対象のユニークネーム
+     * @param expiration 有効期限(秒)
+     * @return トークン
+     */
+    private String createToken(String uniqueFileName, long expiration) {
+        UUID token = UUID.randomUUID(); //UUIDを取得(トークン)
+
+        DownloadTokenInfo tokenInfo = DownloadTokenInfo.builder() //指定された有効期限のトークン情報を生成
+                .token(token.toString())
+                .uniqueFileName(uniqueFileName)
+                .expirationDate(LocalDateTime.now().plusSeconds(expiration))
+                .build();
+
+        downloadTokenInfoRepository.save(tokenInfo);
+        return tokenInfo.getToken();
     }
 }

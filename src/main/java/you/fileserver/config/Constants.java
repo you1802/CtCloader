@@ -38,4 +38,7 @@ public class Constants {
     public static final String USER_NAME_REGEX = "^[\\x21-\\x7E]{4,32}$";
     //パスワード用正規表現
     public static final String PASSWORD_REGEX = "^[\\x21-\\x7E]{8,32}$";
+
+    //ページのルート
+    public static final String ROOT_URL = "http://localhost:8080/";
 }
