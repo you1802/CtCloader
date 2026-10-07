@@ -58,8 +58,14 @@ public class FileServerController {
 
     //ダウンロード用のトークン発行するAPI
     @PostMapping(DOWNLOAD_AUTH_PATH)
-    public ResponseEntity<?> downloadAuth(@RequestParam String targetFileName, @RequestParam String fileControlPassword) {
-        return downloadService.passwordAuth(targetFileName, fileControlPassword);
+    public ResponseEntity<?> downloadAuth(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
+        return downloadService.passwordAuth(targetFileName, fileControlPassword, userDetail);
+    }
+
+    //ファイル転送用URLを発行するAPI
+    @PostMapping(TRANSFER_PATH)
+    public ResponseEntity<?> transferUrl(@RequestParam String targetFileName, @AuthenticationPrincipal CustomUserDetails userDetail) {
+        return downloadService.createFileTransferUrl(targetFileName, userDetail);
     }
 
     //ダウンロード用API
@@ -71,8 +77,8 @@ public class FileServerController {
     //削除用API
     @PostMapping(DELETE_PATH)
     @ResponseBody
-    public Map<String, Object> delete(@RequestParam String targetFileName, @RequestParam String fileControlPassword) {
-        return deleteService.deleteFile(targetFileName, fileControlPassword);
+    public Map<String, Object> delete(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
+        return deleteService.deleteFile(targetFileName, fileControlPassword, userDetail);
     }
 
     //ユーザー登録用API

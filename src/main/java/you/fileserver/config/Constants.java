@@ -9,6 +9,7 @@ public class Constants {
     //API
     public static final String FILE_DETAILS_JSON_PATH = "/api/file-details.json";
     public static final String UPLOAD_PATH = "/api/upload/**";
+    public static final String TRANSFER_PATH = "/api/transfer";
     public static final String DOWNLOAD_AUTH_PATH = "/api/download/auth";
     public static final String DOWNLOAD_PATH = "/api/download";
     public static final String DELETE_PATH = "/api/delete";
@@ -37,8 +38,9 @@ public class Constants {
     //ユーザー名用正規表現
     public static final String USER_NAME_REGEX = "^[\\x21-\\x7E]{4,32}$";
     //パスワード用正規表現
+    public static final String FILE_PASSWORD_REGEX = "^[a-zA-Z0-9]{4,12}$";
     public static final String PASSWORD_REGEX = "^[\\x21-\\x7E]{8,32}$";
 
     //ページのルート
-    public static final String ROOT_URL = "http://localhost:8080/";
+    public static final String ROOT_URL = "http://localhost:8080";
 }

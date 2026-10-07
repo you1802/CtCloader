@@ -23,6 +23,7 @@ public class UploadFileInfo {
     private LocalDateTime uploadDate;
     private boolean visible;
     private boolean downloadLocked;
+    private String comment;
 
     @Tolerate //builderを使いたいのでこのアノテーションでディフォルトコンストラクタをLombokに隠ぺいする
     public UploadFileInfo() {}

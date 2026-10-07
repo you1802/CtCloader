@@ -51,24 +51,24 @@ public class DownloadService {
     }
 
     /**
-     * ダウンロード対象のファイル名とパスワードを受け取ってパスワードが一致した場合、ダウンロードに必要なトークンを返す
+     * ダウンロード対象のファイル名とパスワードを受け取ってパスワードが一致した場合または権限が適性の場合、ダウンロードに必要なトークンを返す
      * @param targetFileName ダウンロードするファイル名(実態のファイル名)
      * @param password パスワード
      * @return 結果のレスポンス
      */
-    public ResponseEntity<?> passwordAuth (String targetFileName, String password) {
+    public ResponseEntity<?> passwordAuth (String targetFileName, String password, CustomUserDetails userDetail) {
         //ファイルの存在チェック
-        Optional<UploadFileInfo> targetFile = uploadFileInfoRepository.findById(targetFileName);
-        if (targetFile.isEmpty()) return ResponseEntity.badRequest().build();
+        Optional<UploadFileInfo> uploadFileInfo = uploadFileInfoRepository.findById(targetFileName);
+        if (uploadFileInfo.isEmpty()) return ResponseEntity.badRequest().build();
         Optional<UploadFilePassword> targetFilePassword = uploadFilePasswordRepository.findById(targetFileName);
         if (targetFilePassword.isEmpty()) return ResponseEntity.badRequest().build();
 
-        //ダウンロードパスワード一致時の処理
-        if (passwordEncoder.matches(password, targetFilePassword.get().getDownloadPassword())) {
-            return ResponseEntity.ok(Map.of("code", 200, "token", createToken(targetFileName, 30))); //30秒有効期限のトークンをレスポンスとして返す
-        } else {
-            return ResponseEntity.ok(Map.of("code", 401, "message", "パスワードが一致しません")); //不一致の時
+        if (!(!(userDetail == null) && (userDetail.userAccount().getRole().equals(AUTH_ADMIN) || userDetail.getUsername().equals(uploadFileInfo.get().getOwner())))) { //ログイン中のユーザーがadminかアップロードしたIDと一致するならパスワードチェックを飛ばす
+            if (!passwordEncoder.matches(password, targetFilePassword.get().getDownloadPassword())) {
+                return ResponseEntity.ok(Map.of("code", 401, "message", "パスワードが一致しません")); //パスワード不一致の時
+            }
         }
+        return ResponseEntity.ok(Map.of("code", 200, "token", createToken(targetFileName, 30))); //30秒有効期限のトークンをレスポンスとして返す
     }
 
     /**
@@ -132,7 +132,13 @@ public class DownloadService {
      * @return ファイルリスト
      */
     public List<FileDetail> fileDetails(CustomUserDetails userDetail) {
-        List<UploadFileInfo> uploadFileInfoList = uploadFileInfoRepository.findAll();
+        List<UploadFileInfo> uploadFileInfoList;
+        if (!(userDetail == null)) {
+            if (userDetail.userAccount().getRole().equals(AUTH_ADMIN)) {
+                uploadFileInfoList = uploadFileInfoRepository.findAll(); //ADMINならすべてのファイル
+            } else uploadFileInfoList = uploadFileInfoRepository.findByOwnerOrVisible(userDetail.getUsername(), true); //ログイン中なら自分のファイル+可視設定に応じて
+        } else uploadFileInfoList = uploadFileInfoRepository.findByVisible(true); //非ログインなら可視設定のみ
+
         List<FileDetail> fileDetails = new ArrayList<>();
 
         for (UploadFileInfo fileInfo : uploadFileInfoList) {
@@ -148,6 +154,7 @@ public class DownloadService {
                     .name(fileInfo.getOriginalFileName())
                     .uniqueFileName(fileInfo.getUniqueFileName())
                     .downloadLock(fileInfo.isDownloadLocked())
+                    .comment(fileInfo.getComment())
                     .build());
         }
         return fileDetails;

@@ -51,7 +51,7 @@ $(function () {
         })
         .use(Tus, { //Tusプロトコルを指定
             endpoint: "/api/upload", //エンドポイントの指定
-            headers: (file) => {
+            headers: () => {
                 return  {[csrfHeader]: getCsrfToken()}
             }
         });
@@ -383,7 +383,7 @@ $(function () {
             if (data.code === 200) {
                 $("meta[name='_csrf']").attr("content", data.csrfToken);
                 navbarChange(true);
-                showToast("ログインに成功しました", "success");$("#loginModal").modal("hide");
+                showToast("ログインに成功しました", "success");$("#loginModal").modal("hide");tableRefresh();
             } else {
                 showToast("ユーザー名またはパスワードが一致しません", "danger");$("#loginModal").modal("hide");
             }
