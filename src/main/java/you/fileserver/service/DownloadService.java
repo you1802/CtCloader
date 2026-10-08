@@ -4,7 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -34,19 +34,16 @@ public class DownloadService {
     private final PasswordEncoder passwordEncoder;
     private final UploadFileInfoRepository uploadFileInfoRepository;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
-    private final ThreadPoolTaskScheduler taskScheduler;
     private final DownloadTokenInfoRepository downloadTokenInfoRepository;
 
 
     public DownloadService(PasswordEncoder passwordEncoder,
                            UploadFileInfoRepository uploadFileInfoRepository,
                            UploadFilePasswordRepository uploadFilePasswordRepository,
-                           ThreadPoolTaskScheduler threadPoolTaskScheduler,
                            DownloadTokenInfoRepository downloadTokenInfoRepository) {
         this.passwordEncoder = passwordEncoder;
         this.uploadFileInfoRepository = uploadFileInfoRepository;
         this.uploadFilePasswordRepository = uploadFilePasswordRepository;
-        this.taskScheduler = threadPoolTaskScheduler;
         this.downloadTokenInfoRepository = downloadTokenInfoRepository;
     }
 
@@ -177,5 +174,13 @@ public class DownloadService {
 
         downloadTokenInfoRepository.save(tokenInfo);
         return tokenInfo.getToken();
+    }
+
+    /**
+     * 期限切れトークンの削除(１時間に１回実行)
+     */
+    @Scheduled(fixedRate = 3600000)
+    private void deleteExpiredTokens() {
+        downloadTokenInfoRepository.deleteByExpirationDateLessThan(LocalDateTime.now());
     }
 }
