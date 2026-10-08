@@ -28,6 +28,12 @@ public class UserDetailServiceImpl implements UserDetailsService {
         return new CustomUserDetails(account);
     }
 
+    /**
+     * ユーザーアカウントとハッシュ化したパスワードをDBに登録する
+     * @param username ユーザーネーム
+     * @param password パスワード
+     * @return 既に使われてる名前ならfalse,登録できたならtrue
+     */
     public boolean saveUserAccount(String username, String password) {
         if (userAccountRepository.findById(username).isPresent()) {
             return false;

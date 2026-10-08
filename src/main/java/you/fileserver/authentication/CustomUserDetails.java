@@ -18,7 +18,8 @@ public record CustomUserDetails(UserAccount userAccount) implements UserDetails 
     }
 
     @Override
-    public @Nullable String getPassword() {
+    @NonNull
+    public String getPassword() {
         return userAccount.getPassword();
     }
 
