@@ -10,10 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import you.fileserver.authentication.CustomUserDetails;
 import you.fileserver.dto.FileDetail;
-import you.fileserver.service.AuthService;
-import you.fileserver.service.DownloadService;
-import you.fileserver.service.UploadService;
-import you.fileserver.service.DeleteService;
+import you.fileserver.service.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,12 +24,14 @@ public class FileServerController {
     private final DownloadService downloadService;
     private final DeleteService deleteService;
     private final AuthService authService;
+    private final ReportService reportService;
 
-    public FileServerController(UploadService uploadService, DownloadService DownloadService, AuthService authService, DeleteService deleteService) {
+    public FileServerController(UploadService uploadService, DownloadService DownloadService, AuthService authService, DeleteService deleteService, ReportService reportService) {
         this.uploadService = uploadService;
         this.downloadService = DownloadService;
         this.authService = authService;
         this.deleteService = deleteService;
+        this.reportService = reportService;
     }
 
     //全ての機能があるページ
@@ -103,5 +102,12 @@ public class FileServerController {
             return Map.of("user", "ゲスト");
         }
         return Map.of("user", userDetails.getUsername());
+    }
+
+    //問題報告用API
+    @PostMapping(FILE_REPORT_PATH)
+    @ResponseBody
+    public Map<String, Object> fileReport(HttpServletRequest request, @RequestParam String targetFileName, @RequestParam String comment) {
+        return reportService.saveReport(request, targetFileName, comment);
     }
 }
