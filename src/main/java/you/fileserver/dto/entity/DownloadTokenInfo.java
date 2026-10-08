@@ -8,6 +8,9 @@ import lombok.experimental.Tolerate;
 
 import java.time.LocalDateTime;
 
+/**
+ * ダウンロード用トークンのDTO
+ */
 @Data
 @Entity
 @Builder

@@ -95,6 +95,7 @@ public class UploadService {
                     .visible(visible)
                     .downloadLocked(downloadPasswordEnabled)
                     .comment(metaData.get("uploadComment"))
+                    .ipAddress(request.getRemoteAddr())
                     .build();
             uploadFileInfoRepository.save(fileInfo);
 
