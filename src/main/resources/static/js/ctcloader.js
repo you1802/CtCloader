@@ -232,7 +232,6 @@ $(function () {
     const $loggedIn = $("#loggedIn");
     const $notLoggedIn = $("#notLoggedIn");
     const $loginUserNameButton = $("#loginUserNameButton");
-    const $forms = $(".needs-validation");
     const $userName = $("#userName");
     const $userPassword = $("#userPassword");
     const $confirmUserPassword = $("#confirmUserPassword");
@@ -242,17 +241,86 @@ $(function () {
     const $registerForm = $("#registerForm");
     const $loginUserName = $("#loginUserName");
     const $registrationButton = $("#registrationButton");
+    const $loginExecuteButton = $("#loginExecuteButton");
+    const $loginUserPassword =$("#loginUserPassword")
+    const $loginModal =$("#loginModal");
+    const $loginForm =$("#loginForm");
+    const $loginButton =$("#loginButton");
+    const $logoutButton =$("#logoutButton");
+    const $logoutModal =$("#logoutModal");
+    const $logoutExecuteButton =$("#logoutExecuteButton");
 
-    //バリデーション系
-    Array.from($forms).forEach(form => {
-        form.addEventListener("submit", e => {
-            if (!form.checkValidity()) {
-                e.preventDefault();
-                e.stopPropagation();
+
+
+    //ログイン状態による表示ボタンの切替
+    /**
+     * ナビバーの表示を変更
+     * @param isLoggedIn ログイン状態(true:ログイン済み false:未ログイン)
+     * @param name ユーザー名の文字列
+     */
+    function navbarChange(isLoggedIn, name) {
+        if (isLoggedIn) {
+            $notLoggedIn.addClass("d-none");
+            $loggedIn.removeClass("d-none");
+            $loginUserNameButton.text("👤" + name);
+        } else {
+            $notLoggedIn.removeClass("d-none");
+            $loggedIn.addClass("d-none");
+        }
+    }
+    //ページ読み込み時初回判定
+    let isInitialDetermination = false;
+    $(document).ajaxStop(() => {
+        if (isInitialDetermination) return;
+        isInitialDetermination = true;
+        $.getJSON("/api/user")
+            .done(function (json) {
+                if (json.user === "ゲスト") {
+                    navbarChange(false);
+                } else {
+                    navbarChange(true, json.user);
+                }
+                $(document).off('ajaxStop');
+            });
+    });
+
+    //ユーザー登録モーダルのバリデーション系
+    $registerForm.on("submit", function (e) {
+        //イベント伝播停止
+        e.preventDefault();
+        e.stopPropagation();
+        //バリに通らなかったらクラス付けて終了
+        if (!this.checkValidity()) {
+            $registerForm.addClass("was-validated");
+            return;
+        }
+        //バリに通った場合
+        $registerForm.addClass("was-validated");
+        $registerExecuteButton.prop("disabled", true);  //通信中、ボタン無効
+
+        $.ajax({
+            url: "/api/register",
+            method: "POST",
+            dataType: "json",
+            data: {
+                username: $userName.val(),
+                password: $userPassword.val()
             }
-            form.classList.add("was-validated");
+        }).done(function (data) {
+            if (data.code === 200) {
+                showToast(data.message, "success");
+                loginProcess($userName.val(), $userPassword.val()); //そのままログイン
+                $registerModal.modal("hide");
+            }  else {
+                showToast(data.message, "danger");
+            }
+        }).fail(function () {
+            showToast("通信エラー", "danger");
+        }).always(function () {
+            $registerExecuteButton.prop("disabled", false);
         });
     });
+
     //ユーザー名入力検証
     $userName.on("blur", function () {
         const userName = $userName.val().trim();
@@ -271,7 +339,7 @@ $(function () {
         $.getJSON("/api/user_name_exists?username=" + userName)
             .done(function (json) {
                 if (json.exists) {
-                    inputEl.setCustomValidity("このユーザー名は既に存在します。");
+                    inputEl.setCustomValidity("ユーザー名重複");
                     $userNameInfo.text("このユーザー名は既に存在します");
                     $userName.addClass("is-invalid");
                 } else {
@@ -289,73 +357,27 @@ $(function () {
         $userName.removeClass("is-invalid");
         $userNameInfo.text("");
     });
-
+    //パスワードダブルチェック
     function checkConfirmPassword() {
         const password = $userPassword.val();
         const confirmPassword = $confirmUserPassword.val();
-        const conPassInputEl = $confirmUserPassword[0];
-
-    }
-
-
-
-    //ログイン状態による表示ボタンの切替
-    /**
-     * ナビバーの表示を変更
-     * @param isLoggedIn ログイン状態(true:ログイン済み false:未ログイン)
-     * @param json ユーザー名の情報
-     */
-    function navbarChange(isLoggedIn, json) {
-        if (isLoggedIn) {
-            $notLoggedIn.addClass("d-none");
-            $loggedIn.removeClass("d-none");
-            (json === undefined) ? $loginUserNameButton.text("👤" + $loginUserName.val()) : $loginUserNameButton.text("👤" + json.user);
+        const conPassInputEl = $confirmUserPassword[0]; //生DOM取得
+        //どちらかが空ならチェックしない
+        if (password === "" || confirmPassword === "") {
+            conPassInputEl.setCustomValidity("");
+            $confirmUserPassword.removeClass("is-invalid");
+            return;
+        }
+        if (password !== confirmPassword) {
+            conPassInputEl.setCustomValidity("エラー");
+            $confirmUserPassword.addClass("is-invalid");
         } else {
-            $notLoggedIn.removeClass("d-none");
-            $loggedIn.addClass("d-none");
+            conPassInputEl.setCustomValidity("");
+            $confirmUserPassword.removeClass("is-invalid");
         }
     }
-    //ページ読み込み時初回判定
-    let isInitialDetermination = false;
-    $(document).ajaxStop(() => {
-        if (isInitialDetermination) return;
-        isInitialDetermination = true;
-        $.getJSON("/api/user")
-            .done(function (json) {
-                if (json.user === "ゲスト") {
-                    navbarChange(false);
-                } else {
-                    navbarChange(true, json);
-                }
-                $(document).off('ajaxStop');
-            });
-    });
-
-    //ユーザー登録ボタンのリスナー
-    $registrationButton.on("click", () => {
-        $registerModal.modal("show");
-    });
-
-    //ユーザー登録実行ボタンのリスナー
-    $registerExecuteButton.on("click", function () {
-        $.ajax({
-            url: "/api/register",
-            method: "POST",
-            dataType: "json",
-            data: {
-                username: $userName.val(),
-                password: $userPassword.val()
-            }
-        }).done(function (data) {
-            if (data.code === 200) {
-                showToast(data.message, "success");//$registerModal.modal("hide");
-            }  else {
-                showToast(data.message, "danger");//$registerModal.modal("hide");
-            }
-        }).fail(function () {
-            showToast("通信エラー", "danger");
-        });
-    });
+    $userPassword.on("input blur", checkConfirmPassword);
+    $confirmUserPassword.on("input blur", checkConfirmPassword);
 
     //ユーザー登録モーダルを閉じたときフォームをリセットする
     $registerModal.on("hidden.bs.modal", function () {
@@ -365,52 +387,65 @@ $(function () {
         $userNameInfo.text("エラー");
     });
 
-    //ログインボタンのリスナー
-    $("#loginButton").on("click", () => {
-        $("#loginModal").modal("show");
-    });
 
     //ログイン実行ボタンのリスナー
-    $("#loginExecuteButton").text("ログイン").off("click").on("click", function () {
+    $loginForm.on("submit", function (e) {
+        //イベント伝播停止
+        e.preventDefault();
+        e.stopPropagation();
+
+        $loginForm.addClass("was-validated");
+        if (this.checkValidity()) loginProcess(); //バリに通った場合
+    });
+
+    /**
+     * ログイン処理　ログインフォーム以外からの呼び出し時、引数必須
+     * @param userName 文字列
+     * @param password 文字列
+     */
+    function loginProcess(userName, password) {
+        const name = userName || $loginUserName.val();
+        const pass = password || $loginUserPassword.val();
+        $loginExecuteButton.prop("disabled", true);  //通信中、ボタン無効
         $.ajax({
             url: "/api/login",
             method: "POST",
             data: {
-                username: $("#loginUserName").val(),
-                password: $("#loginUserPassword").val(),
+                username: name,
+                password: pass
             }
         }).done(function (data) {
             if (data.code === 200) {
                 $("meta[name='_csrf']").attr("content", data.csrfToken);
-                navbarChange(true);
-                showToast("ログインに成功しました", "success");$("#loginModal").modal("hide");tableRefresh();
+                navbarChange(true, name);
+                showToast("ログインに成功しました", "success");$loginModal.modal("hide");tableRefresh();
             } else {
-                showToast("ユーザー名またはパスワードが一致しません", "danger");$("#loginModal").modal("hide");
+                const errorMsg = userName ? "自動ログインに失敗しました。ログイン画面からお試しください。" : "ユーザー名またはパスワードが一致しません";
+                showToast(errorMsg, "danger");$loginModal.modal("hide");
             }
         }).fail(function () {
             showToast("通信エラー", "danger");
+        }).always(function () {
+            $loginExecuteButton.prop("disabled", false);
         });
-    });
+    }
 
     //ログインモーダルを閉じたときフォームをリセット
-    $("#loginModal").on("hidden.bs.modal", function () {
-        $("#loginForm")[0].reset();
+    $loginModal.on("hidden.bs.modal", function () {
+        $loginForm[0].reset();
+        $loginForm.removeClass("was-validated");
     });
 
-    //ログアウトボタンのリスナー
-    $("#logoutButton").on("click", () => {
-        $("#logoutModal").modal("show");
-    });
 
     //ログアウト実行ボタンのイベントリスナー
-    $("#logoutExecuteButton").on("click", () => {
+    $logoutExecuteButton.on("click", () => {
         $.ajax({
             url: "/api/logout",
             method: "POST",
             dataType: "json",
         }).done(function () {
             navbarChange(false);
-            $("#logoutModal").modal("hide");
+            $logoutModal.modal("hide");
             window.location.reload();
         });
     });
