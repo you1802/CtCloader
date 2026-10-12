@@ -53,6 +53,11 @@ public class FileDetailService {
         return fileDetails;
     }
 
+    /**
+     * 掲示板のファイルサイズ合計とログインユーザーの不可視設定のファイルサイズ合計をかえす
+     * @param userDetail ログインユーザー
+     * @return DTO
+     */
     public AllFileDetails allFileDetails(CustomUserDetails userDetail) {
         List<UploadFileInfo> fileInfoList = uploadFileInfoRepository.findAll();
 

@@ -55,12 +55,13 @@ public class FileServerController {
         return fileDetailService.fileDetails(userDetail);
     }
 
-    //掲示板のすべてのファイルのサイズ合計とログインユーザーのファイル材図合計をかえすAPI
+    //掲示板のすべてのファイルのサイズ合計とログインユーザーのファイル材図合計をかえすAPI(非ログイン時はログインユーザーファイルサイズは-1を返す)
     @GetMapping(ALL_FILE_DETAILS_PATH)
     @ResponseBody
     public AllFileDetails getAllFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return fileDetailService.allFileDetails(userDetail);
     }
+
     //アップロード用エンドポイント
     @RequestMapping(value = UPLOAD_PATH, method = {
             RequestMethod.POST, RequestMethod.PATCH, RequestMethod.HEAD, RequestMethod.DELETE, RequestMethod.OPTIONS
