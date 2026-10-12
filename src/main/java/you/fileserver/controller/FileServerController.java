@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import you.fileserver.authentication.CustomUserDetails;
+import you.fileserver.dto.AllFileDetails;
 import you.fileserver.dto.FileDetail;
 import you.fileserver.service.*;
 
@@ -25,13 +26,20 @@ public class FileServerController {
     private final DeleteService deleteService;
     private final AuthService authService;
     private final ReportService reportService;
+    private final FileDetailService fileDetailService;
 
-    public FileServerController(UploadService uploadService, DownloadService DownloadService, AuthService authService, DeleteService deleteService, ReportService reportService) {
+    public FileServerController(UploadService uploadService,
+                                DownloadService DownloadService,
+                                AuthService authService,
+                                DeleteService deleteService,
+                                ReportService reportService,
+                                FileDetailService fileDetailService) {
         this.uploadService = uploadService;
         this.downloadService = DownloadService;
         this.authService = authService;
         this.deleteService = deleteService;
         this.reportService = reportService;
+        this.fileDetailService = fileDetailService;
     }
 
     //全ての機能があるページ
@@ -44,9 +52,15 @@ public class FileServerController {
     @GetMapping(FILE_DETAILS_JSON_PATH)
     @ResponseBody
     public List<FileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return downloadService.fileDetails(userDetail);
+        return fileDetailService.fileDetails(userDetail);
     }
 
+    //掲示板のすべてのファイルのサイズ合計とログインユーザーのファイル材図合計をかえすAPI
+    @GetMapping(ALL_FILE_DETAILS_PATH)
+    @ResponseBody
+    public AllFileDetails getAllFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        return fileDetailService.allFileDetails(userDetail);
+    }
     //アップロード用エンドポイント
     @RequestMapping(value = UPLOAD_PATH, method = {
             RequestMethod.POST, RequestMethod.PATCH, RequestMethod.HEAD, RequestMethod.DELETE, RequestMethod.OPTIONS
@@ -97,11 +111,11 @@ public class FileServerController {
     //ログイン中のユーザー名取得用API
     @GetMapping(USER_ID_PATH)
     @ResponseBody
-    public Map<String, Object> getUser(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        if (userDetails == null) {
+    public Map<String, Object> getUser(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        if (userDetail == null) {
             return Map.of("user", "ゲスト");
         }
-        return Map.of("user", userDetails.getUsername());
+        return Map.of("user", userDetail.getUsername());
     }
 
     //問題報告用API
@@ -110,4 +124,5 @@ public class FileServerController {
     public Map<String, Object> fileReport(HttpServletRequest request, @RequestParam String targetFileName, @RequestParam String comment) {
         return reportService.saveReport(request, targetFileName, comment);
     }
+
 }

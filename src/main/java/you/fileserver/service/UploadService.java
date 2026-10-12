@@ -79,7 +79,7 @@ public class UploadService {
             boolean visible; //可視化設定
             if (userDetail != null) {
                 ownerName = userDetail.getUsername();
-                visible = metaData.containsKey("visible");
+                visible = !metaData.containsKey("visibleSetting");
             } else {
                 ownerName = "";
                 visible = true;

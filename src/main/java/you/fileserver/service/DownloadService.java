@@ -125,39 +125,6 @@ public class DownloadService {
     }
 
     /**
-     * ユーザーに提示するファイルリストの情報を返す
-     * @return ファイルリスト
-     */
-    public List<FileDetail> fileDetails(CustomUserDetails userDetail) {
-        List<UploadFileInfo> uploadFileInfoList;
-        if (!(userDetail == null)) {
-            if (userDetail.userAccount().getRole().equals(AUTH_ADMIN)) {
-                uploadFileInfoList = uploadFileInfoRepository.findAll(); //ADMINならすべてのファイル
-            } else uploadFileInfoList = uploadFileInfoRepository.findByOwnerOrVisible(userDetail.getUsername(), true); //ログイン中なら自分のファイル+可視設定に応じて
-        } else uploadFileInfoList = uploadFileInfoRepository.findByVisible(true); //非ログインなら可視設定のみ
-
-        List<FileDetail> fileDetails = new ArrayList<>();
-
-        for (UploadFileInfo fileInfo : uploadFileInfoList) {
-            boolean owned;
-            if (userDetail == null) {
-                owned = false;
-            } else owned = userDetail.getUsername().equals(fileInfo.getOwner());
-
-            fileDetails.add(FileDetail.builder()
-                    .uploadDate(fileInfo.getUploadDate())
-                    .size(fileInfo.getSize())
-                    .owned(owned)
-                    .name(fileInfo.getOriginalFileName())
-                    .uniqueFileName(fileInfo.getUniqueFileName())
-                    .downloadLock(fileInfo.isDownloadLocked())
-                    .comment(fileInfo.getComment())
-                    .build());
-        }
-        return fileDetails;
-    }
-
-    /**
      * ダウンロード用トークンを生成しデータベースに保存する
      * @param uniqueFileName DL対象のユニークネーム
      * @param expiration 有効期限(秒)
