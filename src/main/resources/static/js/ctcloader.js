@@ -157,7 +157,7 @@ $(function () {
                 $uploadButton.prop("disabled", false);
             } else {
                 $uploadButton.prop("disabled", true);
-            };
+            }
         } else {
             if (uppy.getFiles().length > 0 &&  $setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid")) {
                 $uploadButton.prop("disabled", false);
@@ -308,7 +308,7 @@ $(function () {
             }
         }).done(function (data) {
             if (data.code === 200) {
-                showToast(data.message, "success");
+                showToast(data.message, "info");
                 loginProcess($userName.val(), $userPassword.val()); //そのままログイン
                 $registerModal.modal("hide");
             }  else {
@@ -418,7 +418,7 @@ $(function () {
             if (data.code === 200) {
                 $("meta[name='_csrf']").attr("content", data.csrfToken);
                 navbarChange(true, name);
-                showToast("ログインに成功しました", "success");$loginModal.modal("hide");tableRefresh();
+                showToast("ログインに成功しました", "info");$loginModal.modal("hide");tableRefresh();
             } else {
                 const errorMsg = userName ? "自動ログインに失敗しました。ログイン画面からお試しください。" : "ユーザー名またはパスワードが一致しません";
                 showToast(errorMsg, "danger");$loginModal.modal("hide");
@@ -438,15 +438,23 @@ $(function () {
 
 
     //ログアウト実行ボタンのイベントリスナー
-    $logoutExecuteButton.on("click", () => {
+    $logoutExecuteButton.on("click", function () {
+        $logoutExecuteButton.prop("disabled", true);    //通信の間、ボタン無効
         $.ajax({
             url: "/api/logout",
             method: "POST",
             dataType: "json",
-        }).done(function () {
+        }).done(function (data) {
             navbarChange(false);
+            $("meta[name='_csrf']").attr("content", data.csrfToken);
+            tableRefresh();
             $logoutModal.modal("hide");
-            window.location.reload();
+            showToast("ログアウトしました。", "info");
+            //window.location.reload();
+        }).fail(function () {
+            showToast("通信エラー", "danger")
+        }).always(function () {
+            $logoutExecuteButton.prop("disabled", false);
         });
     });
 

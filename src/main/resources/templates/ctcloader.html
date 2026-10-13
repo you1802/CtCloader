@@ -49,10 +49,20 @@
         <div class="ms-auto d-flex gap-1">
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">アップロード</button>
             <span id="notLoggedIn" class="d-none"><!-- 未ログイン時グループ -->
-            <button type="button" class="btn btn-success" id="registrationButton" data-bs-toggle="modal" data-bs-target="#registerModal">ユーザー登録</button>
-            <button type="button" class="btn btn-success" id="loginButton" data-bs-toggle="modal" data-bs-target="#loginModal">ログイン</button>
+            <button type="button" class="btn btn-info" id="registrationButton" data-bs-toggle="modal" data-bs-target="#registerModal">ユーザー登録</button>
+            <button type="button" class="btn btn-info" id="loginButton" data-bs-toggle="modal" data-bs-target="#loginModal">ログイン</button>
             </span>
             <span id="loggedIn" class="d-none"><!-- ログイン時グループ -->
+<!--                <div class="dropdown">-->
+<!--                  <button class="btn btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">-->
+<!--                    Dropdown button-->
+<!--                  </button>-->
+<!--                  <ul class="dropdown-menu">-->
+<!--                    <li><a class="dropdown-item" href="#">Action</a></li>-->
+<!--                    <li><a class="dropdown-item" href="#">Another action</a></li>-->
+<!--                    <li><a class="dropdown-item" href="#">Something else here</a></li>-->
+<!--                  </ul>-->
+<!--                </div>-->
             <span class="navbar-text text-primary border border-dark rounded fw-semibold d-inline-flex align-items-center px-2" style="padding-left: 4px !important;" id="loginUserNameButton">user</span>
             <button type="button" class="btn btn-danger" id="logoutButton" data-bs-toggle="modal" data-bs-target="#logoutModal">ログアウト</button>
             </span>
@@ -242,7 +252,7 @@
 
 <!-- ログアウト用モーダル -->
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="logoutModalTitle">確認</h1>
