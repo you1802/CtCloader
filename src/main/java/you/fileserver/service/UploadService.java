@@ -79,7 +79,7 @@ public class UploadService {
             boolean visible; //可視化設定
             if (userDetail != null) {
                 ownerName = userDetail.getUsername();
-                visible = metaData.containsKey("visible");
+                visible = !metaData.containsKey("visibleSetting");
             } else {
                 ownerName = "";
                 visible = true;
@@ -95,6 +95,7 @@ public class UploadService {
                     .visible(visible)
                     .downloadLocked(downloadPasswordEnabled)
                     .comment(metaData.get("uploadComment"))
+                    .ipAddress(request.getRemoteAddr())
                     .build();
             uploadFileInfoRepository.save(fileInfo);
 

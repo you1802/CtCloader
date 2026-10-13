@@ -4,12 +4,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import you.fileserver.authentication.CustomUserDetails;
-import you.fileserver.dto.FileDetail;
 import you.fileserver.dto.entity.DownloadTokenInfo;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.entity.UploadFilePassword;
@@ -34,19 +33,16 @@ public class DownloadService {
     private final PasswordEncoder passwordEncoder;
     private final UploadFileInfoRepository uploadFileInfoRepository;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
-    private final ThreadPoolTaskScheduler taskScheduler;
     private final DownloadTokenInfoRepository downloadTokenInfoRepository;
 
 
     public DownloadService(PasswordEncoder passwordEncoder,
                            UploadFileInfoRepository uploadFileInfoRepository,
                            UploadFilePasswordRepository uploadFilePasswordRepository,
-                           ThreadPoolTaskScheduler threadPoolTaskScheduler,
                            DownloadTokenInfoRepository downloadTokenInfoRepository) {
         this.passwordEncoder = passwordEncoder;
         this.uploadFileInfoRepository = uploadFileInfoRepository;
         this.uploadFilePasswordRepository = uploadFilePasswordRepository;
-        this.taskScheduler = threadPoolTaskScheduler;
         this.downloadTokenInfoRepository = downloadTokenInfoRepository;
     }
 
@@ -128,39 +124,6 @@ public class DownloadService {
     }
 
     /**
-     * ユーザーに提示するファイルリストの情報を返す
-     * @return ファイルリスト
-     */
-    public List<FileDetail> fileDetails(CustomUserDetails userDetail) {
-        List<UploadFileInfo> uploadFileInfoList;
-        if (!(userDetail == null)) {
-            if (userDetail.userAccount().getRole().equals(AUTH_ADMIN)) {
-                uploadFileInfoList = uploadFileInfoRepository.findAll(); //ADMINならすべてのファイル
-            } else uploadFileInfoList = uploadFileInfoRepository.findByOwnerOrVisible(userDetail.getUsername(), true); //ログイン中なら自分のファイル+可視設定に応じて
-        } else uploadFileInfoList = uploadFileInfoRepository.findByVisible(true); //非ログインなら可視設定のみ
-
-        List<FileDetail> fileDetails = new ArrayList<>();
-
-        for (UploadFileInfo fileInfo : uploadFileInfoList) {
-            boolean owned;
-            if (userDetail == null) {
-                owned = false;
-            } else owned = userDetail.getUsername().equals(fileInfo.getOwner());
-
-            fileDetails.add(FileDetail.builder()
-                    .uploadDate(fileInfo.getUploadDate())
-                    .size(fileInfo.getSize())
-                    .owned(owned)
-                    .name(fileInfo.getOriginalFileName())
-                    .uniqueFileName(fileInfo.getUniqueFileName())
-                    .downloadLock(fileInfo.isDownloadLocked())
-                    .comment(fileInfo.getComment())
-                    .build());
-        }
-        return fileDetails;
-    }
-
-    /**
      * ダウンロード用トークンを生成しデータベースに保存する
      * @param uniqueFileName DL対象のユニークネーム
      * @param expiration 有効期限(秒)
@@ -177,5 +140,13 @@ public class DownloadService {
 
         downloadTokenInfoRepository.save(tokenInfo);
         return tokenInfo.getToken();
+    }
+
+    /**
+     * 期限切れトークンの削除(１時間に１回実行)
+     */
+    @Scheduled(fixedRate = 3600000)
+    private void deleteExpiredTokens() {
+        downloadTokenInfoRepository.deleteByExpirationDateLessThan(LocalDateTime.now());
     }
 }

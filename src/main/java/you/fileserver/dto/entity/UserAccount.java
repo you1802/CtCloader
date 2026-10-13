@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Tolerate;
 
+/**
+ * ユーザーアカウントのDTO
+ */
 @Data
 @Builder
 @Entity

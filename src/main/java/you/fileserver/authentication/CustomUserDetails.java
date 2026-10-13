@@ -1,7 +1,6 @@
 package you.fileserver.authentication;
 
 import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,7 +17,8 @@ public record CustomUserDetails(UserAccount userAccount) implements UserDetails 
     }
 
     @Override
-    public @Nullable String getPassword() {
+    @NonNull
+    public String getPassword() {
         return userAccount.getPassword();
     }
 

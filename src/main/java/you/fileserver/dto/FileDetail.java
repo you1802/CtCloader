@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * アップロードされたファイルの詳細情報をユーザーに送るためのクラス
+ * アップロードされたファイルの詳細情報をユーザーに送るためのDTO
  */
 @Builder
 @Data
