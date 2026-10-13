@@ -49,13 +49,22 @@
         <div class="ms-auto d-flex gap-1">
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">アップロード</button>
             <span id="notLoggedIn" class="d-none"><!-- 未ログイン時グループ -->
-            <button type="button" class="btn btn-primary" id="registrationButton">ユーザー登録</button>
-            <button type="button" class="btn btn-primary" id="loginButton">ログイン</button>
+            <button type="button" class="btn btn-info" id="registrationButton" data-bs-toggle="modal" data-bs-target="#registerModal">ユーザー登録</button>
+            <button type="button" class="btn btn-info" id="loginButton" data-bs-toggle="modal" data-bs-target="#loginModal">ログイン</button>
             </span>
             <span id="loggedIn" class="d-none"><!-- ログイン時グループ -->
+<!--                <div class="dropdown">-->
+<!--                  <button class="btn btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">-->
+<!--                    Dropdown button-->
+<!--                  </button>-->
+<!--                  <ul class="dropdown-menu">-->
+<!--                    <li><a class="dropdown-item" href="#">Action</a></li>-->
+<!--                    <li><a class="dropdown-item" href="#">Another action</a></li>-->
+<!--                    <li><a class="dropdown-item" href="#">Something else here</a></li>-->
+<!--                  </ul>-->
+<!--                </div>-->
             <span class="navbar-text text-primary border border-dark rounded fw-semibold d-inline-flex align-items-center px-2" style="padding-left: 4px !important;" id="loginUserNameButton">user</span>
-                <!-- <button type="button" class="btn btn-outline-info fw-semibold d-inline-flex align-items-center px-2" style="padding-left: 4px !important;" id="loginUserNameButton">user</button> -->
-            <button type="button" class="btn btn-danger" id="logoutButton">ログアウト</button>
+            <button type="button" class="btn btn-danger" id="logoutButton" data-bs-toggle="modal" data-bs-target="#logoutModal">ログアウト</button>
             </span>
         </div>
     </div>
@@ -243,7 +252,7 @@
 
 <!-- ログアウト用モーダル -->
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="logoutModalTitle">確認</h1>
@@ -269,20 +278,22 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="loginForm">
+                <form id="loginForm" class="needs-validation" novalidate>
                     <div class="mb-3">
                         <label for="loginUserName">ユーザー名</label>
-                        <input type="text" class="form-control registerFormElement" id="loginUserName" required>
+                        <input type="text" class="form-control registerFormElement" id="loginUserName" required pattern="[\x21-\x7E]{4,32}">
+                        <div class="invalid-feedback">入力内容に誤りがあります。半角で正しく入力されているかご確認ください。</div>
                     </div>
                     <div class="mb-3">
                         <label for="loginUserPassword">パスワード</label>
-                        <input type="password" class="form-control registerFormElement" id="loginUserPassword" required>
+                        <input type="password" class="form-control registerFormElement" id="loginUserPassword" required pattern="[\x21-\x7E]{8,32}">
+                        <div class="invalid-feedback">入力内容に誤りがあります。半角で正しく入力されているかご確認ください。</div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-                <button type="button" class="btn btn-primary" id="loginExecuteButton">ログイン</button>
+                <button type="submit" class="btn btn-primary" id="loginExecuteButton" form="loginForm">ログイン</button>
             </div>
         </div>
     </div>
