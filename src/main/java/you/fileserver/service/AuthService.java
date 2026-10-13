@@ -3,6 +3,7 @@ package you.fileserver.service;
 import org.springframework.stereotype.Service;
 import you.fileserver.authentication.UserDetailServiceImpl;
 import you.fileserver.repository.UserAccountRepository;
+import you.fileserver.utility.FileSizeLimitCalculator;
 
 import java.util.Map;
 
@@ -12,10 +13,12 @@ import static you.fileserver.config.Constants.*;
 public class AuthService {
     private final UserDetailServiceImpl userDetailsServiceImpl;
     private final UserAccountRepository userAccountRepository;
+    private final FileSizeLimitCalculator fileSizeLimitCalculator;
 
-    public AuthService(UserDetailServiceImpl userDetailsServiceImpl, UserAccountRepository userAccountRepository) {
+    public AuthService(UserDetailServiceImpl userDetailsServiceImpl, UserAccountRepository userAccountRepository, FileSizeLimitCalculator fileSizeLimitCalculator) {
         this.userDetailsServiceImpl = userDetailsServiceImpl;
         this.userAccountRepository = userAccountRepository;
+        this.fileSizeLimitCalculator = fileSizeLimitCalculator;
     }
 
     /**
@@ -27,6 +30,8 @@ public class AuthService {
     public Map<String, Object> register(String username, String password) {
         //正規表現の最終チェック(クライアントでもチェックする)
         if (!username.matches(USER_NAME_REGEX) || !password.matches(PASSWORD_REGEX)) return Map.of("code", "400", "message", "正規表現エラー");
+        //サーバーの容量上限の最終チェック
+        if (fileSizeLimitCalculator.userAccountLimit()) return Map.of("code", "400", "message", "ユーザー数上限に達しました");
 
         return userDetailsServiceImpl.saveUserAccount(username, password) ? Map.of("code", 200, "message", "登録完了しました") : Map.of("code", 400, "message", "既に登録されてるユーザー名です");
     }

@@ -2,7 +2,7 @@ package you.fileserver.service;
 
 import org.springframework.stereotype.Service;
 import you.fileserver.authentication.CustomUserDetails;
-import you.fileserver.dto.AllFileDetails;
+import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.repository.UploadFileInfoRepository;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static you.fileserver.config.Constants.AUTH_ADMIN;
+import static you.fileserver.config.Constants.*;
 
 @Service
 public class FileDetailService {
@@ -58,15 +58,19 @@ public class FileDetailService {
      * @param userDetail ログインユーザー
      * @return DTO
      */
-    public AllFileDetails allFileDetails(CustomUserDetails userDetail) {
+    public AllFileSizeInfo allFileDetails(CustomUserDetails userDetail) {
         List<UploadFileInfo> fileInfoList = uploadFileInfoRepository.findAll();
 
-        return new AllFileDetails(fileInfoList.stream()
-                .filter(UploadFileInfo::isVisible)
-                .mapToLong(UploadFileInfo::getSize).sum(),
-                userDetail == null ? -1 :
-                        fileInfoList.stream().filter(info -> !info.isVisible())
-                                .filter(info -> Objects.equals(info.getOwner(), userDetail.getUsername()))
-                                .mapToLong(UploadFileInfo::getSize).sum());
+        return AllFileSizeInfo.builder().
+                forumFileSizeLimit(FORUM_FILESIZE_LIMIT).
+                userFileSizeLimit(USER_FILESIZE_LIMIT).
+                forumFileSize(fileInfoList.stream().
+                        filter(UploadFileInfo::isVisible).
+                        mapToLong(UploadFileInfo::getSize).sum()).
+                userFileSize(userDetail == null ? -1 :
+                        fileInfoList.stream().
+                                filter(info -> !info.isVisible() && Objects.equals(info.getOwner(), userDetail.getUsername())).
+                                mapToLong(UploadFileInfo::getSize).sum())
+                .build();
     }
 }

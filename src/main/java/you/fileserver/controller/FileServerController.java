@@ -9,9 +9,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import you.fileserver.authentication.CustomUserDetails;
-import you.fileserver.dto.AllFileDetails;
+import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
 import you.fileserver.service.*;
+import you.fileserver.utility.FileSizeLimitCalculator;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,19 +28,22 @@ public class FileServerController {
     private final AuthService authService;
     private final ReportService reportService;
     private final FileDetailService fileDetailService;
+    private final FileSizeLimitCalculator fileSizeLimitCalculator;
 
     public FileServerController(UploadService uploadService,
                                 DownloadService DownloadService,
                                 AuthService authService,
                                 DeleteService deleteService,
                                 ReportService reportService,
-                                FileDetailService fileDetailService) {
+                                FileDetailService fileDetailService,
+                                FileSizeLimitCalculator fileSizeLimitCalculator) {
         this.uploadService = uploadService;
         this.downloadService = DownloadService;
         this.authService = authService;
         this.deleteService = deleteService;
         this.reportService = reportService;
         this.fileDetailService = fileDetailService;
+        this.fileSizeLimitCalculator = fileSizeLimitCalculator;
     }
 
     //全ての機能があるページ
@@ -58,7 +62,7 @@ public class FileServerController {
     //掲示板のすべてのファイルのサイズ合計とログインユーザーのファイル材図合計をかえすAPI(非ログイン時はログインユーザーファイルサイズは-1を返す)
     @GetMapping(ALL_FILE_DETAILS_PATH)
     @ResponseBody
-    public AllFileDetails getAllFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
+    public AllFileSizeInfo getAllFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return fileDetailService.allFileDetails(userDetail);
     }
 
@@ -107,6 +111,13 @@ public class FileServerController {
     @ResponseBody
     public Map<String, Object> UserNameExists(@RequestParam String username) {
         return authService.userNameExists(username);
+    }
+
+    //ユーザー登録できるかを返すAPI
+    @GetMapping(ENABLE_CREATE_ACCOUNT_PATH)
+    @ResponseBody
+    public Map<String, Object> enableCreateAccount() {
+        return fileSizeLimitCalculator.enableCreateAccount();
     }
 
     //ログイン中のユーザー名取得用API

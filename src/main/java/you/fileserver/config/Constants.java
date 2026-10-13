@@ -20,6 +20,7 @@ public class Constants {
     public static final String USER_NAME_EXISTS_PATH = "/api/user_name_exists";
     public static final String FILE_REPORT_PATH = "/api/file_report";
     public static final String ALL_FILE_DETAILS_PATH = "/api/all_file_details";
+    public static final String ENABLE_CREATE_ACCOUNT_PATH = "/api/enable_create_account";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";
@@ -45,4 +46,11 @@ public class Constants {
 
     //ページのルート
     public static final String ROOT_URL = "http://localhost:8080";
+
+    //ユーザーごとのファイルサイズ上限
+    public static final long USER_FILESIZE_LIMIT = 5368709120L; //5ギガバイド
+    //掲示板のファイルサイズ上限
+    public static final long FORUM_FILESIZE_LIMIT = 107374182400L; //100ギガバイト
+    //サーバーのファイルサイズ上限
+    public static final long SERVER_SIZE_LIMIT = 536870912000L; //500ギガバイト
 }
