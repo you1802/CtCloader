@@ -37,10 +37,11 @@ public class SecurityConfig {
                 //ログアウトをAPI向けにカスタム
                 .logout(logout -> logout
                         .logoutUrl(LOGOUT_PATH)
-                        .logoutSuccessHandler((_, response, _) -> {
+                        .logoutSuccessHandler((request, response, _) -> {
+                            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
                             response.setStatus(HttpServletResponse.SC_OK);
                             response.setContentType("application/json");
-                            objectMapper.writeValue(response.getWriter(), Map.of("code", 200));
+                            objectMapper.writeValue(response.getWriter(), Map.of("code", 200, "csrfToken", csrfToken.getToken()));
                         })
                         .deleteCookies("JSESSIONID"))
                 //ログインフォームをAPI向けにカスタム
