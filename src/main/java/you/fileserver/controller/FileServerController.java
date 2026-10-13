@@ -60,7 +60,7 @@ public class FileServerController {
     }
 
     //掲示板のすべてのファイルのサイズ合計とログインユーザーのファイル材図合計をかえすAPI(非ログイン時はログインユーザーファイルサイズは-1を返す)
-    @GetMapping(ALL_FILE_DETAILS_PATH)
+    @GetMapping(ALL_FILESIZE_INFO_PATH)
     @ResponseBody
     public AllFileSizeInfo getAllFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return fileDetailService.allFileDetails(userDetail);

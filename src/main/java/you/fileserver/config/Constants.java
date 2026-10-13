@@ -19,7 +19,7 @@ public class Constants {
     public static final String USER_ID_PATH = "/api/user";
     public static final String USER_NAME_EXISTS_PATH = "/api/user_name_exists";
     public static final String FILE_REPORT_PATH = "/api/file_report";
-    public static final String ALL_FILE_DETAILS_PATH = "/api/all_file_details";
+    public static final String ALL_FILESIZE_INFO_PATH = "/api/all_filesize_info";
     public static final String ENABLE_CREATE_ACCOUNT_PATH = "/api/enable_create_account";
 
     //htmlコンポーネント
