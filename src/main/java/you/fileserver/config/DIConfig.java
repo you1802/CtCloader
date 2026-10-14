@@ -4,6 +4,9 @@ import me.desair.tus.server.TusFileUploadService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 
 import static you.fileserver.config.Constants.TEMP_PATH;
 import static you.fileserver.config.Constants.TUS_UPLOAD_PATH;
@@ -24,5 +27,17 @@ public class DIConfig {
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(1);
         return scheduler;
+    }
+
+    //csrfトークンを管理するリポジトリ
+    @Bean
+    public CsrfTokenRepository csrfTokenRepository() {
+        return new HttpSessionCsrfTokenRepository();
+    }
+
+    //csrfトークンのハンドラ
+    @Bean
+    public XorCsrfTokenRequestAttributeHandler tokenHandler() {
+        return new XorCsrfTokenRequestAttributeHandler();
     }
 }

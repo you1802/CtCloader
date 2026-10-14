@@ -10,6 +10,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
@@ -21,9 +24,13 @@ import static you.fileserver.config.Constants.LOGOUT_PATH;
 @EnableWebSecurity
 public class SecurityConfig {
     private final ObjectMapper objectMapper;
+    private final CsrfTokenRepository csrfTokenRepository;
+    private final XorCsrfTokenRequestAttributeHandler tokenHandler;
 
-    public SecurityConfig(ObjectMapper objectMapper) {
+    public SecurityConfig(ObjectMapper objectMapper, CsrfTokenRepository csrfTokenRepository, XorCsrfTokenRequestAttributeHandler tokenHandler) {
         this.objectMapper = objectMapper;
+        this.csrfTokenRepository = csrfTokenRepository;
+        this.tokenHandler = tokenHandler;
     }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -38,12 +45,22 @@ public class SecurityConfig {
                 .logout(logout -> logout
                         .logoutUrl(LOGOUT_PATH)
                         .logoutSuccessHandler((request, response, _) -> {
-                            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+                            //csrfトークンを生成
+                            CsrfToken rawCsrfToken = csrfTokenRepository.generateToken(request);
+                            csrfTokenRepository.saveToken(rawCsrfToken, request, response);
+
+                            tokenHandler.handle(request, response, () -> rawCsrfToken); //ハンドラを使いリクエストにトークンを紐づけ
+
+                            CsrfToken encodeCsrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName()); //リクエストからトークンを取得
+
+                            // クライアントに200 OKと新しいトークンを返す
                             response.setStatus(HttpServletResponse.SC_OK);
-                            response.setContentType("application/json");
-                            objectMapper.writeValue(response.getWriter(), Map.of("code", 200, "csrfToken", csrfToken.getToken()));
-                        })
-                        .deleteCookies("JSESSIONID"))
+                            response.setContentType("application/json;charset=UTF-8");
+                            objectMapper.writeValue(response.getWriter(), Map.of(
+                                    "code", 200,
+                                    "csrfToken", encodeCsrfToken.getToken()
+                            ));
+                        }))
                 //ログインフォームをAPI向けにカスタム
                 .formLogin(login -> login
                         .loginProcessingUrl(LOGIN_PATH)
@@ -53,6 +70,7 @@ public class SecurityConfig {
                             response.setContentType("application/json");
                             objectMapper.writeValue(response.getWriter(), Map.of("code", 200, "csrfToken", csrfToken.getToken()));
                         })
+                        //失敗時
                 .failureHandler((_, response, _) -> {
                     response.setStatus(HttpServletResponse.SC_OK);
                     response.setContentType("application/json");
