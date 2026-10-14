@@ -60,10 +60,13 @@ public class UploadService {
             Map<String, String> metaData = uploadInfo.getMetadata(); //ユーザーから送信されたメタデータを取得
             boolean downloadPasswordEnabled = Boolean.parseBoolean(metaData.get("downloadPasswordEnabled"));//ダウンロードパスワードが有効かどうか
 
+            String deletePassword = metaData.get("deletePassword");
+            String downloadPassword = metaData.get("downloadPassword");
+
             //パスワードの正規表現最終チェック(通常の使用ではこれを満たすことはない)
-            if (!metaData.get("deletePassword").matches(FILE_PASSWORD_REGEX)) return;
+            if (!deletePassword.matches(FILE_PASSWORD_REGEX)) return;
             if (downloadPasswordEnabled) {
-                if (!metaData.get("downloadPassword").matches(FILE_PASSWORD_REGEX)) return;
+                if (!downloadPassword.matches(FILE_PASSWORD_REGEX)) return;
             }
 
             InputStream is = tusFileUploadService.getUploadedBytes(uploadUri);
@@ -102,8 +105,8 @@ public class UploadService {
             //データベースにパスワードを登録
             UploadFilePassword ufp = UploadFilePassword.builder()
                     .uniqueFileName(uniqueFileName)
-                    .deletePassword(passwordEncoder.encode(metaData.get("setDeletePassword")))
-                    .downloadPassword(downloadPasswordEnabled ? passwordEncoder.encode(metaData.get("setDownloadPassword")) : "")
+                    .deletePassword(passwordEncoder.encode(deletePassword))
+                    .downloadPassword(downloadPasswordEnabled ? passwordEncoder.encode(downloadPassword) : "")
                     .build();
             uploadFilePasswordRepository.save(ufp);
         }
