@@ -58,12 +58,12 @@ public class UploadService {
         //終了時の処理
         if (uploadInfo != null && !uploadInfo.isUploadInProgress()) {
             Map<String, String> metaData = uploadInfo.getMetadata(); //ユーザーから送信されたメタデータを取得
-            boolean downloadPasswordEnabled = metaData.containsKey("downloadPasswordEnabled"); //ダウンロードパスワードが有効かどうか
+            boolean downloadPasswordEnabled = Boolean.parseBoolean(metaData.get("downloadPasswordEnabled"));//ダウンロードパスワードが有効かどうか
 
             //パスワードの正規表現最終チェック(通常の使用ではこれを満たすことはない)
-            if (!metaData.get("setDeletePassword").matches(FILE_PASSWORD_REGEX)) return;
+            if (!metaData.get("deletePassword").matches(FILE_PASSWORD_REGEX)) return;
             if (downloadPasswordEnabled) {
-                if (!metaData.get("setDownloadPassword").matches(FILE_PASSWORD_REGEX)) return;
+                if (!metaData.get("downloadPassword").matches(FILE_PASSWORD_REGEX)) return;
             }
 
             InputStream is = tusFileUploadService.getUploadedBytes(uploadUri);
@@ -79,7 +79,7 @@ public class UploadService {
             boolean visible; //可視化設定
             if (userDetail != null) {
                 ownerName = userDetail.getUsername();
-                visible = !metaData.containsKey("visibleSetting");
+                visible = !Boolean.parseBoolean(metaData.get("visibleSetting"));
             } else {
                 ownerName = "";
                 visible = true;
@@ -94,7 +94,7 @@ public class UploadService {
                     .uploadDate(LocalDateTime.now())
                     .visible(visible)
                     .downloadLocked(downloadPasswordEnabled)
-                    .comment(metaData.get("uploadComment"))
+                    .comment(metaData.get("comment"))
                     .ipAddress(request.getRemoteAddr())
                     .build();
             uploadFileInfoRepository.save(fileInfo);
