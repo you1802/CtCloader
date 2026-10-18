@@ -115,6 +115,8 @@ public class DownloadService {
             }
         };
 
+        uploadFileInfoRepository.updateDownloadCountAndDate(targetFileName, LocalDateTime.now());
+
         HttpHeaders headers = new HttpHeaders(); //ヘッダーの設定
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM); //コンテンツタイプをOCTET_STREAMに設定(このタイプが設定されているとブラウザで通常表示できる画像データなども自動でDLされる)
         headers.setContentDispositionFormData("attachment", URLEncoder.encode(targetFileInfo.get().getOriginalFileName(), StandardCharsets.UTF_8)); //ファイル名をセット

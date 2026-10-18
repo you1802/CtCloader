@@ -26,6 +26,8 @@ public class UploadFileInfo {
     private boolean downloadLocked; //ダウンロードのパスワードロック
     private String comment; //ファイルのコメント
     private String ipAddress; //アップロード者のIP
+    private int downloadCount; //ダウンロード数
+    private LocalDateTime lastDownloadDate; //最終ダウンロード日時
 
     @OneToMany(mappedBy = "uniqueFileName", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<FileReport> fileReports = new ArrayList<>(); //ファイルの問題報告のリスト

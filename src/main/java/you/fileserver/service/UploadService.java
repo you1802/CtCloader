@@ -88,17 +88,21 @@ public class UploadService {
                 visible = true;
             }
 
+            LocalDateTime now = LocalDateTime.now();
+
             //データベースにファイル情報を登録
             UploadFileInfo fileInfo = UploadFileInfo.builder()
                     .owner(ownerName)
                     .originalFileName(originalFileName)
                     .uniqueFileName(uniqueFileName)
                     .size(uploadInfo.getLength())
-                    .uploadDate(LocalDateTime.now())
+                    .uploadDate(now)
                     .visible(visible)
                     .downloadLocked(downloadPasswordEnabled)
                     .comment(metaData.get("comment"))
                     .ipAddress(request.getRemoteAddr())
+                    .downloadCount(0)
+                    .lastDownloadDate(now)
                     .build();
             uploadFileInfoRepository.save(fileInfo);
 
