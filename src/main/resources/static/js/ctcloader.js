@@ -242,14 +242,14 @@ $(function () {
     const $loginUserName = $("#loginUserName");
     const $registrationButton = $("#registrationButton");
     const $loginExecuteButton = $("#loginExecuteButton");
-    const $loginUserPassword =$("#loginUserPassword")
-    const $loginModal =$("#loginModal");
-    const $loginForm =$("#loginForm");
-    const $loginButton =$("#loginButton");
-    const $logoutButton =$("#logoutButton");
-    const $logoutModal =$("#logoutModal");
-    const $logoutExecuteButton =$("#logoutExecuteButton");
-
+    const $loginUserPassword = $("#loginUserPassword")
+    const $loginModal = $("#loginModal");
+    const $loginForm = $("#loginForm");
+    const $loginButton  =$("#loginButton");
+    const $logoutButton = $("#logoutButton");
+    const $logoutModal = $("#logoutModal");
+    const $logoutExecuteButton = $("#logoutExecuteButton");
+    const $userMenuButton = $("#userMenuButton");
 
 
     //ログイン状態による表示ボタンの切替
@@ -262,7 +262,7 @@ $(function () {
         if (isLoggedIn) {
             $notLoggedIn.addClass("d-none");
             $loggedIn.removeClass("d-none");
-            $loginUserNameButton.text("👤" + name);
+            $userMenuButton.text("👤" + name);
         } else {
             $notLoggedIn.removeClass("d-none");
             $loggedIn.addClass("d-none");
