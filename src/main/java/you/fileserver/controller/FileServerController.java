@@ -124,10 +124,7 @@ public class FileServerController {
     @GetMapping(USER_ID_PATH)
     @ResponseBody
     public Map<String, Object> getUser(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        if (userDetail == null) {
-            return Map.of("user", "ゲスト");
-        }
-        return Map.of("user", userDetail.getUsername());
+        return authService.getUser(userDetail);
     }
 
     //問題報告用API

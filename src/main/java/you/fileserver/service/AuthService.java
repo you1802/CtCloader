@@ -1,6 +1,7 @@
 package you.fileserver.service;
 
 import org.springframework.stereotype.Service;
+import you.fileserver.authentication.CustomUserDetails;
 import you.fileserver.authentication.UserDetailServiceImpl;
 import you.fileserver.repository.UserAccountRepository;
 import you.fileserver.utility.FileSizeLimitCalculator;
@@ -43,5 +44,17 @@ public class AuthService {
      */
     public Map<String, Object> userNameExists(String username) {
         return userAccountRepository.existsById(username) ? Map.of("exists", true) : Map.of("exists", false);
+    }
+
+    /**
+     * ログイン中のユーザー名を返す(非ログインなら「ゲスト」とかえす)
+     * @param userDetail ログイン中のユーザー情報
+     * @return ユーザー名
+     */
+    public Map<String, Object> getUser(CustomUserDetails userDetail) {
+        if (userDetail == null) {
+            return Map.of("user", "ゲスト");
+        }
+        return Map.of("user", userDetail.getUsername());
     }
 }
