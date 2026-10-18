@@ -16,12 +16,15 @@ $(function () {
      */
     const $uploadModal = $("#uploadModal");
 
+    const $uploadComment = $("#uploadComment");
+
     const $setDeletePassword = $("#setDeletePassword");
     const $setDeletePassword_div = $("#setDeletePassword_div");
     const $confirmSetDeletePassword = $("#confirmSetDeletePassword");
 
     const $downloadPasswordEnabled = $("#downloadPasswordEnabled");
     const $downloadPasswordEnabledLabel = $("#downloadPasswordEnabledLabel");
+    const $visibleSetting = $("#visibleSetting");
 
     const $setDownloadPasswordGroup = $("#setDownloadPasswordGroup");
     const $setDownloadPassword = $("#setDownloadPassword");
@@ -32,10 +35,19 @@ $(function () {
     const $uploadModalCloseButtonHeader = $("#uploadModalCloseButtonHeader");
     const $uploadModalCloseButtonFooter = $("#uploadModalCloseButtonFooter");
 
-    const {Uppy, Dashboard, Form, Tus} = window.Uppy;
+    const {Uppy, Dashboard, Tus} = window.Uppy;
     const ja_JP = window.Uppy.locales.ja_JP;
     const uppy = new Uppy({
-        locale: ja_JP //日本語化
+        locale: ja_JP, //日本語化
+        onBeforeUpload: (files) => {
+            Object.keys(files).forEach(fileId => {
+                files[fileId].meta.downloadPassword = $setDownloadPassword.val();
+                files[fileId].meta.deletePassword = $setDeletePassword.val();
+                files[fileId].meta.downloadPasswordEnabled = $downloadPasswordEnabled.prop("checked");
+                files[fileId].meta.visibleSetting = $visibleSetting.prop("checked");
+                files[fileId].meta.comment = $uploadComment.val();
+            })
+        }
     })
         .use(Dashboard, {
             target: "#uploader",
@@ -44,10 +56,6 @@ $(function () {
             doneButtonHandler: () => { //doneボタンを押したときモーダルを閉じる
                 $uploadModal.modal("hide");
             }
-        })
-        .use(Form, {
-            target: "#uploadForm",
-            getMetaFromForm: true //アップロード用のフォームの情報
         })
         .use(Tus, { //Tusプロトコルを指定
             endpoint: "/api/upload", //エンドポイントの指定
