@@ -92,7 +92,7 @@ public class FileServerController {
         return downloadService.downloadFile(targetFileName, token);
     }
 
-    //削除用API
+    //ファイル削除用API
     @PostMapping(DELETE_PATH)
     @ResponseBody
     public Map<String, Object> delete(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
