@@ -258,7 +258,13 @@ $(function () {
     const $logoutModal = $("#logoutModal");
     const $logoutExecuteButton = $("#logoutExecuteButton");
     const $userMenuButton = $("#userMenuButton");
+    const $loadingSpinner = $("#loadingSpinner");
 
+    //スピナー表示用関数
+    const spinner = {
+        show: function () {$loadingSpinner.removeClass("d-none");},
+        hide: function () {$loadingSpinner.addClass("d-none");}
+    };
 
     //ログイン状態による表示ボタンの切替
     /**
@@ -305,6 +311,7 @@ $(function () {
         //バリに通った場合
         $registerForm.addClass("was-validated");
         $registerExecuteButton.prop("disabled", true);  //通信中、ボタン無効
+        spinner.show();
 
         $.ajax({
             url: "/api/register",
@@ -326,6 +333,7 @@ $(function () {
             showToast("通信エラー", "danger");
         }).always(function () {
             $registerExecuteButton.prop("disabled", false);
+            spinner.hide();
         });
     });
 
@@ -343,6 +351,7 @@ $(function () {
         }
         if (userName === "") return;
         $registerExecuteButton.prop("disabled", true);  //通信の間、ボタン無効
+        spinner.show();
 
         $.getJSON("/api/user_name_exists?username=" + userName)
             .done(function (json) {
@@ -357,6 +366,7 @@ $(function () {
             })
             .always(function () {
                 $registerExecuteButton.prop("disabled", false);
+                spinner.hide();
             });
     });
     //入力時に判定をクリア
@@ -415,6 +425,8 @@ $(function () {
         const name = userName || $loginUserName.val();
         const pass = password || $loginUserPassword.val();
         $loginExecuteButton.prop("disabled", true);  //通信中、ボタン無効
+        spinner.show();
+
         $.ajax({
             url: "/api/login",
             method: "POST",
@@ -428,13 +440,14 @@ $(function () {
                 navbarChange(true, name);
                 showToast("ログインに成功しました", "info");$loginModal.modal("hide");tableRefresh();
             } else {
-                const errorMsg = userName ? "自動ログインに失敗しました。ログイン画面からお試しください。" : "ユーザー名またはパスワードが一致しません";
+                const errorMsg = userName ? "自動ログインに失敗しました。ログイン画面からお試しください。" : "ユーザー名またはパスワードが一致しません";  //呼び出し場所によって文言変更
                 showToast(errorMsg, "danger");$loginModal.modal("hide");
             }
         }).fail(function () {
             showToast("通信エラー", "danger");
         }).always(function () {
             $loginExecuteButton.prop("disabled", false);
+            spinner.hide();
         });
     }
 
@@ -448,6 +461,7 @@ $(function () {
     //ログアウト実行ボタンのイベントリスナー
     $logoutExecuteButton.on("click", function () {
         $logoutExecuteButton.prop("disabled", true);    //通信の間、ボタン無効
+        spinner.show();
         $.ajax({
             url: "/api/logout",
             method: "POST",
@@ -458,11 +472,11 @@ $(function () {
             tableRefresh();
             $logoutModal.modal("hide");
             showToast("ログアウトしました。", "info");
-            //window.location.reload();
         }).fail(function () {
             showToast("通信エラー", "danger")
         }).always(function () {
             $logoutExecuteButton.prop("disabled", false);
+            spinner.hide();
         });
     });
 
