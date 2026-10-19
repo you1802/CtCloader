@@ -15,19 +15,23 @@ import java.util.List;
 @Repository
 public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,String> {
     /**
-     * ログイン中のユーザーのファイルリストを作成するための情報を引き出す
+     * ログイン中のユーザーのファイルリストを作成するための情報を引き出すジェネリックメソッド
      * @param owner ログイン中のユーザー名
      * @param visible ファイルの可視化設定
+     * @param type プロジェクションクラス
      * @return 必要な情報だけ取り出したリスト
+     * @param <T> プロジェクションクラス
      */
-    List<UserUploadFileInfoProjection> findByOwnerOrVisible(String owner, boolean visible);
+    <T> List<T> findByOwnerOrVisible(String owner, boolean visible, Class<T> type);
 
     /**
      * 非ログイン中ユーザーのファイルリストを作成するための情報を引き出す
      * @param visible ファイルの可視化設定
+     * @param type プロジェクションクラス
      * @return 必要な情報だけ取り出したリスト
+     * @param <T> プロジェクションクラス
      */
-    List<UserUploadFileInfoProjection> findByVisible(boolean visible);
+    <T> List<T> findByVisible(boolean visible, Class<T> type);
 
     /**
      * ダウンロード数を＋1し最終ダウンロード日時を更新するメソッド

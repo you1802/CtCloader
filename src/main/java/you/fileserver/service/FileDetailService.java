@@ -31,8 +31,8 @@ public class FileDetailService {
         boolean login = userDetail == null; //ログイン中かどうか
 
         if(login) {
-            userUploadFileInfoList = uploadFileInfoRepository.findByVisible(true); //非ログインなら可視設定のみ
-        } else userUploadFileInfoList = uploadFileInfoRepository.findByOwnerOrVisible(userDetail.getUsername(), true); //ログイン中なら自分のファイル+可視設定に応じて
+            userUploadFileInfoList = uploadFileInfoRepository.findByVisible(true, UserUploadFileInfoProjection.class); //非ログインなら可視設定のみ
+        } else userUploadFileInfoList = uploadFileInfoRepository.findByOwnerOrVisible(userDetail.getUsername(), true, UserUploadFileInfoProjection.class); //ログイン中なら自分のファイル+可視設定に応じて
 
         List<FileDetail> fileDetailList = new ArrayList<>();
 
