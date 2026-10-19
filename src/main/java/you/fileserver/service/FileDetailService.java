@@ -5,6 +5,7 @@ import you.fileserver.authentication.CustomUserDetails;
 import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
 import you.fileserver.dto.entity.UploadFileInfo;
+import you.fileserver.dto.projection.UserUploadFileInfoProjection;
 import you.fileserver.repository.UploadFileInfoRepository;
 
 import java.util.ArrayList;
@@ -24,33 +25,38 @@ public class FileDetailService {
      * ユーザーに提示するファイルリストの情報を返す
      * @return ファイルリスト
      */
-    public List<FileDetail> fileDetails(CustomUserDetails userDetail) {
-        List<UploadFileInfo> uploadFileInfoList;
-        if (!(userDetail == null)) {
-            if (userDetail.userAccount().getRole().equals(AUTH_ADMIN)) {
-                uploadFileInfoList = uploadFileInfoRepository.findAll(); //ADMINならすべてのファイル
-            } else uploadFileInfoList = uploadFileInfoRepository.findByOwnerOrVisible(userDetail.getUsername(), true); //ログイン中なら自分のファイル+可視設定に応じて
-        } else uploadFileInfoList = uploadFileInfoRepository.findByVisible(true); //非ログインなら可視設定のみ
+    public List<FileDetail> userFileDetails(CustomUserDetails userDetail) {
+        List<UserUploadFileInfoProjection> userUploadFileInfoList;
 
-        List<FileDetail> fileDetails = new ArrayList<>();
+        boolean login = userDetail == null; //ログイン中かどうか
 
-        for (UploadFileInfo fileInfo : uploadFileInfoList) {
+        if(login) {
+            userUploadFileInfoList = uploadFileInfoRepository.findByVisible(true); //非ログインなら可視設定のみ
+        } else userUploadFileInfoList = uploadFileInfoRepository.findByOwnerOrVisible(userDetail.getUsername(), true); //ログイン中なら自分のファイル+可視設定に応じて
+
+        List<FileDetail> fileDetailList = new ArrayList<>();
+
+        for (UserUploadFileInfoProjection userFileInfo : userUploadFileInfoList) {
             boolean owned;
-            if (userDetail == null) {
-                owned = false;
-            } else owned = userDetail.getUsername().equals(fileInfo.getOwner());
 
-            fileDetails.add(FileDetail.builder()
-                    .uploadDate(fileInfo.getUploadDate())
-                    .size(fileInfo.getSize())
-                    .owned(owned)
-                    .name(fileInfo.getOriginalFileName())
-                    .uniqueFileName(fileInfo.getUniqueFileName())
-                    .downloadLock(fileInfo.isDownloadLocked())
-                    .comment(fileInfo.getComment())
+            //ファイルが自分のアップロードしたものかどうかの判定
+            if (login) {
+                owned = false;
+            } else owned = userFileInfo.getOwner().equals(userDetail.getUsername());
+
+            fileDetailList.add(FileDetail.builder()
+                            .uniqueFileName(userFileInfo.getUniqueFileName())
+                            .size(userFileInfo.getSize())
+                            .name(userFileInfo.getOriginalFileName())
+                            .uploadDate(userFileInfo.getUploadDate())
+                            .downloadLock(userFileInfo.isDownloadLocked())
+                            .owned(owned)
+                            .downloadCount(userFileInfo.getDownloadCount())
+                            .lastDownloadDate(userFileInfo.getLastDownloadDate())
+                            .comment(userFileInfo.getComment())
                     .build());
         }
-        return fileDetails;
+        return fileDetailList;
     }
 
     /**
@@ -73,4 +79,21 @@ public class FileDetailService {
                                 mapToLong(UploadFileInfo::getSize).sum())
                 .build();
     }
+
+//    //テスト用
+//    public List<FileDetail> test(){
+//        List<FileDetail> fileDetails = new ArrayList<>();
+//
+//        for (int i = 0; i < 100; i++) {
+//            fileDetails.add(FileDetail.builder()
+//                            .uniqueFileName("uniqueFile" + i)
+//                            .size(i * 1000)
+//                            .owned(false)
+//                            .name("name" + i)
+//                            .downloadLock(false)
+//                            .uploadDate(LocalDateTime.now().minusSeconds(i))
+//                    .build());
+//        }
+//        return fileDetails;
+//    }
 }

@@ -56,7 +56,7 @@ public class FileServerController {
     @GetMapping(FILE_DETAILS_JSON_PATH)
     @ResponseBody
     public List<FileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return fileDetailService.fileDetails(userDetail);
+        return fileDetailService.userFileDetails(userDetail);
     }
 
     //掲示板のすべてのファイルのサイズ合計とログインユーザーのファイル材図合計をかえすAPI(非ログイン時はログインユーザーファイルサイズは-1を返す)
@@ -133,5 +133,4 @@ public class FileServerController {
     public Map<String, Object> fileReport(HttpServletRequest request, @RequestParam String targetFileName, @RequestParam String comment) {
         return reportService.saveReport(request, targetFileName, comment);
     }
-
 }
