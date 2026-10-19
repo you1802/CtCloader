@@ -186,6 +186,8 @@ $(function () {
         }
 
         //フォームを編集不可に
+        $uploadComment.prop("readOnly", true);
+
         $setDeletePassword.prop("readOnly", true).addClass("is-valid");
         $confirmSetDeletePassword.prop("readOnly", true);
 
@@ -203,11 +205,15 @@ $(function () {
         uploadFile();
     });
 
-    //アップロードモーダルが閉じられた時,モーダル内の情報をリセットしテーブルを更新する
+    //アップロードモーダルが閉じられた時,アップロード中でないのならモーダル内の情報をリセットしテーブルを更新する
     $uploadModal.on("hidden.bs.modal", function () {
+        if (Object.keys(uppy.getState().currentUploads).length > 0) return
+
         uppy.clear();
 
         $("#uploadForm")[0].reset();
+
+        $uploadComment.prop("readOnly", false);
 
         $confirmSetDeletePassword.removeClass("is-valid is-invalid").prop("readOnly", false);
         $setDeletePassword.removeClass("is-valid").prop("readOnly", false);
@@ -220,7 +226,6 @@ $(function () {
         $setDownloadPassword.removeClass("is-valid").prop("readOnly", false);
         $confirmSetDownloadPassword.removeClass("is-valid is-invalid").prop("readOnly", false);
         $setDownloadPassword_div.removeClass("was-validated");
-
 
         tableRefresh();
     });
