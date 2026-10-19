@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import you.fileserver.dto.entity.UploadFileInfo;
-import you.fileserver.dto.projection.UserUploadFileInfoProjection;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +31,14 @@ public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,S
      * @param <T> プロジェクションクラス
      */
     <T> List<T> findByVisible(boolean visible, Class<T> type);
+
+    /**
+     * DB全体から必要な情報を引き出す
+     * @param type プロジェクションクラス
+     * @return 必要な情報のリスト
+     * @param <T> プロジェクションクラス
+     */
+    <T> List<T> findAllBy(Class<T> type);
 
     /**
      * ダウンロード数を＋1し最終ダウンロード日時を更新するメソッド

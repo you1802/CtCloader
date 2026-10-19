@@ -4,13 +4,12 @@ import org.springframework.stereotype.Service;
 import you.fileserver.authentication.CustomUserDetails;
 import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
-import you.fileserver.dto.entity.UploadFileInfo;
+import you.fileserver.dto.projection.FileSizeInfoProjection;
 import you.fileserver.dto.projection.UserUploadFileInfoProjection;
 import you.fileserver.repository.UploadFileInfoRepository;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static you.fileserver.config.Constants.*;
 
@@ -65,18 +64,14 @@ public class FileDetailService {
      * @return DTO
      */
     public AllFileSizeInfo allFileDetails(CustomUserDetails userDetail) {
-        List<UploadFileInfo> fileInfoList = uploadFileInfoRepository.findAll();
+        List<FileSizeInfoProjection> fileSizeInfoList = uploadFileInfoRepository.findAllBy(FileSizeInfoProjection.class);
 
-        return AllFileSizeInfo.builder().
-                forumFileSizeLimit(FORUM_FILESIZE_LIMIT).
-                userFileSizeLimit(USER_FILESIZE_LIMIT).
-                forumFileSize(fileInfoList.stream().
-                        filter(UploadFileInfo::isVisible).
-                        mapToLong(UploadFileInfo::getSize).sum()).
-                userFileSize(userDetail == null ? -1 :
-                        fileInfoList.stream().
-                                filter(info -> !info.isVisible() && Objects.equals(info.getOwner(), userDetail.getUsername())).
-                                mapToLong(UploadFileInfo::getSize).sum())
+        return AllFileSizeInfo.builder()
+                .forumFileSizeLimit(FORUM_FILESIZE_LIMIT) //掲示板サイズ限界
+                .userFileSizeLimit(USER_FILESIZE_LIMIT) //ユーザーごとのサイズ限界
+                .forumFileSize(fileSizeInfoList.stream().filter(FileSizeInfoProjection::isVisible).mapToLong(FileSizeInfoProjection::getSize).sum()) //現在の掲示板のファイルサイズ合計、ファイル全体から可視化オンのものを抜き出してサイズを合計
+                .userFileSize(userDetail == null ? -1 : //現在のユーザーのファイルサイズ合計、非ログインなら-1
+                        fileSizeInfoList.stream().filter(file -> !file.isVisible() && file.getOwner().equals(userDetail.getUsername())).mapToLong(FileSizeInfoProjection::getSize).sum()) //ログイン中なら不可視のファイルかつ自分のものの合計サイズ
                 .build();
     }
 
