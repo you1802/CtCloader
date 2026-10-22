@@ -76,8 +76,8 @@ public class FileServerController {
 
     //ダウンロード用のトークン発行するAPI
     @PostMapping(DOWNLOAD_AUTH_PATH)
-    public ResponseEntity<?> downloadAuth(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
-        return downloadService.passwordAuth(targetFileName, fileControlPassword, userDetail);
+    public ResponseEntity<?> downloadAuth(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) throws TusException, IOException {
+        return downloadService.passwordAuth(targetFileName, fileControlPassword, userDetail, request);
     }
 
     //ファイル転送用URLを発行するAPI
@@ -88,15 +88,15 @@ public class FileServerController {
 
     //ダウンロード用API
     @GetMapping(DOWNLOAD_PATH)
-    public ResponseEntity<StreamingResponseBody> download(@RequestParam String targetFileName, @RequestParam String token) {
-        return downloadService.downloadFile(targetFileName, token);
+    public ResponseEntity<StreamingResponseBody> download(@RequestParam String targetFileName, @RequestParam String token, HttpServletRequest request) {
+        return downloadService.downloadFile(targetFileName, token, request);
     }
 
     //削除用API
     @PostMapping(DELETE_PATH)
     @ResponseBody
-    public Map<String, Object> delete(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
-        return deleteService.deleteFile(targetFileName, fileControlPassword, userDetail);
+    public Map<String, Object> delete(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) {
+        return deleteService.deleteFile(targetFileName, fileControlPassword, userDetail, request);
     }
 
     //ユーザー登録用API

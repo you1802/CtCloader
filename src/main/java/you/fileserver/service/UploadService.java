@@ -2,6 +2,7 @@ package you.fileserver.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import me.desair.tus.server.TusFileUploadService;
 import me.desair.tus.server.exception.TusException;
 import me.desair.tus.server.upload.UploadInfo;
@@ -24,6 +25,7 @@ import static you.fileserver.config.Constants.FILE_PATH;
 import static you.fileserver.config.Constants.FILE_PASSWORD_REGEX;
 
 @Service
+@Slf4j
 public class UploadService {
     TusFileUploadService tusFileUploadService;
     UploadFileInfoRepository uploadFileInfoRepository;
@@ -59,14 +61,21 @@ public class UploadService {
         if (uploadInfo != null && !uploadInfo.isUploadInProgress()) {
             Map<String, String> metaData = uploadInfo.getMetadata(); //ユーザーから送信されたメタデータを取得
             boolean downloadPasswordEnabled = Boolean.parseBoolean(metaData.get("downloadPasswordEnabled"));//ダウンロードパスワードが有効かどうか
+            boolean login = userDetail != null; //ログイン済みかどうか
 
             String deletePassword = metaData.get("deletePassword");
             String downloadPassword = metaData.get("downloadPassword");
 
             //パスワードの正規表現最終チェック(通常の使用ではこれを満たすことはない)
-            if (!deletePassword.matches(FILE_PASSWORD_REGEX)) return;
+            if (!deletePassword.matches(FILE_PASSWORD_REGEX)) {
+                log.warn("file delete password regex not match password:{}", deletePassword);
+                return;
+            }
             if (downloadPasswordEnabled) {
-                if (!downloadPassword.matches(FILE_PASSWORD_REGEX)) return;
+                if (!downloadPassword.matches(FILE_PASSWORD_REGEX)) {
+                    log.warn("file download password regex not match password:{}", downloadPassword);
+                    return;
+                }
             }
 
             InputStream is = tusFileUploadService.getUploadedBytes(uploadUri);
@@ -80,7 +89,7 @@ public class UploadService {
 
             String ownerName; //ログイン中のユーザー名
             boolean visible; //可視化設定
-            if (userDetail != null) {
+            if (login) {
                 ownerName = userDetail.getUsername();
                 visible = !Boolean.parseBoolean(metaData.get("visibleSetting"));
             } else {
@@ -113,6 +122,8 @@ public class UploadService {
                     .downloadPassword(downloadPasswordEnabled ? passwordEncoder.encode(downloadPassword) : "")
                     .build();
             uploadFilePasswordRepository.save(ufp);
+
+            log.info("file upload complete ip:{} user:{} uniqueFilename:{}", request.getRemoteAddr(), login ? userDetail.getUsername() : null, uniqueFileName); //ログを出力
         }
         tusFileUploadService.deleteUpload(uploadUri);
     }

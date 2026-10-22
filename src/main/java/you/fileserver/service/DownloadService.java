@@ -1,5 +1,8 @@
 package you.fileserver.service;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import me.desair.tus.server.exception.TusException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -16,10 +19,7 @@ import you.fileserver.repository.DownloadTokenInfoRepository;
 import you.fileserver.repository.UploadFileInfoRepository;
 import you.fileserver.repository.UploadFilePasswordRepository;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -29,6 +29,7 @@ import java.util.*;
 import static you.fileserver.config.Constants.*;
 
 @Service
+@Slf4j
 public class DownloadService {
     private final PasswordEncoder passwordEncoder;
     private final UploadFileInfoRepository uploadFileInfoRepository;
@@ -52,7 +53,7 @@ public class DownloadService {
      * @param password パスワード
      * @return 結果のレスポンス
      */
-    public ResponseEntity<?> passwordAuth (String targetFileName, String password, CustomUserDetails userDetail) {
+    public ResponseEntity<?> passwordAuth (String targetFileName, String password, CustomUserDetails userDetail, HttpServletRequest request) throws TusException, IOException {
         //ファイルの存在チェック
         Optional<UploadFileInfo> uploadFileInfo = uploadFileInfoRepository.findById(targetFileName);
         if (uploadFileInfo.isEmpty()) return ResponseEntity.badRequest().build();
@@ -61,6 +62,7 @@ public class DownloadService {
 
         if (!(!(userDetail == null) && (userDetail.userAccount().getRole().equals(AUTH_ADMIN) || userDetail.getUsername().equals(uploadFileInfo.get().getOwner())))) { //ログイン中のユーザーがadminかアップロードしたIDと一致するならパスワードチェックを飛ばす
             if (!passwordEncoder.matches(password, targetFilePassword.get().getDownloadPassword())) {
+                log.info("download password not match. uniqueFilename:{} ip:{}" ,targetFileName , request.getRemoteAddr()); //ログを出力
                 return ResponseEntity.ok(Map.of("code", 401, "message", "パスワードが一致しません")); //パスワード不一致の時
             }
         }
@@ -86,7 +88,7 @@ public class DownloadService {
      * @param token トークン
      * @return ファイルデータストリーミングのレスポンス
      */
-    public ResponseEntity<StreamingResponseBody> downloadFile(String targetFileName, String token) {
+    public ResponseEntity<StreamingResponseBody> downloadFile(String targetFileName, String token, HttpServletRequest request) {
         Optional<UploadFileInfo> targetFileInfo = uploadFileInfoRepository.findById(targetFileName);
         Optional<DownloadTokenInfo> tokenInfo = downloadTokenInfoRepository.findById(token);
 
@@ -94,6 +96,7 @@ public class DownloadService {
 
         if (targetFileInfo.get().isDownloadLocked()) { //ファイルがダウンロードロックされている場合
             if (tokenInfo.isEmpty() || !Objects.equals(targetFileName, tokenInfo.get().getUniqueFileName()) || LocalDateTime.now().isAfter(tokenInfo.get().getExpirationDate())) {
+                log.warn("token not match or expired. uniqueFilename:{} ip:{}" ,targetFileName , request.getRemoteAddr());
                 return ResponseEntity.status(HttpStatus.GONE).build(); //トークンが存在しないまたはトークンに紐づけされているファイル名に一致しない場合またはトークン期限切れの時は 410 gone
             }
         }
@@ -121,6 +124,8 @@ public class DownloadService {
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM); //コンテンツタイプをOCTET_STREAMに設定(このタイプが設定されているとブラウザで通常表示できる画像データなども自動でDLされる)
         headers.setContentDispositionFormData("attachment", URLEncoder.encode(targetFileInfo.get().getOriginalFileName(), StandardCharsets.UTF_8)); //ファイル名をセット
         headers.setContentLength(file.length()); //ファイルのサイズをセット(これがあると正確な残りDL時間がブラウザに表示される)
+
+        log.info("file downloaded. uniqueFilename:{} ip:{}", targetFileName, request.getRemoteAddr());
 
         return new ResponseEntity<>(streamingResponseBody, headers, HttpStatus.OK);
     }

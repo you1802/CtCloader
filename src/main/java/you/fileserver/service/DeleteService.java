@@ -1,5 +1,7 @@
 package you.fileserver.service;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import you.fileserver.authentication.CustomUserDetails;
@@ -17,6 +19,7 @@ import static you.fileserver.config.Constants.AUTH_ADMIN;
 import static you.fileserver.config.Constants.FILE_PATH;
 
 @Service
+@Slf4j
 public class DeleteService {
     private final PasswordEncoder passwordEncoder;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
@@ -33,7 +36,7 @@ public class DeleteService {
      * @param deletePassword ユーザーが設定したパスワード
      * @return 削除成功したかどうかのレスポンス
      */
-    public Map<String, Object> deleteFile(String targetFileName, String deletePassword, CustomUserDetails userDetail) {
+    public Map<String, Object> deleteFile(String targetFileName, String deletePassword, CustomUserDetails userDetail, HttpServletRequest request) {
         Map<String, Object> failRes = Map.of("code", 400, "message", "削除に失敗しました"); //失敗時のレスポンス
         Map<String, Object> SuccessRes = Map.of("code", 200, "message", "削除に成功しました"); //成功時のレスポンス
 
@@ -46,7 +49,6 @@ public class DeleteService {
             Optional<UploadFilePassword> uploadFilePassword = uploadFilePasswordRepository.findById(targetFileName);
             if (uploadFilePassword.isEmpty()) return failRes;
             if (!passwordEncoder.matches(deletePassword, uploadFilePassword.get().getDeletePassword())) return failRes;
-
         }
 
         //リポジトリからファイル情報とパスワードを削除
@@ -57,6 +59,10 @@ public class DeleteService {
         File file = Path.of(FILE_PATH, targetFileName).toFile();
 
         file.delete();
+
+        //ログを出力
+        log.info("file delete complete. uniqueFilename:{} ip:{}", targetFileName, request.getRemoteAddr());
+
         return SuccessRes;
     }
 }
