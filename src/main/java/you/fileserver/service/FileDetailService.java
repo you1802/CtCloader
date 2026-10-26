@@ -1,9 +1,12 @@
 package you.fileserver.service;
 
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.stereotype.Service;
+import you.fileserver.annotation.IsAdmin;
 import you.fileserver.authentication.CustomUserDetails;
 import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
+import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.projection.FileSizeInfoProjection;
 import you.fileserver.dto.projection.UserUploadFileInfoProjection;
 import you.fileserver.repository.UploadFileInfoRepository;
@@ -14,12 +17,14 @@ import java.util.List;
 import static you.fileserver.config.Constants.*;
 
 @Service
+@EnableMethodSecurity
 public class FileDetailService {
     private final UploadFileInfoRepository uploadFileInfoRepository;
 
     public FileDetailService(UploadFileInfoRepository uploadFileInfoRepository) {
         this.uploadFileInfoRepository = uploadFileInfoRepository;
     }
+
     /**
      * ユーザーに提示するファイルリストの情報を返す
      * @return ファイルリスト
@@ -73,6 +78,15 @@ public class FileDetailService {
                 .userFileSize(userDetail == null ? -1 : //現在のユーザーのファイルサイズ合計、非ログインなら-1
                         fileSizeInfoList.stream().filter(file -> !file.isVisible() && file.getOwner().equals(userDetail.getUsername())).mapToLong(FileSizeInfoProjection::getSize).sum()) //ログイン中なら不可視のファイルかつ自分のものの合計サイズ
                 .build();
+    }
+
+    /**
+     * ADMIN用ファイル詳細情報
+     * @return DTO
+     */
+    @IsAdmin
+    public List<UploadFileInfo> adminFileDetails() {
+        return uploadFileInfoRepository.findAll();
     }
 
 //    //テスト用
