@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import me.desair.tus.server.TusFileUploadService;
 import me.desair.tus.server.exception.TusException;
 import me.desair.tus.server.upload.UploadInfo;
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import you.fileserver.authentication.CustomUserDetails;
@@ -81,11 +80,9 @@ public class UploadService {
             InputStream is = tusFileUploadService.getUploadedBytes(uploadUri);
 
             String originalFileName = uploadInfo.getFileName().replace(" ", "-"); //オリジナルのファイル名にあるスペースを-に変換する
-            String extension = FilenameUtils.getExtension(originalFileName); //ファイルの拡張子を取得
-            String uploadId = uploadUri.substring(uploadUri.lastIndexOf("/") + 1); //アップロードURIからアップロードIDを取得
-            String uniqueFileName = uploadId + "." + extension; //アップロードIDに拡張子を付けて保存用のファイル名にする
+            String fileID = uploadUri.substring(uploadUri.lastIndexOf("/") + 1); //アップロードURIからアップロードIDを取得しファイルのIDに
 
-            Files.copy(is, Path.of(FILE_PATH, uniqueFileName)); //保存用ファイル名でファイルを保存
+            Files.copy(is, Path.of(FILE_PATH, fileID)); //保存用ファイル名(ID)でファイルを保存
 
             String ownerName; //ログイン中のユーザー名
             boolean visible; //可視化設定
@@ -103,7 +100,7 @@ public class UploadService {
             UploadFileInfo fileInfo = UploadFileInfo.builder()
                     .owner(ownerName)
                     .originalFileName(originalFileName)
-                    .uniqueFileName(uniqueFileName)
+                    .fileID(fileID)
                     .size(uploadInfo.getLength())
                     .uploadDate(now)
                     .visible(visible)
@@ -117,13 +114,13 @@ public class UploadService {
 
             //データベースにパスワードを登録
             UploadFilePassword ufp = UploadFilePassword.builder()
-                    .uniqueFileName(uniqueFileName)
+                    .fileID(fileID)
                     .deletePassword(passwordEncoder.encode(deletePassword))
                     .downloadPassword(downloadPasswordEnabled ? passwordEncoder.encode(downloadPassword) : "")
                     .build();
             uploadFilePasswordRepository.save(ufp);
 
-            log.info("file upload complete ip:{} user:{} uniqueFilename:{}", request.getRemoteAddr(), login ? userDetail.getUsername() : null, uniqueFileName); //ログを出力
+            log.info("file upload complete ip:{} user:{} fileID:{}", request.getRemoteAddr(), login ? userDetail.getUsername() : null, fileID); //ログを出力
         }
         tusFileUploadService.deleteUpload(uploadUri);
     }

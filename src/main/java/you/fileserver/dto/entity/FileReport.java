@@ -15,7 +15,7 @@ public class FileReport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String uniqueFileName;
+    private String fileID;
     private String comment;
     private String ipAddress;
 

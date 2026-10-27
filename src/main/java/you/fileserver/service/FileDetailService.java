@@ -49,7 +49,7 @@ public class FileDetailService {
             } else owned = userFileInfo.getOwner().equals(userDetail.getUsername());
 
             fileDetailList.add(FileDetail.builder()
-                            .uniqueFileName(userFileInfo.getUniqueFileName())
+                            .fileID(userFileInfo.getFileID())
                             .size(userFileInfo.getSize())
                             .name(userFileInfo.getOriginalFileName())
                             .uploadDate(userFileInfo.getUploadDate())
@@ -95,7 +95,7 @@ public class FileDetailService {
 //
 //        for (int i = 0; i < 100; i++) {
 //            fileDetails.add(FileDetail.builder()
-//                            .uniqueFileName("uniqueFile" + i)
+//                            .fileID("uniqueFile" + i)
 //                            .size(i * 1000)
 //                            .owned(false)
 //                            .name("name" + i)

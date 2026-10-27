@@ -32,36 +32,36 @@ public class DeleteService {
     }
     /**
      * ファイル削除メソッド
-     * @param targetFileName ファイルの実際の保存名(ID)
+     * @param fileID ファイルの実際の保存名(ID)
      * @param deletePassword ユーザーが設定したパスワード
      * @return 削除成功したかどうかのレスポンス
      */
-    public Map<String, Object> deleteFile(String targetFileName, String deletePassword, CustomUserDetails userDetail, HttpServletRequest request) {
+    public Map<String, Object> deleteFile(String fileID, String deletePassword, CustomUserDetails userDetail, HttpServletRequest request) {
         Map<String, Object> failRes = Map.of("code", 400, "message", "削除に失敗しました"); //失敗時のレスポンス
         Map<String, Object> SuccessRes = Map.of("code", 200, "message", "削除に成功しました"); //成功時のレスポンス
 
         //リポジトリにフェイル情報があるかの確認
-        Optional<UploadFileInfo> uploadFileInfo = uploadFileInfoRepository.findById(targetFileName);
+        Optional<UploadFileInfo> uploadFileInfo = uploadFileInfoRepository.findById(fileID);
         if (uploadFileInfo.isEmpty()) return failRes;
 
         if (!(!(userDetail == null) && (userDetail.userAccount().getRole().equals(AUTH_ADMIN) || userDetail.getUsername().equals(uploadFileInfo.get().getOwner())))) { //ログイン中のユーザーがadminまたはアップロードしたidの場合はパスワード認証を飛ばす
             //ユーザーが設定したファイルとパスワードが一致するかの確認
-            Optional<UploadFilePassword> uploadFilePassword = uploadFilePasswordRepository.findById(targetFileName);
+            Optional<UploadFilePassword> uploadFilePassword = uploadFilePasswordRepository.findById(fileID);
             if (uploadFilePassword.isEmpty()) return failRes;
             if (!passwordEncoder.matches(deletePassword, uploadFilePassword.get().getDeletePassword())) return failRes;
         }
 
         //リポジトリからファイル情報とパスワードを削除
         uploadFileInfoRepository.delete(uploadFileInfo.get());
-        uploadFileInfoRepository.deleteById(targetFileName);
+        uploadFileInfoRepository.deleteById(fileID);
 
         //ファイル実体を削除
-        File file = Path.of(FILE_PATH, targetFileName).toFile();
+        File file = Path.of(FILE_PATH, fileID).toFile();
 
         file.delete();
 
         //ログを出力
-        log.info("file delete complete. uniqueFilename:{} ip:{}", targetFileName, request.getRemoteAddr());
+        log.info("file delete complete. fileID:{} ip:{}", fileID, request.getRemoteAddr());
 
         return SuccessRes;
     }

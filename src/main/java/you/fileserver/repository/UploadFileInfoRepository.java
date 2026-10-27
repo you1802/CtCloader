@@ -40,13 +40,22 @@ public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,S
      */
     <T> List<T> findAllBy(Class<T> type);
 
+//    /**
+//     *
+//     * @param uniqueFileName
+//     * @param type
+//     * @return
+//     * @param <T>
+//     */
+//    <T> Optional<T> findById(String uniqueFileName, Class<T> type);
+
     /**
      * ダウンロード数を＋1し最終ダウンロード日時を更新するメソッド
-     * @param uniqueFileName 対象ファイル名
+     * @param fileID 対象ファイルID
      * @param now 現在時刻
      */
     @Transactional
     @Modifying
-    @Query("UPDATE UploadFileInfo ufi SET ufi.downloadCount = ufi.downloadCount + 1, ufi.lastDownloadDate = :now WHERE ufi.uniqueFileName = :uniqueFileName")
-    void updateDownloadCountAndDate(@Param("uniqueFileName") String uniqueFileName, @Param("now") LocalDateTime now);
+    @Query("UPDATE UploadFileInfo ufi SET ufi.downloadCount = ufi.downloadCount + 1, ufi.lastDownloadDate = :now WHERE ufi.fileID = :fileID")
+    void updateDownloadCountAndDate(@Param("fileID") String fileID, @Param("now") LocalDateTime now);
 }

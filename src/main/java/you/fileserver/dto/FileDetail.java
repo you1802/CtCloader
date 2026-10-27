@@ -16,7 +16,7 @@ public class FileDetail {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") //ブラウザにJSONを送るときに見やすい表示に変更する
     private LocalDateTime uploadDate; //アップロード日時
     private boolean owned; //ファイルの所有者かどうか
-    private String uniqueFileName; //サーバーに保存するファイルの実態の名前
+    private String fileID; //サーバーに保存するファイルの実態の名前(ID)
     private boolean downloadLock; //ダウンロードのパスワードロック
     private String comment; //ファイルのコメント
     private int downloadCount; //ダウンロード数

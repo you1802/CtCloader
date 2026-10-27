@@ -18,12 +18,12 @@ public class ReportService {
     /**
      * ユーザーから受け取った報告をDBに登録する
      * @param request リクエスト
-     * @param uniqueFileName 対象ファイル名
+     * @param fileID 対象ファイル名
      * @param comment コメント
      */
-    public Map<String, Object> saveReport(HttpServletRequest request, String uniqueFileName, String comment) {
+    public Map<String, Object> saveReport(HttpServletRequest request, String fileID, String comment) {
         fileReportRepository.save(FileReport.builder()
-                .uniqueFileName(uniqueFileName)
+                .fileID(fileID)
                 .comment(comment)
                 .ipAddress(request.getRemoteAddr())
                 .build());

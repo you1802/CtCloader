@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
  * ユーザー用のファイルリスト情報のプロジェクション
  */
 public interface UserUploadFileInfoProjection {
-    String getUniqueFileName();
+    String getFileID();
     String getOwner();
     String getOriginalFileName();
     long getSize();

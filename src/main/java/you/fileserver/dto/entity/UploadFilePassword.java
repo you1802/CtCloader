@@ -14,7 +14,7 @@ import lombok.experimental.Tolerate;
 @Builder
 public class UploadFilePassword {
     @Id
-    private String uniqueFileName;
+    private String fileID;
     private String downloadPassword;
     private String deletePassword;
 

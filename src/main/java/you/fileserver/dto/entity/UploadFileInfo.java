@@ -17,7 +17,7 @@ import java.util.List;
 @Builder
 public class UploadFileInfo {
     @Id
-    private String uniqueFileName; //サーバーに保存するファイルの実態の名前
+    private String fileID; //サーバーに保存するファイルの実態の名前
     private String owner; //アップロード時のユーザーID
     private String originalFileName; //ファイルのもともとの名前
     private long size; //ファイルサイズ
@@ -29,7 +29,7 @@ public class UploadFileInfo {
     private int downloadCount; //ダウンロード数
     private LocalDateTime lastDownloadDate; //最終ダウンロード日時
 
-    @OneToMany(mappedBy = "uniqueFileName", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "fileID", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<FileReport> fileReports = new ArrayList<>(); //ファイルの問題報告のリスト
 
     @Tolerate //builderを使いたいのでこのアノテーションでディフォルトコンストラクタをLombokに隠ぺいする

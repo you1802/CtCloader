@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 public class DownloadTokenInfo {
     @Id
     private String token;
-    private String uniqueFileName;
+    private String fileID;
     private LocalDateTime expirationDate;
 
     @Tolerate

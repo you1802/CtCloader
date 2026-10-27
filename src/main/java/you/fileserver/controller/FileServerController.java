@@ -76,27 +76,27 @@ public class FileServerController {
 
     //ダウンロード用のトークン発行するAPI
     @PostMapping(DOWNLOAD_AUTH_PATH)
-    public ResponseEntity<?> downloadAuth(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) throws TusException, IOException {
-        return downloadService.passwordAuth(targetFileName, fileControlPassword, userDetail, request);
+    public ResponseEntity<?> downloadAuth(@RequestParam String fileID, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) throws TusException, IOException {
+        return downloadService.passwordAuth(fileID, fileControlPassword, userDetail, request);
     }
 
     //ファイル転送用URLを発行するAPI
     @PostMapping(TRANSFER_PATH)
-    public ResponseEntity<?> transferUrl(@RequestParam String targetFileName, @AuthenticationPrincipal CustomUserDetails userDetail) {
-        return downloadService.createFileTransferUrl(targetFileName, userDetail);
+    public ResponseEntity<?> transferUrl(@RequestParam String fileID, @AuthenticationPrincipal CustomUserDetails userDetail) {
+        return downloadService.createFileTransferUrl(fileID, userDetail);
     }
 
     //ダウンロード用API
     @GetMapping(DOWNLOAD_PATH)
-    public ResponseEntity<StreamingResponseBody> download(@RequestParam String targetFileName, @RequestParam String token, HttpServletRequest request) {
-        return downloadService.downloadFile(targetFileName, token, request);
+    public ResponseEntity<StreamingResponseBody> download(@RequestParam String fileID, @RequestParam String token, HttpServletRequest request) {
+        return downloadService.downloadFile(fileID, token, request);
     }
 
     //削除用API
     @PostMapping(DELETE_PATH)
     @ResponseBody
-    public Map<String, Object> delete(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) {
-        return deleteService.deleteFile(targetFileName, fileControlPassword, userDetail, request);
+    public Map<String, Object> delete(@RequestParam String fileID, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) {
+        return deleteService.deleteFile(fileID, fileControlPassword, userDetail, request);
     }
 
     //ユーザー登録用API
@@ -130,7 +130,7 @@ public class FileServerController {
     //問題報告用API
     @PostMapping(FILE_REPORT_PATH)
     @ResponseBody
-    public Map<String, Object> fileReport(HttpServletRequest request, @RequestParam String targetFileName, @RequestParam String comment) {
-        return reportService.saveReport(request, targetFileName, comment);
+    public Map<String, Object> fileReport(HttpServletRequest request, @RequestParam String fileID, @RequestParam String comment) {
+        return reportService.saveReport(request, fileID, comment);
     }
 }
