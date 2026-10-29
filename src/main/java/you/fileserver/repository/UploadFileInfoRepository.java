@@ -10,16 +10,17 @@ import you.fileserver.dto.entity.UploadFileInfo;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,String> {
     /**
-     * ログイン中のユーザーのファイルリストを作成するための情報を引き出すジェネリックメソッド
+     * ログイン中のユーザーのファイルリストを作成するための情報を引き出す
      * @param owner ログイン中のユーザー名
      * @param visible ファイルの可視化設定
      * @param type プロジェクションクラス
      * @return 必要な情報だけ取り出したリスト
-     * @param <T> プロジェクションクラス
+     * @param <T> ジェネリックメソッド
      */
     <T> List<T> findByOwnerOrVisible(String owner, boolean visible, Class<T> type);
 
@@ -28,7 +29,7 @@ public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,S
      * @param visible ファイルの可視化設定
      * @param type プロジェクションクラス
      * @return 必要な情報だけ取り出したリスト
-     * @param <T> プロジェクションクラス
+     * @param <T> ジェネリックメソッド
      */
     <T> List<T> findByVisible(boolean visible, Class<T> type);
 
@@ -36,18 +37,18 @@ public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,S
      * DB全体から必要な情報を引き出す
      * @param type プロジェクションクラス
      * @return 必要な情報のリスト
-     * @param <T> プロジェクションクラス
+     * @param <T> ジェネリックメソッド
      */
     <T> List<T> findAllBy(Class<T> type);
 
-//    /**
-//     *
-//     * @param uniqueFileName
-//     * @param type
-//     * @return
-//     * @param <T>
-//     */
-//    <T> Optional<T> findById(String uniqueFileName, Class<T> type);
+    /**
+     *
+     * @param fileID ファイル id
+     * @param type プロジェクションクラス
+     * @return 必要な情報
+     * @param <T> ジェネリックメソッド
+     */
+    <T> Optional<T> findByFileID(String fileID, Class<T> type);
 
     /**
      * ダウンロード数を＋1し最終ダウンロード日時を更新するメソッド

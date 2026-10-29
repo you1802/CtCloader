@@ -16,6 +16,9 @@ import java.util.List;
 
 import static you.fileserver.config.Constants.*;
 
+/**
+ * ユーザーにかえすファイルリスト関係のサービスクラス
+ */
 @Service
 @EnableMethodSecurity
 public class FileDetailService {

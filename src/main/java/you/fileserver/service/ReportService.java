@@ -7,6 +7,9 @@ import you.fileserver.repository.FileReportRepository;
 
 import java.util.Map;
 
+/**
+ * ファイルの問題報告関係のサービスクラス
+ */
 @Service
 public class ReportService {
     private final FileReportRepository fileReportRepository;

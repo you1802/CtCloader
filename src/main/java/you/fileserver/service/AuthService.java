@@ -10,6 +10,9 @@ import java.util.Map;
 
 import static you.fileserver.config.Constants.*;
 
+/**
+ * 認可認証関係のサービスクラス
+ */
 @Service
 public class AuthService {
     private final UserDetailServiceImpl userDetailsServiceImpl;

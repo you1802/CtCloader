@@ -18,6 +18,9 @@ import java.util.Optional;
 import static you.fileserver.config.Constants.AUTH_ADMIN;
 import static you.fileserver.config.Constants.FILE_PATH;
 
+/**
+ * ファイルの削除関係のサービスクラス
+ */
 @Service
 @Slf4j
 public class DeleteService {

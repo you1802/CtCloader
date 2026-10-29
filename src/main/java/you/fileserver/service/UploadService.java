@@ -23,6 +23,9 @@ import java.util.*;
 import static you.fileserver.config.Constants.FILE_PATH;
 import static you.fileserver.config.Constants.FILE_PASSWORD_REGEX;
 
+/**
+ * アップロード関係のサービスクラス
+ */
 @Service
 @Slf4j
 public class UploadService {

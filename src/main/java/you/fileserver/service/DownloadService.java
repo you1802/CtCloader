@@ -10,10 +10,13 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import you.fileserver.annotation.IsAdmin;
 import you.fileserver.authentication.CustomUserDetails;
 import you.fileserver.dto.entity.DownloadTokenInfo;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.entity.UploadFilePassword;
+import you.fileserver.dto.projection.DownloadFileInfoProjection;
+import you.fileserver.exception.DownloadFileNotFoundException;
 import you.fileserver.repository.DownloadTokenInfoRepository;
 import you.fileserver.repository.UploadFileInfoRepository;
 import you.fileserver.repository.UploadFilePasswordRepository;
@@ -27,6 +30,9 @@ import java.util.*;
 
 import static you.fileserver.config.Constants.*;
 
+/**
+ * ダウンロード関係のサービスクラス
+ */
 @Service
 @Slf4j
 public class DownloadService {
@@ -34,7 +40,6 @@ public class DownloadService {
     private final UploadFileInfoRepository uploadFileInfoRepository;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
     private final DownloadTokenInfoRepository downloadTokenInfoRepository;
-
 
     public DownloadService(PasswordEncoder passwordEncoder,
                            UploadFileInfoRepository uploadFileInfoRepository,
@@ -107,6 +112,19 @@ public class DownloadService {
         log.info("file downloaded. fileID:{} ip:{}", fileID, request.getRemoteAddr()); //ログを出力
 
         return createStreamingResponseEntity(fileID, targetFileInfo.get().getOriginalFileName());
+    }
+
+    /**
+     * ADMIN専用ダウンロードメソッド
+     * @param fileID ファイル id
+     * @return レスポンス
+     */
+    @IsAdmin
+    public ResponseEntity<StreamingResponseBody> adminFileDownload(String fileID) {
+        DownloadFileInfoProjection downloadFileInfo = uploadFileInfoRepository.findByFileID(fileID, DownloadFileInfoProjection.class)
+                .orElseThrow(() -> new DownloadFileNotFoundException(fileID));
+
+        return createStreamingResponseEntity(fileID, downloadFileInfo.getOriginalFileName());
     }
 
     /**
