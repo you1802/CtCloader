@@ -3,9 +3,12 @@ package you.fileserver.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * APIレスポンス用DTO
+ */
 @Data
 @AllArgsConstructor
-public class ErrorResponse {
+public class ApiResponse {
     private String code;
     private String message;
 }

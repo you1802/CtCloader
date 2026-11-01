@@ -16,7 +16,7 @@ import you.fileserver.dto.entity.DownloadTokenInfo;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.entity.UploadFilePassword;
 import you.fileserver.dto.projection.DownloadFileInfoProjection;
-import you.fileserver.exception.DownloadFileNotFoundException;
+import you.fileserver.exception.TargetFileNotFoundException;
 import you.fileserver.repository.DownloadTokenInfoRepository;
 import you.fileserver.repository.UploadFileInfoRepository;
 import you.fileserver.repository.UploadFilePasswordRepository;
@@ -58,16 +58,18 @@ public class DownloadService {
      * @return 結果のレスポンス
      */
     public ResponseEntity<?> passwordAuth (String fileID, String password, CustomUserDetails userDetail, HttpServletRequest request) {
-        //ファイルの存在チェック
-        Optional<UploadFileInfo> uploadFileInfo = uploadFileInfoRepository.findById(fileID);
-        if (uploadFileInfo.isEmpty()) return ResponseEntity.badRequest().build();
-        Optional<UploadFilePassword> targetFilePassword = uploadFilePasswordRepository.findById(fileID);
-        if (targetFilePassword.isEmpty()) return ResponseEntity.badRequest().build();
+        String currentUserName = userDetail == null ? null : userDetail.getUsername(); //ユーザー名を取得
 
-        if (!(!(userDetail == null) && (userDetail.userAccount().getRole().equals(AUTH_ADMIN) || userDetail.getUsername().equals(uploadFileInfo.get().getOwner())))) { //ログイン中のユーザーがadminかアップロードしたIDと一致するならパスワードチェックを飛ばす
-            if (!passwordEncoder.matches(password, targetFilePassword.get().getDownloadPassword())) {
+        //ファイルの存在チェック
+        DownloadFileInfoProjection downloadFileInfo = uploadFileInfoRepository.findByFileID(fileID, DownloadFileInfoProjection.class)
+                .orElseThrow(() -> new TargetFileNotFoundException(fileID));
+        UploadFilePassword targetFilePassword = uploadFilePasswordRepository.findById(fileID)
+                .orElseThrow(() -> new TargetFileNotFoundException(fileID));
+
+        if (downloadFileInfo.isDownloadLocked()) { //ダウンロードロックされてる場合
+            if (!(passwordEncoder.matches(password, targetFilePassword.getDownloadPassword()) ||  Objects.equals(currentUserName, downloadFileInfo.getOwner()))) { //ダウンロードパスワードまたはアップロードユーザー名が一致しない場合
                 log.info("download password not match. fileID:{} ip:{}" ,fileID , request.getRemoteAddr()); //ログを出力
-                return ResponseEntity.ok(Map.of("code", 401, "message", "パスワードが一致しません")); //パスワード不一致の時
+                return ResponseEntity.ok(Map.of("code", 401, "message", "パスワードが一致しません"));
             }
         }
         return ResponseEntity.ok(Map.of("code", 200, "token", createToken(fileID, 30))); //30秒有効期限のトークンをレスポンスとして返す
@@ -122,7 +124,7 @@ public class DownloadService {
     @IsAdmin
     public ResponseEntity<StreamingResponseBody> adminFileDownload(String fileID) {
         DownloadFileInfoProjection downloadFileInfo = uploadFileInfoRepository.findByFileID(fileID, DownloadFileInfoProjection.class)
-                .orElseThrow(() -> new DownloadFileNotFoundException(fileID));
+                .orElseThrow(() -> new TargetFileNotFoundException(fileID));
 
         return createStreamingResponseEntity(fileID, downloadFileInfo.getOriginalFileName());
     }
