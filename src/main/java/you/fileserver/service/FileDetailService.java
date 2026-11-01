@@ -13,6 +13,7 @@ import you.fileserver.repository.UploadFileInfoRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static you.fileserver.config.Constants.*;
 
@@ -33,34 +34,32 @@ public class FileDetailService {
      * @return ファイルリスト
      */
     public List<FileDetail> userFileDetails(CustomUserDetails userDetail) {
-        List<UserUploadFileInfoProjection> userUploadFileInfoList;
+        Optional<CustomUserDetails> userDetailOpt = Optional.ofNullable(userDetail); //userDetailをオプショナルでラップ
 
-        boolean login = userDetail == null; //ログイン中かどうか
+        //オプショナルのメソッドを使って必要な情報をリポジトリから取り出す
+        List<UserUploadFileInfoProjection> userUploadFileList = userDetailOpt
+                .map(user -> uploadFileInfoRepository.findByOwnerOrVisible(user.getUsername(), true, UserUploadFileInfoProjection.class)) //ログイン中なら自分のファイル+可視設定に応じて
+                .orElseGet(() -> uploadFileInfoRepository.findByVisible(true, UserUploadFileInfoProjection.class)); //非ログインなら可視設定のみ
 
-        if(login) {
-            userUploadFileInfoList = uploadFileInfoRepository.findByVisible(true, UserUploadFileInfoProjection.class); //非ログインなら可視設定のみ
-        } else userUploadFileInfoList = uploadFileInfoRepository.findByOwnerOrVisible(userDetail.getUsername(), true, UserUploadFileInfoProjection.class); //ログイン中なら自分のファイル+可視設定に応じて
+        List<FileDetail> fileDetailList = new ArrayList<>(); //ユーザーに送るファイルリスト
 
-        List<FileDetail> fileDetailList = new ArrayList<>();
-
-        for (UserUploadFileInfoProjection userFileInfo : userUploadFileInfoList) {
-            boolean owned;
-
+        for (UserUploadFileInfoProjection userFileInfo : userUploadFileList) {
             //ファイルが自分のアップロードしたものかどうかの判定
-            if (login) {
-                owned = false;
-            } else owned = userFileInfo.getOwner().equals(userDetail.getUsername());
+            boolean owned = userDetailOpt
+                    .map(user -> user.getUsername().equals(userFileInfo.getOwner()))
+                    .orElse(false);
 
+            //ユーザーに送る情報をリストに格納
             fileDetailList.add(FileDetail.builder()
-                            .fileID(userFileInfo.getFileID())
-                            .size(userFileInfo.getSize())
-                            .name(userFileInfo.getOriginalFileName())
-                            .uploadDate(userFileInfo.getUploadDate())
-                            .downloadLock(userFileInfo.isDownloadLocked())
-                            .owned(owned)
-                            .downloadCount(userFileInfo.getDownloadCount())
-                            .lastDownloadDate(userFileInfo.getLastDownloadDate())
-                            .comment(userFileInfo.getComment())
+                    .fileID(userFileInfo.getFileID())
+                    .size(userFileInfo.getSize())
+                    .name(userFileInfo.getOriginalFileName())
+                    .uploadDate(userFileInfo.getUploadDate())
+                    .downloadLock(userFileInfo.isDownloadLocked())
+                    .owned(owned)
+                    .downloadCount(userFileInfo.getDownloadCount())
+                    .lastDownloadDate(userFileInfo.getLastDownloadDate())
+                    .comment(userFileInfo.getComment())
                     .build());
         }
         return fileDetailList;
@@ -72,14 +71,19 @@ public class FileDetailService {
      * @return DTO
      */
     public AllFileSizeInfo allFileDetails(CustomUserDetails userDetail) {
-        List<FileSizeInfoProjection> fileSizeInfoList = uploadFileInfoRepository.findAllBy(FileSizeInfoProjection.class);
+        Optional<CustomUserDetails> userDetailOpt = Optional.ofNullable(userDetail); //userDetailをオプショナルでラップ
+        List<FileSizeInfoProjection> fileSizeInfoList = uploadFileInfoRepository.findAllBy(FileSizeInfoProjection.class); //ファイルサイズ情報をリポジトリから取得
+
+        //ユーザーのアップロードした不可視設定のファイルの合計サイズを計算
+        long userFileSize = userDetailOpt
+                .map(user -> fileSizeInfoList.stream().filter(file -> !file.isVisible() && file.getOwner().equals(user.getUsername())).mapToLong(FileSizeInfoProjection::getSize).sum()) //ログイン中なら不可視のファイルかつ自分のものの合計サイズ)
+                .orElse(-1L); //非ログインなら-1
 
         return AllFileSizeInfo.builder()
                 .forumFileSizeLimit(FORUM_FILESIZE_LIMIT) //掲示板サイズ限界
                 .userFileSizeLimit(USER_FILESIZE_LIMIT) //ユーザーごとのサイズ限界
                 .forumFileSize(fileSizeInfoList.stream().filter(FileSizeInfoProjection::isVisible).mapToLong(FileSizeInfoProjection::getSize).sum()) //現在の掲示板のファイルサイズ合計、ファイル全体から可視化オンのものを抜き出してサイズを合計
-                .userFileSize(userDetail == null ? -1 : //現在のユーザーのファイルサイズ合計、非ログインなら-1
-                        fileSizeInfoList.stream().filter(file -> !file.isVisible() && file.getOwner().equals(userDetail.getUsername())).mapToLong(FileSizeInfoProjection::getSize).sum()) //ログイン中なら不可視のファイルかつ自分のものの合計サイズ
+                .userFileSize(userFileSize)
                 .build();
     }
 
