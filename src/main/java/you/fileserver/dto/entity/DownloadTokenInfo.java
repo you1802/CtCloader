@@ -16,9 +16,9 @@ import java.time.LocalDateTime;
 @Builder
 public class DownloadTokenInfo {
     @Id
-    private String token;
-    private String fileID;
-    private LocalDateTime expirationDate;
+    private String token; //ダウンロードに必要な一時トークン
+    private String fileID; //ダウンロードするファイルID
+    private LocalDateTime expirationDate; //有効期限
 
     @Tolerate
     public DownloadTokenInfo() {}

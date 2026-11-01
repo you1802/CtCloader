@@ -14,9 +14,9 @@ import lombok.experimental.Tolerate;
 @Entity
 public class UserAccount {
     @Id
-    private String username;
-    private String password;
-    private String role;
+    private String username; //ユーザーネーム
+    private String password; //パスワード
+    private String role; //ロール
 
     @Tolerate //builderを使いたいのでこのアノテーションでディフォルトコンストラクタをLombokに隠ぺいする
     public UserAccount() {}
