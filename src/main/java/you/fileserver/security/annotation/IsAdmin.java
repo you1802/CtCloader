@@ -1,4 +1,4 @@
-package you.fileserver.annotation;
+package you.fileserver.security.annotation;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 

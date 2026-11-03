@@ -1,4 +1,4 @@
-package you.fileserver.authentication;
+package you.fileserver.security.authentication;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;

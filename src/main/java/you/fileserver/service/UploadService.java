@@ -8,7 +8,7 @@ import me.desair.tus.server.exception.TusException;
 import me.desair.tus.server.upload.UploadInfo;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import you.fileserver.authentication.CustomUserDetails;
+import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.entity.UploadFilePassword;
 import you.fileserver.repository.UploadFileInfoRepository;

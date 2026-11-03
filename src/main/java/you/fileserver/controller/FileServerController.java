@@ -8,7 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import you.fileserver.authentication.CustomUserDetails;
+import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
 import you.fileserver.service.*;

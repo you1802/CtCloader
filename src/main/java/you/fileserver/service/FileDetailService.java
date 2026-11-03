@@ -2,8 +2,8 @@ package you.fileserver.service;
 
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.stereotype.Service;
-import you.fileserver.annotation.IsAdmin;
-import you.fileserver.authentication.CustomUserDetails;
+import you.fileserver.security.annotation.IsAdmin;
+import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
 import you.fileserver.dto.entity.UploadFileInfo;
