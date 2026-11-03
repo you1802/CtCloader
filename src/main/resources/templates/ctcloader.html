@@ -48,24 +48,21 @@
 
         <div class="ms-auto d-flex gap-1">
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">アップロード</button>
-            <span id="notLoggedIn" class="d-none"><!-- 未ログイン時グループ -->
+            <div id="notLoggedIn" class="d-none"><!-- 未ログイン時グループ -->
             <button type="button" class="btn btn-info" id="registrationButton" data-bs-toggle="modal" data-bs-target="#registerModal">ユーザー登録</button>
             <button type="button" class="btn btn-info" id="loginButton" data-bs-toggle="modal" data-bs-target="#loginModal">ログイン</button>
-            </span>
-            <span id="loggedIn" class="d-none"><!-- ログイン時グループ -->
-<!--                <div class="dropdown">-->
-<!--                  <button class="btn btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">-->
-<!--                    Dropdown button-->
-<!--                  </button>-->
-<!--                  <ul class="dropdown-menu">-->
-<!--                    <li><a class="dropdown-item" href="#">Action</a></li>-->
-<!--                    <li><a class="dropdown-item" href="#">Another action</a></li>-->
-<!--                    <li><a class="dropdown-item" href="#">Something else here</a></li>-->
-<!--                  </ul>-->
-<!--                </div>-->
-            <span class="navbar-text text-primary border border-dark rounded fw-semibold d-inline-flex align-items-center px-2" style="padding-left: 4px !important;" id="loginUserNameButton">user</span>
-            <button type="button" class="btn btn-danger" id="logoutButton" data-bs-toggle="modal" data-bs-target="#logoutModal">ログアウト</button>
-            </span>
+            </div>
+            <div id="loggedIn" class="d-none d-inline-flex gap-1 align-items-center"><!-- ログイン時グループ -->
+                <div class="dropdown">
+                    <!-- ユーザーボタンドロップダウン -->
+                    <button class="btn btn-outline-info dropdown-toggle text-dark" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">user</button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><button type="button" class="dropdown-item text-danger" id="deleteAccountButton" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">アカウント削除</button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button type="button" class="dropdown-item" id="logoutButton" data-bs-toggle="modal" data-bs-target="#logoutModal">ログアウト</button></li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </nav>
@@ -299,10 +296,61 @@
     </div>
 </div>
 
+<!-- アカウント削除用モーダル -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger text-white">
+            <div class="modal-header bg-danger text-center">
+                <h5 class="modal-title fs-5 fw-bold w-100 text-center ps-2">⚠️ アカウントの削除確認</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p class="fs-5 fw-bold text-danger mb-2">本当にアカウントを削除しますか？</p>
+                <p class="text-muted small mb-0">アップロードしたデータも消去されます。</p>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-danger" id="deleteAccountExecuteButton">削除する</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ファイルリストのテーブル -->
 <div class="container mt-5">
     <table id="files-table"></table>
 </div>
+
+<!-- サーバー容量バー -->
+<div class="container">
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        <div class="col">
+            <div class="d-flex justify-content-between small">
+                <span>サーバー全体</span>
+                <span id="serverRemainingCapacity">空き</span>
+            </div>
+            <div class="progress position-relative" role="progressbar" aria-label="Progress" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                <div id="serverUsage" class="d-flex align-items-center justify-content-center w-100 h-100 pt-1 small text-dark fw-bold text-nowrap" style="z-index: 2; text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 1px 0 #fff, 0 -1px 0 #fff;">
+                    サーバー使用状況
+                </div>
+                <div class="progress-bar text-bg-primary position-absolute start-0 top-0 h-100" id="serverProgressBar" style="width: 50%; z-index: 1;"></div>
+            </div>
+        </div>
+        <div class="col" id="userProgressBarArea">
+            <div class="d-flex justify-content-between small">
+                <span>ユーザー割当</span>
+                <span id="userRemainingCapacity">残り</span>
+            </div>
+            <div class="progress position-relative" role="progressbar" aria-label="Progress" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                <div id="userUsage" class="d-flex align-items-center justify-content-center w-100 h-100 pt-1 small text-dark fw-bold text-nowrap" style="z-index: 2; text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 1px 0 #fff, 0 -1px 0 #fff;">
+                    ユーザー使用状況
+                </div>
+                <div class="progress-bar text-bg-primary position-absolute start-0 top-0 h-100" id="userProgressBar" style="width: 50%; z-index: 1;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- スクロール確認用スペーサー -->
 <div style="height: 200vh;"></div>
@@ -311,6 +359,10 @@
 <!-- トースト用のコンテナ -->
 <div id="toastContainer" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
-<script src="js/ctcloader-table.js"></script>
+<!-- Nowローディング用スピナー -->
+<div id="loadingSpinner" class="spinner-border text-primary position-fixed bottom-0 end-0 m-4 d-none" role="status" style="z-index: 1100;">
+  <span class="visually-hidden">Loading...</span>
+</div>
+
 </body>
 </html>
