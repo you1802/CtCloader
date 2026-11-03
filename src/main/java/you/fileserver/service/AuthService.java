@@ -1,8 +1,8 @@
 package you.fileserver.service;
 
 import org.springframework.stereotype.Service;
-import you.fileserver.authentication.CustomUserDetails;
-import you.fileserver.authentication.UserDetailServiceImpl;
+import you.fileserver.security.authentication.CustomUserDetails;
+import you.fileserver.security.authentication.UserDetailServiceImpl;
 import you.fileserver.repository.UserAccountRepository;
 import you.fileserver.utility.FileSizeLimitCalculator;
 
@@ -10,6 +10,9 @@ import java.util.Map;
 
 import static you.fileserver.config.Constants.*;
 
+/**
+ * 認可認証関係のサービスクラス
+ */
 @Service
 public class AuthService {
     private final UserDetailServiceImpl userDetailsServiceImpl;

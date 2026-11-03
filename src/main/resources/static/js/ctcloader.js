@@ -248,7 +248,7 @@ $(function () {
     const ja_JP = window.Uppy.locales.ja_JP;
     const uppy = new Uppy({
         locale: ja_JP, //日本語化
-        onBeforeUpload: (files) => {
+        onBeforeUpload: (files) => { //ファイルにパスワードなどのメタ情報を付与する
             Object.keys(files).forEach(fileId => {
                 files[fileId].meta.downloadPassword = $setDownloadPassword.val();
                 files[fileId].meta.deletePassword = $setDeletePassword.val();
@@ -387,45 +387,43 @@ $(function () {
 
     //アップロードボタンを押したとき条件を満たしていればアップロードし、パスワードを編集不可にする
     $uploadButton.on("click", function () {
+        //共通のバリデーションチェック(ファイルが存在しダウンロードパスワードが有効かどうか)
+        if (!(uppy.getFiles().length > 0 && $setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid"))) return;
+
+        //ダウンロードパスワードを設定してる場合のバリデーション
         if ($downloadPasswordEnabled.prop("checked")) {
-            if (uppy.getFiles().length > 0 && $setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid") && $setDownloadPassword[0].checkValidity() && $confirmSetDownloadPassword.hasClass("is-valid")) {
-                $setDeletePassword.prop("readOnly", true).addClass("is-valid");
-                $confirmSetDeletePassword.prop("readOnly", true);
-
-                $downloadPasswordEnabled.addClass("is-readonly")
-                $downloadPasswordEnabledLabel.addClass("is-readonly");
-
-                $setDownloadPassword.prop("readOnly", true).addClass("is-valid");
-                $confirmSetDownloadPassword.prop("readOnly", true);
-
-                $uploadButton.prop("disabled", true);
-                $uploadModalCloseButtonHeader.prop("disabled", true);
-                $uploadModalCloseButtonFooter.prop("disabled", true);
-
-                uploadFile();
-            }
-        } else {
-            if (uppy.getFiles().length > 0 && $setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid")) {
-                $setDeletePassword.prop("readOnly", true).addClass("is-valid");
-                $confirmSetDeletePassword.prop("readOnly", true);
-
-                $downloadPasswordEnabled.addClass("is-readonly")
-                $downloadPasswordEnabledLabel.addClass("is-readonly");
-
-                $uploadButton.prop("disabled", true);
-                $uploadModalCloseButtonHeader.prop("disabled", true);
-                $uploadModalCloseButtonFooter.prop("disabled", true);
-
-                uploadFile();
-            }
+            if (!($setDownloadPassword[0].checkValidity() && $confirmSetDownloadPassword.hasClass("is-valid"))) return;
         }
+
+        //フォームを編集不可に
+        $uploadComment.prop("readOnly", true);
+
+        $setDeletePassword.prop("readOnly", true).addClass("is-valid");
+        $confirmSetDeletePassword.prop("readOnly", true);
+
+        $downloadPasswordEnabled.addClass("is-readonly");
+        $downloadPasswordEnabledLabel.addClass("is-readonly");
+
+        $uploadButton.prop("disabled", true);
+        $uploadModalCloseButtonHeader.prop("disabled", true);
+        $uploadModalCloseButtonFooter.prop("disabled", true);
+
+        $setDownloadPassword.prop("readOnly", true).addClass("is-valid");
+        $confirmSetDownloadPassword.prop("readOnly", true);
+
+        //アップロード実行
+        uploadFile();
     });
 
-    //アップロードモーダルが閉じられた時,モーダル内の情報をリセットしテーブルを更新する
+    //アップロードモーダルが閉じられた時,アップロード中でないのならモーダル内の情報をリセットしテーブルを更新する
     $uploadModal.on("hidden.bs.modal", function () {
+        if (Object.keys(uppy.getState().currentUploads).length > 0) return
+
         uppy.clear();
 
         $("#uploadForm")[0].reset();
+
+        $uploadComment.prop("readOnly", false);
 
         $confirmSetDeletePassword.removeClass("is-valid is-invalid").prop("readOnly", false);
         $setDeletePassword.removeClass("is-valid").prop("readOnly", false);
@@ -438,7 +436,6 @@ $(function () {
         $setDownloadPassword.removeClass("is-valid").prop("readOnly", false);
         $confirmSetDownloadPassword.removeClass("is-valid is-invalid").prop("readOnly", false);
         $setDownloadPassword_div.removeClass("was-validated");
-
 
         tableRefresh();
     });

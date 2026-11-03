@@ -1,4 +1,4 @@
-package you.fileserver.authentication;
+package you.fileserver.security.authentication;
 
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,7 +13,7 @@ public record CustomUserDetails(UserAccount userAccount) implements UserDetails 
     @Override
     @NonNull
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(userAccount.getRole()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + userAccount.getRole()));
     }
 
     @Override

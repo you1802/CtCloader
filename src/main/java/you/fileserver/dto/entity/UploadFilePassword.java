@@ -14,9 +14,9 @@ import lombok.experimental.Tolerate;
 @Builder
 public class UploadFilePassword {
     @Id
-    private String uniqueFileName;
-    private String downloadPassword;
-    private String deletePassword;
+    private String fileID; //ファイルID
+    private String downloadPassword; //ダウンロードパスワード
+    private String deletePassword; //削除パスワード
 
     @Tolerate //builderを使いたいのでこのアノテーションでディフォルトコンストラクタをLombokに隠ぺいする
     public UploadFilePassword() {}

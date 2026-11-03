@@ -8,7 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import you.fileserver.authentication.CustomUserDetails;
+import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
 import you.fileserver.service.*;
@@ -56,7 +56,7 @@ public class FileServerController {
     @GetMapping(FILE_DETAILS_JSON_PATH)
     @ResponseBody
     public List<FileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return fileDetailService.fileDetails(userDetail);
+        return fileDetailService.userFileDetails(userDetail);
     }
 
     //掲示板のすべてのファイルのサイズ合計とログインユーザーのファイル材図合計をかえすAPI(非ログイン時はログインユーザーファイルサイズは-1を返す)
@@ -76,27 +76,27 @@ public class FileServerController {
 
     //ダウンロード用のトークン発行するAPI
     @PostMapping(DOWNLOAD_AUTH_PATH)
-    public ResponseEntity<?> downloadAuth(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
-        return downloadService.passwordAuth(targetFileName, fileControlPassword, userDetail);
+    public ResponseEntity<?> downloadAuth(@RequestParam String fileID, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) {
+        return downloadService.passwordAuth(fileID, fileControlPassword, userDetail, request);
     }
 
     //ファイル転送用URLを発行するAPI
     @PostMapping(TRANSFER_PATH)
-    public ResponseEntity<?> transferUrl(@RequestParam String targetFileName, @AuthenticationPrincipal CustomUserDetails userDetail) {
-        return downloadService.createFileTransferUrl(targetFileName, userDetail);
+    public ResponseEntity<?> transferUrl(@RequestParam String fileID, @AuthenticationPrincipal CustomUserDetails userDetail) {
+        return downloadService.createFileTransferUrl(fileID, userDetail);
     }
 
     //ダウンロード用API
     @GetMapping(DOWNLOAD_PATH)
-    public ResponseEntity<StreamingResponseBody> download(@RequestParam String targetFileName, @RequestParam String token) {
-        return downloadService.downloadFile(targetFileName, token);
+    public ResponseEntity<StreamingResponseBody> download(@RequestParam String fileID, @RequestParam String token, HttpServletRequest request) {
+        return downloadService.downloadFile(fileID, token, request);
     }
 
     //ファイル削除用API
     @PostMapping(DELETE_PATH)
     @ResponseBody
-    public Map<String, Object> delete(@RequestParam String targetFileName, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
-        return deleteService.deleteFile(targetFileName, fileControlPassword, userDetail);
+    public Map<String, Object> delete(@RequestParam String fileID, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) {
+        return deleteService.deleteFile(fileID, fileControlPassword, userDetail, request);
     }
 
     //ユーザー登録用API
@@ -130,8 +130,7 @@ public class FileServerController {
     //問題報告用API
     @PostMapping(FILE_REPORT_PATH)
     @ResponseBody
-    public Map<String, Object> fileReport(HttpServletRequest request, @RequestParam String targetFileName, @RequestParam String comment) {
-        return reportService.saveReport(request, targetFileName, comment);
+    public Map<String, Object> fileReport(HttpServletRequest request, @RequestParam String fileID, @RequestParam String comment) {
+        return reportService.saveReport(request, fileID, comment);
     }
-
 }
