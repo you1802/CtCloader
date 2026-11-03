@@ -111,7 +111,7 @@ public class AuthService {
     @IsUser
     public DefaultApiResponse deleteUser(CustomUserDetails userDetail) {
         //削除するユーザーの不可視設定ファイルをリスト化
-        List<DeleteFileInfoProjection> userFiles = uploadFileInfoRepository.findByOwnerOrVisible(userDetail.getUsername(), true, DeleteFileInfoProjection.class);
+        List<DeleteFileInfoProjection> userFiles = uploadFileInfoRepository.findByOwnerAndVisible(userDetail.getUsername(), false, DeleteFileInfoProjection.class);
 
         userFiles.forEach(file -> {
             String fileID = file.getFileID(); //対象ファイルのIDを取得

@@ -42,13 +42,23 @@ public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,S
     <T> List<T> findAllBy(Class<T> type);
 
     /**
-     *
+     * プロジェクション用findById
      * @param fileID ファイル id
      * @param type プロジェクションクラス
      * @return 必要な情報
      * @param <T> ジェネリックメソッド
      */
     <T> Optional<T> findByFileID(String fileID, Class<T> type);
+
+    /**
+     * ログイン中のユーザーの不可視設定ファイル取得用
+     * @param owner ログインユーザー
+     * @param visible 不可視設定
+     * @param type プロジェクション
+     * @return 必要な情報
+     * @param <T> ジェネリックメソッド
+     */
+    <T> List<T> findByOwnerAndVisible(String owner, boolean visible, Class<T> type);
 
     /**
      * ダウンロード数を＋1し最終ダウンロード日時を更新するメソッド
