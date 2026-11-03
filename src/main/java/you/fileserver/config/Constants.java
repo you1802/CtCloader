@@ -21,6 +21,7 @@ public class Constants {
     public static final String FILE_REPORT_PATH = "/api/file_report";
     public static final String ALL_FILESIZE_INFO_PATH = "/api/all_filesize_info";
     public static final String ENABLE_CREATE_ACCOUNT_PATH = "/api/enable_create_account";
+    public static final String DELETE_USER_PATH = "/api/delete_user";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";

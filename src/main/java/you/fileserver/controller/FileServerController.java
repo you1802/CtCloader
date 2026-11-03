@@ -8,6 +8,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import you.fileserver.dto.DefaultApiResponse;
 import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
@@ -132,5 +133,11 @@ public class FileServerController {
     @ResponseBody
     public Map<String, Object> fileReport(HttpServletRequest request, @RequestParam String fileID, @RequestParam String comment) {
         return reportService.saveReport(request, fileID, comment);
+    }
+
+    //ユーザー削除用API
+    @PostMapping(DELETE_USER_PATH)
+    public DefaultApiResponse deleteUser(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        return authService.deleteUser(userDetail);
     }
 }
