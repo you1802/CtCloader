@@ -4,6 +4,215 @@
 $(function () {
      'use strict';
 
+    //ヘッダーにあるcsrfトークン用ヘッダーを取得
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    //csrfトークンを取得する関数
+    function getCsrfToken() {
+        return $("meta[name='_csrf']").attr("content");
+    }
+
+    /*
+    テーブル関係
+     */
+    //テーブル自体の設定
+    const table = new DataTable("#files-table", {
+        language: {
+            url: "https://cdn.datatables.net/plug-ins/3.0.1/i18n/ja.json",
+        },
+
+        "columnDefs": [
+            {className: "dt-center", "targets": "_all"},
+            {"orderable": false, "targets": [3, 4]},
+            {"width": 120, "targets": 3},
+            {"width": 60, "targets": 4},
+            {searchable: false, "targets": [1, 2, 3, 4]}
+        ],
+        ajax: {
+            url: "/api/file-details.json",
+            dataSrc: ""
+        },
+        columns: [
+            {data: "name", title: "ファイル名"},
+            {
+                data: "size", title: "サイズ", render: function (data, type) {
+                    if (type === "display") {
+                        return formatBytes(data);
+                    }
+                    return data;
+                }
+            },
+            {data: "uploadDate", title: "アップロード日時"},
+            {
+                data: "uniqueFileName", title: "ダウンロード", render: function (data, type, row) {
+                    if (row.downloadLock === true) {
+                        return `
+                    <button type="button" class="btn btn-link" onclick="lockedFileDownloadModal('${row.uniqueFileName}')">
+                    <i class="bi bi-file-earmark-lock"></i>
+                    </button>
+                    `
+                    } else {
+                        return `<a href="api/download?targetFileName=${data}&token=" class="icon-link"><i class="bi-download"></a>`
+                    }
+                }
+            },
+            {
+                data: null, title: "削除", render: function (data, type, row) {
+                    //if (!row.owned === true) {return null;}
+                    return `
+                    <button type="button" class="btn btn-link" onclick="fileDeleteModal('${row.uniqueFileName}')">
+                    <i class="bi bi-trash"></i>
+                    </button>`
+                }
+            }
+        ]
+    });
+
+    //テーブル更新用関数
+    function tableRefresh() {
+        table.ajax.reload();
+    }
+
+    /**
+     * 与えられたbytesを見やすい形にする(1 KBなど)
+     * decimalsは小数点以下何位まで表示するか、デフォルトは2桁
+     * @param bytes 変換したい数
+     * @param decimals 小数点以下何位まで表示するか
+     * @returns {string} 変換後の文字列
+     */
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return "0 Byte"; //0のときは0byte
+        const k = 1024;　//1キロバイト
+        const i = Math.floor( //与えられた数以下の整数を返す
+            Math.log(bytes) / Math.log(k)); //分母の対数の底を何乗したら分子の対数の底になるか
+        const sizes = ["Bytes", "KB", "MB", "GB", "TB"]; //iが0ならbytes,1ならKB...
+        return (bytes / Math.pow(k, i)) //bytesをkのi乗でわる
+                .toFixed(decimals) //小数点以下を設定どおりに切り捨て
+            + ' ' + sizes[i]; //サイズの文字を追加
+    }
+
+    /*
+    ファイルのダウンロードとアップロード関係
+     */
+    const $fileControlModal = $("#fileControlModal");
+    const $targetFileName = $("#targetFileName");
+    const $fileControlModalTitle = $("#fileControlModalTitle");
+    const $fileControlExecuteButton = $("#fileControlExecuteButton");
+    const $fileControlPassword = $("#fileControlPassword");
+
+    //ファイルのダウンロードまたはアップロードのパスワード入力用モーダルのイベントリスナー
+    $fileControlModal.on("hidden.bs.modal", function () {
+        $fileControlPassword.val("");
+    })
+
+    //ファイル削除用モーダルを呼び出す
+    function fileDeleteModal(targetFileName) {
+        $targetFileName.val(targetFileName);
+        $fileControlModalTitle.text("ファイルの削除");
+        $fileControlExecuteButton.text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
+            deleteFile($targetFileName.val(), $fileControlPassword.val());
+        })
+        $fileControlModal.modal("show");
+    }
+
+    //パスワードロックされたファイルダウンロード用モーダルを呼び出す
+    function lockedFileDownloadModal(targetFileName) {
+        $targetFileName.val(targetFileName);
+        $fileControlModalTitle.text("ファイルのダウンロード");
+        $fileControlExecuteButton.text("ダウンロード").removeClass("btn-danger").addClass("btn-success").off().on("click", function () {
+            downloadFile($targetFileName.val(), $fileControlPassword.val());
+        })
+        $fileControlModal.modal("show");
+    }
+
+    /**
+     * パスワードが一致する場合、サーバー側からワンタイムトークンを受け取りファイルをダウンロードする
+     * @param targetFileName ダウンロードするファイル名
+     * @param fileControlPassword ダウンロードするファイルのパスワード
+     */
+    function downloadFile(targetFileName, fileControlPassword) {
+        $.ajax({
+            url: "/api/download/auth",
+            type: "POST",
+            dataType: "json",
+            data: {
+                targetFileName: targetFileName,
+                fileControlPassword: fileControlPassword
+            }
+        }).done(function (data) {
+            if (data.code === 200) {
+                window.location.href = `/api/download?targetFileName=${targetFileName}&token=${data.token}`;
+            } else {
+                showToast(data.message, "danger");
+            }
+        }).fail(function () {
+            showToast("通信エラー", "danger");
+        })
+    }
+
+    /**
+     * 削除用関数
+     * @param targetFileName 削除するファイル名
+     * @param fileControlPassword 削除用パスワード
+     */
+    function deleteFile(targetFileName, fileControlPassword) {
+        $.ajax({
+            url: "/api/delete",
+            type: "POST",
+            dataType: 'json',
+            data: {
+                targetFileName: targetFileName,
+                fileControlPassword: fileControlPassword
+            }
+        }).done(function (data) {
+            if (data.code === 200) {
+                showToast(data.message, "success");
+            } else {
+                showToast(data.message, "danger");
+            }
+            tableRefresh();
+            capacityBarUpdate();
+        })
+            .fail(function () {
+                showToast("通信エラー", "danger");
+            })
+    }
+
+    /**
+     * トースト表示用関数
+     * @param msg 表示するメッセージ
+     * @param type メッセージのタイプ(success,danger,warning,info,dark)
+     */
+    function showToast(msg, type) {
+        const container = document.getElementById('toastContainer');
+
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-bg-${type} border-0`;
+        toast.setAttribute("role", "alert");
+        toast.setAttribute("aria-live", "assertive");
+        toast.setAttribute("aria-atomic", "true");
+        toast.innerHTML = `
+    <div class="toast-header">
+    <div class="me-auto">告知</div>
+    <button type="button" class="ntn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="d-flex">
+    <div class="toast-body">${msg}</div>
+    </div>
+    `;
+
+        container.appendChild(toast);
+
+        const bootstrapToast = new bootstrap.Toast(toast, {
+            delay: 3000
+        });
+        bootstrapToast.show();
+
+        toast.addEventListener("hidden.bs.modal", function () {
+            toast.remove();
+        })
+    }
+
     //GET以外のすべてのajaxのヘッダーにcsrfトークンを入れる
     $(document).ajaxSend(function (event, xhr, settings) {
         if (settings.type !== "GET") {
@@ -77,6 +286,7 @@ $(function () {
     uppy.on("complete", () => {
         $uploadModalCloseButtonHeader.prop("disabled", false);
         $uploadModalCloseButtonFooter.prop("disabled", false);
+        capacityBarUpdate();
     });
     uppy.on("error", () => {
         $uploadModalCloseButtonHeader.prop("disabled", false);
@@ -155,7 +365,7 @@ $(function () {
         }
     }
 
-    //アップロードボタンのを有効か無効か切り替え
+    //アップロードボタンが有効か無効か切り替え
     function switchUploadButton() {
         const {totalProgress} = uppy.getState();
         if (totalProgress > 0) return; //アップロード中かアップロード完了時は処理しない
@@ -259,6 +469,13 @@ $(function () {
     const $logoutExecuteButton = $("#logoutExecuteButton");
     const $userMenuButton = $("#userMenuButton");
     const $loadingSpinner = $("#loadingSpinner");
+    const $serverRemainingCapacity = $("#serverRemainingCapacity");
+    const $serverUsage = $("#serverUsage");
+    const $userRemainingCapacity = $("#userRemainingCapacity");
+    const $userUsage = $("#userUsage");
+    const $userProgressBarArea = $("#userProgressBarArea");
+    const $serverProgressBar = $("#serverProgressBar");
+    const $userProgressBar = $("#userProgressBar");
 
     //スピナー表示用関数
     const spinner = {
@@ -439,6 +656,7 @@ $(function () {
                 $("meta[name='_csrf']").attr("content", data.csrfToken);
                 navbarChange(true, name);
                 showToast("ログインに成功しました", "info");$loginModal.modal("hide");tableRefresh();
+                capacityBarUpdate();
             } else {
                 const errorMsg = userName ? "自動ログインに失敗しました。ログイン画面からお試しください。" : "ユーザー名またはパスワードが一致しません";  //呼び出し場所によって文言変更
                 showToast(errorMsg, "danger");$loginModal.modal("hide");
@@ -472,6 +690,7 @@ $(function () {
             tableRefresh();
             $logoutModal.modal("hide");
             showToast("ログアウトしました。", "info");
+            capacityBarUpdate();
         }).fail(function () {
             showToast("通信エラー", "danger")
         }).always(function () {
@@ -480,4 +699,57 @@ $(function () {
         });
     });
 
+    /**
+     * バイト数を適切な単位で表示
+     * @param bytes バイト数
+     */
+    function unitConversion(bytes) {
+        if (bytes === 0) return "0 Byte";
+        const unit = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + " " + unit[i];
+    }
+
+    /**
+     * バーの見た目を変更
+     * @param $barElement バーの要素
+     * @param ratio 容量の割合
+     */
+    function progressBarUpdate($barElement, ratio) {
+        $barElement.css("width", ratio + "%");  //バーの幅を変更
+        //バーの色を変更
+        $barElement.removeClass("text-bg-primary text-bg-warning text-bg-danger");
+        if (ratio <= 70) {
+            $barElement.addClass("text-bg-primary");
+        } else if (ratio <= 90) {
+            $barElement.addClass("text-bg-warning");
+        } else {
+            $barElement.addClass("text-bg-danger");
+        }
+    }
+
+    /**
+     * サーバー容量バーを更新
+     */
+    function capacityBarUpdate() {
+        $.getJSON("/api/all_filesize_info")
+            .done(function (json) {
+                //サーバー側
+                const serverRatio = json.forumFileSize / json.forumFileSizeLimit * 100;
+                progressBarUpdate($serverProgressBar, serverRatio);
+                $serverRemainingCapacity.text(`空き: ${unitConversion(json.forumFileSizeLimit - json.forumFileSize)}`);   //バーのラベル部分
+                $serverUsage.text(`${unitConversion(json.forumFileSize)} / ${unitConversion(json.forumFileSizeLimit)}`);    //バーの中の部分
+                //ユーザー側
+                if (json.userFileSize === -1) {
+                    $userProgressBarArea.addClass("d-none");
+                } else {
+                    const userRatio = json.userFileSize / json.userFileSizeLimit * 100;
+                    progressBarUpdate($userProgressBar, userRatio);
+                    $userRemainingCapacity.text(`残り: ${unitConversion(json.userFileSizeLimit - json.userFileSize)}`);
+                    $userUsage.text(`${unitConversion(json.userFileSize)} / ${unitConversion(json.userFileSizeLimit)}`);
+                    $userProgressBarArea.removeClass("d-none");
+                }
+            })
+    }
+    capacityBarUpdate();
 });
