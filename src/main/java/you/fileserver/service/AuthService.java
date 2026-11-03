@@ -1,9 +1,12 @@
 package you.fileserver.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import you.fileserver.dto.DefaultApiResponse;
+import you.fileserver.dto.entity.UserAccount;
 import you.fileserver.dto.projection.DeleteFileInfoProjection;
+import you.fileserver.exception.ServerErrorException;
 import you.fileserver.repository.UploadFileInfoRepository;
 import you.fileserver.repository.UploadFilePasswordRepository;
 import you.fileserver.security.annotation.IsUser;
@@ -30,17 +33,20 @@ public class AuthService {
     private final FileSizeLimitCalculator fileSizeLimitCalculator;
     private final UploadFileInfoRepository uploadFileInfoRepository;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public AuthService(UserDetailServiceImpl userDetailsServiceImpl,
                        UserAccountRepository userAccountRepository,
                        FileSizeLimitCalculator fileSizeLimitCalculator,
                        UploadFileInfoRepository uploadFileInfoRepository,
-                       UploadFilePasswordRepository uploadFilePasswordRepository) {
+                       UploadFilePasswordRepository uploadFilePasswordRepository,
+                       PasswordEncoder passwordEncoder) {
         this.userDetailsServiceImpl = userDetailsServiceImpl;
         this.userAccountRepository = userAccountRepository;
         this.fileSizeLimitCalculator = fileSizeLimitCalculator;
         this.uploadFileInfoRepository = uploadFileInfoRepository;
         this.uploadFilePasswordRepository = uploadFilePasswordRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
@@ -80,9 +86,27 @@ public class AuthService {
     }
 
     /**
+     * パスワード変更用メソッド
+     * @param oldPassword 旧パスワード
+     * @param newPassword 新パスワード
+     * @return レスポンス用DTO
+     */
+    @IsUser
+    public DefaultApiResponse changePassword(String oldPassword, String newPassword, CustomUserDetails userDetail) {
+        if (passwordEncoder.matches(oldPassword, userDetail.getPassword())) { //旧パスワードが一致したとき
+            UserAccount currentUser = userAccountRepository.findById(userDetail.getUsername()) //DBからユーザーアカウントオブジェクトを取得
+                    .orElseThrow(() -> new ServerErrorException("ユーザー情報が見つかりません。"));
+            currentUser.setPassword(passwordEncoder.encode(newPassword)); //パスワードをハッシュ化してオブジェクトに格納
+            userAccountRepository.save(currentUser); //DBを更新
+            return new DefaultApiResponse("200", "パスワード変更に成功しました。");
+        }
+        return new DefaultApiResponse("400", "旧パスワードが一致しません。");
+    }
+
+    /**
      * ユーザー削除用メソッド,付随してユーザーがアップロードした不可視設定のファイルも削除する
      * @param userDetail ログインユーザー
-     * @return レスポンス
+     * @return レスポンス用DTO
      */
     @IsUser
     public DefaultApiResponse deleteUser(CustomUserDetails userDetail) {

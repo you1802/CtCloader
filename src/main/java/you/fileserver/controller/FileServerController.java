@@ -140,4 +140,10 @@ public class FileServerController {
     public DefaultApiResponse deleteUser(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return authService.deleteUser(userDetail);
     }
+
+    //ユーザーパスワード変更用API
+    @PostMapping(USER_PASSWORD_CHANGE_PATH)
+    public DefaultApiResponse userPasswordChange(@AuthenticationPrincipal CustomUserDetails userDetail, @RequestParam String oldPassword, @RequestParam String newPassword) {
+        return authService.changePassword(oldPassword, newPassword, userDetail);
+    }
 }
