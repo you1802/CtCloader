@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import you.fileserver.security.annotation.IsAdmin;
+import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.entity.DownloadTokenInfo;
 import you.fileserver.dto.entity.UploadFileInfo;
@@ -81,6 +82,7 @@ public class DownloadService {
      * @param userDetail ログイン中のユーザー情報
      * @return URL情報が入ったレスポンス
      */
+    @IsUser
     public ResponseEntity<?> createFileTransferUrl(String fileID, CustomUserDetails userDetail) {
         Optional<UploadFileInfo> targetFile = uploadFileInfoRepository.findById(fileID);
         if (targetFile.isEmpty() || userDetail == null || !Objects.equals(targetFile.get().getOwner(), userDetail.getUsername())) return ResponseEntity.badRequest().build(); //ファイルが自身のアップロードしたものでない場合バッドリクエスト

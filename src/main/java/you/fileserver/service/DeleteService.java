@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import you.fileserver.dto.DefaultApiResponse;
 import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.entity.UploadFilePassword;
@@ -39,9 +40,8 @@ public class DeleteService {
      * @param deletePassword ユーザーが設定したパスワード
      * @return 削除成功したかどうかのレスポンス
      */
-    public Map<String, Object> deleteFile(String fileID, String deletePassword, CustomUserDetails userDetail, HttpServletRequest request) {
-        Map<String, Object> failRes = Map.of("code", 400, "message", "削除に失敗しました"); //失敗時のレスポンス
-        Map<String, Object> SuccessRes = Map.of("code", 200, "message", "削除に成功しました"); //成功時のレスポンス
+    public DefaultApiResponse deleteFile(String fileID, String deletePassword, CustomUserDetails userDetail, HttpServletRequest request) {
+        DefaultApiResponse failRes = new DefaultApiResponse(400, "削除に失敗しました"); //失敗時のレスポンス
 
         //リポジトリにフェイル情報があるかの確認
         Optional<UploadFileInfo> uploadFileInfo = uploadFileInfoRepository.findById(fileID);
@@ -66,6 +66,6 @@ public class DeleteService {
         //ログを出力
         log.info("file delete complete. fileID:{} ip:{}", fileID, request.getRemoteAddr());
 
-        return SuccessRes;
+        return new DefaultApiResponse(200, "削除に成功しました。");
     }
 }

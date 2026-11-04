@@ -14,12 +14,14 @@ class FileDetailServiceTest {
     @MockitoBean
     private UploadFileInfoRepository uploadFileInfoRepository;
 
+
     @Autowired
     private FileDetailService fileDetailService;
 
     /**
      * 権限テスト
      */
+    //@IsAdmin
     @Test
     @WithMockUser(roles = "ADMIN")
     void adminFileDetailsTestWithAdmin() {

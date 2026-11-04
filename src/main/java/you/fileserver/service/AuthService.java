@@ -55,13 +55,14 @@ public class AuthService {
      * @param password 登録するパスワード
      * @return 成功または失敗のレスポンス
      */
-    public Map<String, Object> register(String username, String password) {
+    public DefaultApiResponse register(String username, String password) {
         //正規表現の最終チェック(クライアントでもチェックする)
-        if (!username.matches(USER_NAME_REGEX) || !password.matches(PASSWORD_REGEX)) return Map.of("code", "400", "message", "正規表現エラー");
+        if (!username.matches(USER_NAME_REGEX) || !password.matches(PASSWORD_REGEX)) return new DefaultApiResponse(400, "正規表現エラー");
         //サーバーの容量上限の最終チェック
-        if (fileSizeLimitCalculator.userAccountLimit()) return Map.of("code", "400", "message", "ユーザー数上限に達しました");
+        if (fileSizeLimitCalculator.userAccountLimit()) return new DefaultApiResponse(400, "ユーザー数上限に達しました");
 
-        return userDetailsServiceImpl.saveUserAccount(username, password) ? Map.of("code", 200, "message", "登録完了しました") : Map.of("code", 400, "message", "既に登録されてるユーザー名です");
+        return userDetailsServiceImpl.saveUserAccount(username, password) ?
+                new DefaultApiResponse(200, "登録完了しました") : new DefaultApiResponse(400, "既に登録されてるユーザー名です");
     }
 
     /**
@@ -98,9 +99,9 @@ public class AuthService {
                     .orElseThrow(() -> new ServerErrorException("ユーザー情報が見つかりません。"));
             currentUser.setPassword(passwordEncoder.encode(newPassword)); //パスワードをハッシュ化してオブジェクトに格納
             userAccountRepository.save(currentUser); //DBを更新
-            return new DefaultApiResponse("200", "パスワード変更に成功しました。");
+            return new DefaultApiResponse(200, "パスワード変更に成功しました。");
         }
-        return new DefaultApiResponse("400", "旧パスワードが一致しません。");
+        return new DefaultApiResponse(400, "旧パスワードが一致しません。");
     }
 
     /**
@@ -127,6 +128,6 @@ public class AuthService {
 
         log.info("delete user {} success", userDetail.getUsername()); //ログを出力
 
-        return new DefaultApiResponse("200", "ユーザーの削除に成功しました。");
+        return new DefaultApiResponse(200, "ユーザーの削除に成功しました。");
     }
 }

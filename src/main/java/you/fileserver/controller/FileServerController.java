@@ -96,14 +96,14 @@ public class FileServerController {
     //ファイル削除用API
     @PostMapping(DELETE_PATH)
     @ResponseBody
-    public Map<String, Object> delete(@RequestParam String fileID, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) {
+    public DefaultApiResponse delete(@RequestParam String fileID, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) {
         return deleteService.deleteFile(fileID, fileControlPassword, userDetail, request);
     }
 
     //ユーザー登録用API
     @PostMapping(REGISTER_PATH)
     @ResponseBody
-    public Map<String, Object> register(@RequestParam String username, @RequestParam String password) {
+    public DefaultApiResponse register(@RequestParam String username, @RequestParam String password) {
         return authService.register(username, password);
     }
 
@@ -131,7 +131,7 @@ public class FileServerController {
     //問題報告用API
     @PostMapping(FILE_REPORT_PATH)
     @ResponseBody
-    public Map<String, Object> fileReport(HttpServletRequest request, @RequestParam String fileID, @RequestParam String comment) {
+    public DefaultApiResponse fileReport(HttpServletRequest request, @RequestParam String fileID, @RequestParam String comment) {
         return reportService.saveReport(request, fileID, comment);
     }
 

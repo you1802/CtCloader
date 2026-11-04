@@ -2,6 +2,7 @@ package you.fileserver.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
+import you.fileserver.dto.DefaultApiResponse;
 import you.fileserver.dto.entity.FileReport;
 import you.fileserver.repository.FileReportRepository;
 
@@ -24,12 +25,12 @@ public class ReportService {
      * @param fileID 対象ファイル名
      * @param comment コメント
      */
-    public Map<String, Object> saveReport(HttpServletRequest request, String fileID, String comment) {
+    public DefaultApiResponse saveReport(HttpServletRequest request, String fileID, String comment) {
         fileReportRepository.save(FileReport.builder()
                 .fileID(fileID)
                 .comment(comment)
                 .ipAddress(request.getRemoteAddr())
                 .build());
-        return Map.of("code", 200);
+        return new DefaultApiResponse(200, "問題の報告に成功しました。");
     }
 }
