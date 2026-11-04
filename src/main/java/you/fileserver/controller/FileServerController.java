@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import me.desair.tus.server.exception.TusException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
@@ -131,19 +132,19 @@ public class FileServerController {
     //問題報告用API
     @PostMapping(FILE_REPORT_PATH)
     @ResponseBody
-    public DefaultApiResponse fileReport(HttpServletRequest request, @RequestParam String fileID, @RequestParam String comment) {
+    public DefaultApiResponse fileReport(@RequestParam String fileID, @RequestParam String comment, HttpServletRequest request) {
         return reportService.saveReport(request, fileID, comment);
     }
 
     //ユーザー削除用API
     @PostMapping(DELETE_USER_PATH)
-    public DefaultApiResponse deleteUser(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return authService.deleteUser(userDetail);
+    public Map<String, Object> deleteUser(HttpServletRequest request, HttpServletResponse response, CsrfToken csrfToken, @AuthenticationPrincipal CustomUserDetails userDetail) {
+        return authService.deleteUser(request, response, csrfToken, userDetail);
     }
 
     //ユーザーパスワード変更用API
     @PostMapping(USER_PASSWORD_CHANGE_PATH)
-    public DefaultApiResponse userPasswordChange(@AuthenticationPrincipal CustomUserDetails userDetail, @RequestParam String oldPassword, @RequestParam String newPassword) {
+    public DefaultApiResponse userPasswordChange(@RequestParam String oldPassword, @RequestParam String newPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
         return authService.changePassword(oldPassword, newPassword, userDetail);
     }
 }

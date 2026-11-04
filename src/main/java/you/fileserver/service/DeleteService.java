@@ -13,7 +13,6 @@ import you.fileserver.repository.UploadFilePasswordRepository;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 
 import static you.fileserver.config.Constants.AUTH_ADMIN;

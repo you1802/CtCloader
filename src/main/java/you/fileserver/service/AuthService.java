@@ -1,7 +1,12 @@
 package you.fileserver.service;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Service;
 import you.fileserver.dto.DefaultApiResponse;
 import you.fileserver.dto.entity.UserAccount;
@@ -110,7 +115,7 @@ public class AuthService {
      * @return レスポンス用DTO
      */
     @IsUser
-    public DefaultApiResponse deleteUser(CustomUserDetails userDetail) {
+    public Map<String, Object> deleteUser(HttpServletRequest request, HttpServletResponse response, CsrfToken csrfToken, CustomUserDetails userDetail) {
         //削除するユーザーの不可視設定ファイルをリスト化
         List<DeleteFileInfoProjection> userFiles = uploadFileInfoRepository.findByOwnerAndVisible(userDetail.getUsername(), false, DeleteFileInfoProjection.class);
 
@@ -128,6 +133,9 @@ public class AuthService {
 
         log.info("delete user {} success", userDetail.getUsername()); //ログを出力
 
-        return new DefaultApiResponse(200, "ユーザーの削除に成功しました。");
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.logout(request, response, SecurityContextHolder.getContext().getAuthentication());
+
+        return Map.of("code", 200, "message", "ユーザーの削除に成功しました。", "csrfToken", csrfToken.getToken());
     }
 }
