@@ -1,6 +1,5 @@
 package you.fileserver.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import you.fileserver.dto.DefaultApiResponse;
 import you.fileserver.dto.entity.FileReport;
@@ -19,15 +18,15 @@ public class ReportService {
 
     /**
      * ユーザーから受け取った報告をDBに登録する
-     * @param request リクエスト
      * @param fileID 対象ファイル名
      * @param comment コメント
+     * @param ipAddress IP
      */
-    public DefaultApiResponse saveReport(HttpServletRequest request, String fileID, String comment) {
+    public DefaultApiResponse saveReport(String fileID, String comment, String ipAddress) {
         fileReportRepository.save(FileReport.builder()
                 .fileID(fileID)
                 .comment(comment)
-                .ipAddress(request.getRemoteAddr())
+                .ipAddress(ipAddress)
                 .build());
         return new DefaultApiResponse(200, "問題の報告に成功しました。");
     }

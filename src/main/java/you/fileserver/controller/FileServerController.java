@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import me.desair.tus.server.exception.TusException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -85,7 +86,7 @@ public class FileServerController {
     //ダウンロード用のトークン発行するAPI
     @PostMapping(DOWNLOAD_AUTH_PATH)
     public ResponseEntity<?> downloadAuth(@RequestParam String fileID, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) {
-        return downloadService.passwordAuth(fileID, fileControlPassword, userDetail, request);
+        return downloadService.passwordAuth(fileID, fileControlPassword, userDetail, request.getRemoteAddr());
     }
 
     //ファイル転送用URLを発行するAPI
@@ -97,21 +98,21 @@ public class FileServerController {
     //ダウンロード用API
     @GetMapping(DOWNLOAD_PATH)
     public ResponseEntity<StreamingResponseBody> download(@RequestParam String fileID, @RequestParam String token, HttpServletRequest request) {
-        return downloadService.downloadFile(fileID, token, request);
+        return downloadService.downloadFile(fileID, token, request.getRemoteAddr());
     }
 
     //ファイル削除用API
     @PostMapping(DELETE_PATH)
     @ResponseBody
     public DefaultApiResponse delete(@RequestParam String fileID, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) {
-        return deleteService.deleteFile(fileID, fileControlPassword, userDetail, request);
+        return deleteService.deleteFile(fileID, fileControlPassword, userDetail, request.getRemoteAddr());
     }
 
     //問題報告用API
     @PostMapping(FILE_REPORT_PATH)
     @ResponseBody
     public DefaultApiResponse fileReport(@RequestParam String fileID, @RequestParam String comment, HttpServletRequest request) {
-        return reportService.saveReport(request, fileID, comment);
+        return reportService.saveReport(fileID, comment, request.getRemoteAddr());
     }
 
     /*
@@ -147,12 +148,24 @@ public class FileServerController {
 
     //ユーザー削除用API
     @PostMapping(DELETE_USER_PATH)
+    @ResponseBody
     public Map<String, Object> deleteUser(HttpServletRequest request, HttpServletResponse response, CsrfToken csrfToken, @AuthenticationPrincipal CustomUserDetails userDetail) {
-        return authService.deleteUser(request, response, csrfToken, userDetail);
+        authService.deleteUser(userDetail.getUsername());
+
+        //ログアウト処理
+        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
+        logoutHandler.logout(request, response, null);
+
+        return Map.of(
+                "code", 200,
+                "message", "ユーザーの削除に成功しました。",
+                "csrfToken", csrfToken.getToken()
+        );
     }
 
     //ユーザーパスワード変更用API
     @PostMapping(USER_PASSWORD_CHANGE_PATH)
+    @ResponseBody
     public DefaultApiResponse userPasswordChange(@RequestParam String oldPassword, @RequestParam String newPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
         return authService.changePassword(oldPassword, newPassword, userDetail);
     }

@@ -1,12 +1,7 @@
 package you.fileserver.service;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Service;
 import you.fileserver.dto.DefaultApiResponse;
 import you.fileserver.dto.entity.UserAccount;
@@ -111,31 +106,27 @@ public class AuthService {
 
     /**
      * ユーザー削除用メソッド,付随してユーザーがアップロードした不可視設定のファイルも削除する
-     * @param userDetail ログインユーザー
-     * @return レスポンス用DTO
+     * @param username ログインユーザー名
      */
     @IsUser
-    public Map<String, Object> deleteUser(HttpServletRequest request, HttpServletResponse response, CsrfToken csrfToken, CustomUserDetails userDetail) {
+    public void deleteUser(String username) {
         //削除するユーザーの不可視設定ファイルをリスト化
-        List<DeleteFileInfoProjection> userFiles = uploadFileInfoRepository.findByOwnerAndVisible(userDetail.getUsername(), false, DeleteFileInfoProjection.class);
+        List<DeleteFileInfoProjection> userFiles = uploadFileInfoRepository.findByOwnerAndVisible(username, false, DeleteFileInfoProjection.class);
 
         userFiles.forEach(file -> {
-            String fileID = file.getFileID(); //対象ファイルのIDを取得
-            uploadFileInfoRepository.deleteById(fileID); //アップロードファイル情報を削除
-            uploadFilePasswordRepository.deleteById(fileID); //アップロードファイルパスワード情報を削除
+            String fileID = file.getFileID(); // 対象ファイルのIDを取得
+            uploadFileInfoRepository.deleteById(fileID); // アップロードファイル情報を削除
+            uploadFilePasswordRepository.deleteById(fileID); // アップロードファイルパスワード情報を削除
 
-            //ファイル実体を削除
+            // ファイル実体を削除
             File targetFile = Path.of(FILE_PATH, fileID).toFile();
-            targetFile.delete();
+            if (targetFile.exists()) {
+                targetFile.delete();
+            }
         });
 
-        userAccountRepository.deleteById(userDetail.getUsername()); //ユーザー情報を削除
+        userAccountRepository.deleteById(username); //ユーザー情報を削除
 
-        log.info("delete user {} success", userDetail.getUsername()); //ログを出力
-
-        SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
-        logoutHandler.logout(request, response, SecurityContextHolder.getContext().getAuthentication());
-
-        return Map.of("code", 200, "message", "ユーザーの削除に成功しました。", "csrfToken", csrfToken.getToken());
+        log.info("delete user {} success", username); //ログを出力
     }
 }

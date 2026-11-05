@@ -1,6 +1,5 @@
 package you.fileserver.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,7 +38,7 @@ public class DeleteService {
      * @param deletePassword ユーザーが設定したパスワード
      * @return 削除成功したかどうかのレスポンス
      */
-    public DefaultApiResponse deleteFile(String fileID, String deletePassword, CustomUserDetails userDetail, HttpServletRequest request) {
+    public DefaultApiResponse deleteFile(String fileID, String deletePassword, CustomUserDetails userDetail, String ipAddress) {
         DefaultApiResponse failRes = new DefaultApiResponse(400, "削除に失敗しました"); //失敗時のレスポンス
 
         //リポジトリにフェイル情報があるかの確認
@@ -63,7 +62,7 @@ public class DeleteService {
         file.delete();
 
         //ログを出力
-        log.info("file delete complete. fileID:{} ip:{}", fileID, request.getRemoteAddr());
+        log.info("file delete complete. fileID:{} ip:{}", fileID, ipAddress);
 
         return new DefaultApiResponse(200, "削除に成功しました。");
     }
