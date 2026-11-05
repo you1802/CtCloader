@@ -23,6 +23,7 @@ public class Constants {
     public static final String ENABLE_CREATE_ACCOUNT_PATH = "/api/enable_create_account";
     public static final String DELETE_USER_PATH = "/api/delete_user";
     public static final String USER_PASSWORD_CHANGE_PATH = "/api/password_change";
+    public static final String OWNED_FILE_DETAILS_JSON_PATH = "/api/owned-file-details.json";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";

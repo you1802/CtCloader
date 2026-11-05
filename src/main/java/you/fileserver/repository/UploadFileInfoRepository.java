@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,String> {
     /**
-     * ログイン中のユーザーのファイルリストを作成するための情報を引き出す
+     * ログイン中のユーザーの掲示板ファイルリストを作成するための情報を引き出す
      * @param owner ログイン中のユーザー名
      * @param visible ファイルの可視化設定
      * @param type プロジェクションクラス
@@ -23,6 +23,15 @@ public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,S
      * @param <T> ジェネリックメソッド
      */
     <T> List<T> findByOwnerOrVisible(String owner, boolean visible, Class<T> type);
+
+    /**
+     * ログイン中ユーザー自身がアップロードしたファイルリストを返す
+     * @param owner ログイン中のユーザ名
+     * @param type プロジェクションクラス
+     * @return 必要な情報だけ取り出したリスト
+     * @param <T> ジェネリックメソッド
+     */
+    <T> List<T> findByOwner(String owner, Class<T> type);
 
     /**
      * 非ログイン中ユーザーのファイルリストを作成するための情報を引き出す

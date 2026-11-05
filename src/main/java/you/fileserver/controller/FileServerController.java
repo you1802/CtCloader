@@ -54,11 +54,14 @@ public class FileServerController {
         return "ctcloader";
     }
 
+    /*
+     * テーブル関係
+     */
     //ファイルリスト取得用API
     @GetMapping(FILE_DETAILS_JSON_PATH)
     @ResponseBody
     public List<FileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return fileDetailService.userFileDetails(userDetail);
+        return fileDetailService.userForumFileDetails(userDetail);
     }
 
     //掲示板のすべてのファイルのサイズ合計とログインユーザーのファイル材図合計をかえすAPI(非ログイン時はログインユーザーファイルサイズは-1を返す)
@@ -68,6 +71,9 @@ public class FileServerController {
         return fileDetailService.allFileDetails(userDetail);
     }
 
+    /*
+     * ファイル操作
+     */
     //アップロード用エンドポイント
     @RequestMapping(value = UPLOAD_PATH, method = {
             RequestMethod.POST, RequestMethod.PATCH, RequestMethod.HEAD, RequestMethod.DELETE, RequestMethod.OPTIONS
@@ -101,6 +107,16 @@ public class FileServerController {
         return deleteService.deleteFile(fileID, fileControlPassword, userDetail, request);
     }
 
+    //問題報告用API
+    @PostMapping(FILE_REPORT_PATH)
+    @ResponseBody
+    public DefaultApiResponse fileReport(@RequestParam String fileID, @RequestParam String comment, HttpServletRequest request) {
+        return reportService.saveReport(request, fileID, comment);
+    }
+
+    /*
+     * ユーザーアカウント制御
+     */
     //ユーザー登録用API
     @PostMapping(REGISTER_PATH)
     @ResponseBody
@@ -129,13 +145,6 @@ public class FileServerController {
         return authService.getUser(userDetail);
     }
 
-    //問題報告用API
-    @PostMapping(FILE_REPORT_PATH)
-    @ResponseBody
-    public DefaultApiResponse fileReport(@RequestParam String fileID, @RequestParam String comment, HttpServletRequest request) {
-        return reportService.saveReport(request, fileID, comment);
-    }
-
     //ユーザー削除用API
     @PostMapping(DELETE_USER_PATH)
     public Map<String, Object> deleteUser(HttpServletRequest request, HttpServletResponse response, CsrfToken csrfToken, @AuthenticationPrincipal CustomUserDetails userDetail) {
@@ -146,5 +155,15 @@ public class FileServerController {
     @PostMapping(USER_PASSWORD_CHANGE_PATH)
     public DefaultApiResponse userPasswordChange(@RequestParam String oldPassword, @RequestParam String newPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
         return authService.changePassword(oldPassword, newPassword, userDetail);
+    }
+
+    /*
+     * マイページ関連
+     */
+    //ログイン中ユーザー自身が、アップロードしたファイルのみの詳細リストを取得するAPI(ログイン時専用)
+    @GetMapping(OWNED_FILE_DETAILS_JSON_PATH)
+    @ResponseBody
+    public List<FileDetail> ownedFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        return fileDetailService.userOwnedFileDetails(userDetail);
     }
 }

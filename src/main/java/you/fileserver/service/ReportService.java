@@ -6,8 +6,6 @@ import you.fileserver.dto.DefaultApiResponse;
 import you.fileserver.dto.entity.FileReport;
 import you.fileserver.repository.FileReportRepository;
 
-import java.util.Map;
-
 /**
  * ファイルの問題報告関係のサービスクラス
  */
