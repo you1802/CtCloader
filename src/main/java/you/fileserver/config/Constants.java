@@ -24,6 +24,7 @@ public class Constants {
     public static final String DELETE_USER_PATH = "/api/delete_user";
     public static final String USER_PASSWORD_CHANGE_PATH = "/api/password_change";
     public static final String OWNED_FILE_DETAILS_JSON_PATH = "/api/owned-file-details.json";
+    public static final String LOGIN_HISTORY_PATH = "/api/login-history";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";

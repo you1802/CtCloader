@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import you.fileserver.dto.DefaultApiResponse;
+import you.fileserver.dto.UserLoginHistory;
 import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
@@ -32,6 +33,7 @@ public class FileServerController {
     private final ReportService reportService;
     private final FileDetailService fileDetailService;
     private final FileSizeLimitCalculator fileSizeLimitCalculator;
+    private final LoginHistoryService loginHistoryService;
 
     public FileServerController(UploadService uploadService,
                                 DownloadService DownloadService,
@@ -39,7 +41,8 @@ public class FileServerController {
                                 DeleteService deleteService,
                                 ReportService reportService,
                                 FileDetailService fileDetailService,
-                                FileSizeLimitCalculator fileSizeLimitCalculator) {
+                                FileSizeLimitCalculator fileSizeLimitCalculator,
+                                LoginHistoryService loginHistoryService) {
         this.uploadService = uploadService;
         this.downloadService = DownloadService;
         this.authService = authService;
@@ -47,6 +50,7 @@ public class FileServerController {
         this.reportService = reportService;
         this.fileDetailService = fileDetailService;
         this.fileSizeLimitCalculator = fileSizeLimitCalculator;
+        this.loginHistoryService = loginHistoryService;
     }
 
     //全ての機能があるページ
@@ -178,5 +182,12 @@ public class FileServerController {
     @ResponseBody
     public List<FileDetail> ownedFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return fileDetailService.userOwnedFileDetails(userDetail);
+    }
+
+    //ログイン履歴を取得するAPI
+    @GetMapping(LOGIN_HISTORY_PATH)
+    @ResponseBody
+    public List<UserLoginHistory> loginHistory(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        return loginHistoryService.getLoginHistory(userDetail);
     }
 }

@@ -123,20 +123,20 @@ public class FileDetailService {
         return uploadFileInfoRepository.findAll();
     }
 
-    //テスト用
-    public List<FileDetail> test(){
-        List<FileDetail> fileDetails = new ArrayList<>();
-
-        for (int i = 0; i < 100; i++) {
-            fileDetails.add(FileDetail.builder()
-                            .fileID("uniqueFile" + i)
-                            .size(i * 1000)
-                            .owned(false)
-                            .name("name" + i)
-                            .downloadLock(false)
-                            .uploadDate(LocalDateTime.now().minusSeconds(i))
-                    .build());
-        }
-        return fileDetails;
-    }
+//    //テスト用
+//    public List<FileDetail> test(){
+//        List<FileDetail> fileDetails = new ArrayList<>();
+//
+//        for (int i = 0; i < 100; i++) {
+//            fileDetails.add(FileDetail.builder()
+//                            .fileID("uniqueFile" + i)
+//                            .size(i * 1000)
+//                            .owned(false)
+//                            .name("name" + i)
+//                            .downloadLock(false)
+//                            .uploadDate(LocalDateTime.now().minusSeconds(i))
+//                    .build());
+//        }
+//        return fileDetails;
+//    }
 }
