@@ -32,6 +32,7 @@ public class DeleteService {
         this.uploadFilePasswordRepository = uploadFilePasswordRepository;
         this.uploadFileInfoRepository = uploadFileInfoRepository;
     }
+
     /**
      * ファイル削除メソッド
      * @param fileID ファイルの実際の保存名(ID)
@@ -39,17 +40,15 @@ public class DeleteService {
      * @return 削除成功したかどうかのレスポンス
      */
     public DefaultApiResponse deleteFile(String fileID, String deletePassword, CustomUserDetails userDetail, String ipAddress) {
-        DefaultApiResponse failRes = new DefaultApiResponse(400, "削除に失敗しました"); //失敗時のレスポンス
-
         //リポジトリにフェイル情報があるかの確認
         Optional<UploadFileInfo> uploadFileInfo = uploadFileInfoRepository.findById(fileID);
-        if (uploadFileInfo.isEmpty()) return failRes;
+        if (uploadFileInfo.isEmpty()) return new DefaultApiResponse(400, "削除に失敗しました");
 
         if (!(!(userDetail == null) && (userDetail.userAccount().getRole().equals(AUTH_ADMIN) || userDetail.getUsername().equals(uploadFileInfo.get().getOwner())))) { //ログイン中のユーザーがadminまたはアップロードしたidの場合はパスワード認証を飛ばす
             //ユーザーが設定したファイルとパスワードが一致するかの確認
             Optional<UploadFilePassword> uploadFilePassword = uploadFilePasswordRepository.findById(fileID);
-            if (uploadFilePassword.isEmpty()) return failRes;
-            if (!passwordEncoder.matches(deletePassword, uploadFilePassword.get().getDeletePassword())) return failRes;
+            if (uploadFilePassword.isEmpty()) return new DefaultApiResponse(400, "削除に失敗しました");
+            if (!passwordEncoder.matches(deletePassword, uploadFilePassword.get().getDeletePassword())) return new DefaultApiResponse(400, "削除に失敗しました");
         }
 
         //リポジトリからファイル情報とパスワードを削除

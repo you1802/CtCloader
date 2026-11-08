@@ -182,12 +182,4 @@ public class DownloadService {
 
         return new ResponseEntity<>(streamingResponseBody, headers, HttpStatus.OK);
     }
-
-    /**
-     * 期限切れトークンの削除(１時間に１回実行)
-     */
-    @Scheduled(fixedRate = 3600000)
-    private void deleteExpiredTokens() {
-        downloadTokenInfoRepository.deleteByExpirationDateLessThan(LocalDateTime.now());
-    }
 }

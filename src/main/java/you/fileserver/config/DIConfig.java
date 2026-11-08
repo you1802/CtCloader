@@ -21,14 +21,6 @@ public class DIConfig {
                 .withStoragePath(TEMP_PATH); //一時ファイルの場所指定
     }
 
-    //一定時間後に処理を実行するスケジューラー
-    @Bean
-    public ThreadPoolTaskScheduler taskScheduler() {
-        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(1);
-        return scheduler;
-    }
-
     //csrfトークンを管理するリポジトリ
     @Bean
     public CsrfTokenRepository csrfTokenRepository() {
