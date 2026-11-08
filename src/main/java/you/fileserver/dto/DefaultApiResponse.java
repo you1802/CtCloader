@@ -8,7 +8,7 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
-public class ApiResponse {
-    private String code;
+public class DefaultApiResponse {
+    private int code;
     private String message;
 }
