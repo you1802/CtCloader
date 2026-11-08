@@ -316,6 +316,31 @@
     </div>
 </div>
 
+<!-- ファイル詳細モーダル -->
+<!-- Button trigger modal -->
+<!--<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fileDetailModal">-->
+<!--  Launch demo modal-->
+<!--</button>-->
+<!-- Modal -->
+<div class="modal fade" id="fileDetailModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Modal body text goes here.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- ファイルリストのテーブル -->
 <div class="container mt-5">
     <table id="files-table"></table>
@@ -333,7 +358,7 @@
                 <div id="serverUsage" class="d-flex align-items-center justify-content-center w-100 h-100 pt-1 small text-dark fw-bold text-nowrap" style="z-index: 2; text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 1px 0 #fff, 0 -1px 0 #fff;">
                     サーバー使用状況
                 </div>
-                <div class="progress-bar text-bg-primary position-absolute start-0 top-0 h-100" id="serverProgressBar" style="width: 50%; z-index: 1;"></div>
+                <div class="progress-bar text-bg-primary position-absolute start-0 top-0 h-100" id="serverProgressBar" style="width: 0; z-index: 1;"></div>
             </div>
         </div>
         <div class="col" id="userProgressBarArea">
@@ -345,7 +370,7 @@
                 <div id="userUsage" class="d-flex align-items-center justify-content-center w-100 h-100 pt-1 small text-dark fw-bold text-nowrap" style="z-index: 2; text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff, 0 1px 0 #fff, 0 -1px 0 #fff;">
                     ユーザー使用状況
                 </div>
-                <div class="progress-bar text-bg-primary position-absolute start-0 top-0 h-100" id="userProgressBar" style="width: 50%; z-index: 1;"></div>
+                <div class="progress-bar text-bg-primary position-absolute start-0 top-0 h-100" id="userProgressBar" style="width: 0; z-index: 1;"></div>
             </div>
         </div>
     </div>

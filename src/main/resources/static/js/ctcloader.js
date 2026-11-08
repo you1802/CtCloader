@@ -20,51 +20,71 @@ $(function () {
         language: {
             url: "https://cdn.datatables.net/plug-ins/3.0.1/i18n/ja.json",
         },
-
-        "columnDefs": [
+        order: [], // 初期ソートを無効化
+        columnDefs: [
             {className: "dt-center", "targets": "_all"},
-            {"orderable": false, "targets": [3, 4]},
-            {"width": 120, "targets": 3},
-            {"width": 60, "targets": 4},
-            {searchable: false, "targets": [1, 2, 3, 4]}
+            //{"orderable": false, "targets": [3, 4]},
+            //{"width": 120, "targets": 3},
+            {"width": 60, "targets": [0, 2]},
+            {searchable: false, "targets": [0, 2, 3, 4, 5]}
         ],
         ajax: {
             url: "/api/file-details.json",
             dataSrc: ""
         },
         columns: [
-            {data: "name", title: "ファイル名"},
+            {
+                data: "owned", render: function () {
+
+                }},
+            {
+                data: "name", title: "ファイル名", render: function (data, type, row) {
+                    if (type === "display") {
+                        return `
+                        <button type="button" class="btn btn-link text-start text-decoration-none p-0" onclick="openFileDetailModal('${row.uniqueFileName}')">
+                        ${data}
+                        </button>
+                        `;
+                    }
+                }},
+            {
+                data: "downloadLock", render: function () {
+
+                }},
             {
                 data: "size", title: "サイズ", render: function (data, type) {
                     if (type === "display") {
                         return formatBytes(data);
                     }
                     return data;
-                }
-            },
+                }},
             {data: "uploadDate", title: "アップロード日時"},
-            {
-                data: "uniqueFileName", title: "ダウンロード", render: function (data, type, row) {
-                    if (row.downloadLock === true) {
-                        return `
-                    <button type="button" class="btn btn-link" onclick="lockedFileDownloadModal('${row.uniqueFileName}')">
-                    <i class="bi bi-file-earmark-lock"></i>
-                    </button>
-                    `
-                    } else {
-                        return `<a href="api/download?targetFileName=${data}&token=" class="icon-link"><i class="bi-download"></a>`
-                    }
-                }
-            },
-            {
-                data: null, title: "削除", render: function (data, type, row) {
-                    //if (!row.owned === true) {return null;}
-                    return `
-                    <button type="button" class="btn btn-link" onclick="fileDeleteModal('${row.uniqueFileName}')">
-                    <i class="bi bi-trash"></i>
-                    </button>`
-                }
-            }
+            {data: "lastDownloadDate", title: "最終ダウンロード日時"},
+
+            // {
+            //     data: "uniqueFileName", title: "ダウンロード", render: function (data, type, row) {
+            //         if (row.downloadLock === true) {
+            //             return `
+            //         <button type="button" class="btn btn-link" onclick="lockedFileDownloadModal('${row.uniqueFileName}')">
+            //         <i class="bi bi-file-earmark-lock"></i>
+            //         </button>
+            //         `
+            //         } else {
+            //             return `<a href="api/download?targetFileName=${data}&token=" class="icon-link"><i class="bi-download"></a>`
+            //         }
+            //     }
+            // },
+
+            // {
+            //     data: null, title: "削除", render: function (data, type, row) {
+            //         //if (!row.owned === true) {return null;}
+            //         return `
+            //         <button type="button" class="btn btn-link" onclick="fileDeleteModal('${row.uniqueFileName}')">
+            //         <i class="bi bi-trash"></i>
+            //         </button>
+            //         `
+            //     }
+            // }
         ]
     });
 
@@ -86,8 +106,8 @@ $(function () {
         const i = Math.floor( //与えられた数以下の整数を返す
             Math.log(bytes) / Math.log(k)); //分母の対数の底を何乗したら分子の対数の底になるか
         const sizes = ["Bytes", "KB", "MB", "GB", "TB"]; //iが0ならbytes,1ならKB...
-        return (bytes / Math.pow(k, i)) //bytesをkのi乗でわる
-                .toFixed(decimals) //小数点以下を設定どおりに切り捨て
+        return parseFloat((bytes / Math.pow(k, i)) //bytesをkのi乗でわる
+                .toFixed(decimals)) //小数点以下を設定どおりに切り捨て
             + ' ' + sizes[i]; //サイズの文字を追加
     }
 
@@ -99,6 +119,13 @@ $(function () {
     const $fileControlModalTitle = $("#fileControlModalTitle");
     const $fileControlExecuteButton = $("#fileControlExecuteButton");
     const $fileControlPassword = $("#fileControlPassword");
+    const $fileDetailModal = $("#fileDetailModal");
+
+    //ファイル個別メニュー表示用
+    window.openFileDetailModal = function(uniqueFileName) {
+        bootstrap.Modal.getOrCreateInstance($fileDetailModal[0]).show();
+    };
+
 
     //ファイルのダウンロードまたはアップロードのパスワード入力用モーダルのイベントリスナー
     $fileControlModal.on("hidden.bs.modal", function () {
@@ -697,17 +724,6 @@ $(function () {
     });
 
     /**
-     * バイト数を適切な単位で表示
-     * @param bytes バイト数
-     */
-    function unitConversion(bytes) {
-        if (bytes === 0) return "0 Byte";
-        const unit = ["Bytes", "KB", "MB", "GB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + " " + unit[i];
-    }
-
-    /**
      * バーの見た目を変更
      * @param $barElement バーの要素
      * @param ratio 容量の割合
@@ -734,16 +750,16 @@ $(function () {
                 //サーバー側
                 const serverRatio = json.forumFileSize / json.forumFileSizeLimit * 100;
                 progressBarUpdate($serverProgressBar, serverRatio);
-                $serverRemainingCapacity.text(`空き: ${unitConversion(json.forumFileSizeLimit - json.forumFileSize)}`);   //バーのラベル部分
-                $serverUsage.text(`${unitConversion(json.forumFileSize)} / ${unitConversion(json.forumFileSizeLimit)}`);    //バーの中の部分
+                $serverRemainingCapacity.text(`空き: ${formatBytes(json.forumFileSizeLimit - json.forumFileSize)}`);   //バーのラベル部分
+                $serverUsage.text(`${formatBytes(json.forumFileSize)} / ${formatBytes(json.forumFileSizeLimit)}`);    //バーの中の部分
                 //ユーザー側
                 if (json.userFileSize === -1) {
                     $userProgressBarArea.addClass("d-none");
                 } else {
                     const userRatio = json.userFileSize / json.userFileSizeLimit * 100;
                     progressBarUpdate($userProgressBar, userRatio);
-                    $userRemainingCapacity.text(`残り: ${unitConversion(json.userFileSizeLimit - json.userFileSize)}`);
-                    $userUsage.text(`${unitConversion(json.userFileSize)} / ${unitConversion(json.userFileSizeLimit)}`);
+                    $userRemainingCapacity.text(`残り: ${formatBytes(json.userFileSizeLimit - json.userFileSize)}`);
+                    $userUsage.text(`${formatBytes(json.userFileSize)} / ${formatBytes(json.userFileSizeLimit)}`);
                     $userProgressBarArea.removeClass("d-none");
                 }
             })
