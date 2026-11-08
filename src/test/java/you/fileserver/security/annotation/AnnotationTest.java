@@ -28,17 +28,13 @@ public class AnnotationTest {
     @Test
     @WithMockUser(roles = "USER")
     void isAdminTestWithUser() {
-        Assertions.assertThrows(AuthorizationDeniedException.class, () -> {
-            testMethod.isAdminTest();
-        });
+        Assertions.assertThrows(AuthorizationDeniedException.class, () -> testMethod.isAdminTest());
     }
 
     @Test
     @WithAnonymousUser
     void isAdminTestWithAnonymous() {
-        Assertions.assertThrows(AuthorizationDeniedException.class, () -> {
-            testMethod.isAdminTest();
-        });
+        Assertions.assertThrows(AuthorizationDeniedException.class, () -> testMethod.isAdminTest());
     }
 
     /*
@@ -47,9 +43,7 @@ public class AnnotationTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void isUserTestWithAdmin() {
-        Assertions.assertThrows(AuthorizationDeniedException.class, () -> {
-            testMethod.isUserTest();
-        });
+        Assertions.assertThrows(AuthorizationDeniedException.class, () -> testMethod.isUserTest());
     }
 
     @Test
@@ -61,8 +55,6 @@ public class AnnotationTest {
     @Test
     @WithAnonymousUser
     void isUserTestWithAnonymous() {
-        Assertions.assertThrows(AuthorizationDeniedException.class, () -> {
-            testMethod.isUserTest();
-        });
+        Assertions.assertThrows(AuthorizationDeniedException.class, () -> testMethod.isUserTest());
     }
 }
