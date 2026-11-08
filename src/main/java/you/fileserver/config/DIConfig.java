@@ -3,7 +3,6 @@ package you.fileserver.config;
 import me.desair.tus.server.TusFileUploadService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
@@ -19,14 +18,6 @@ public class DIConfig {
         return new TusFileUploadService()
                 .withUploadUri(TUS_UPLOAD_PATH) //アップロード先のエンドポイントを指定
                 .withStoragePath(TEMP_PATH); //一時ファイルの場所指定
-    }
-
-    //一定時間後に処理を実行するスケジューラー
-    @Bean
-    public ThreadPoolTaskScheduler taskScheduler() {
-        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(1);
-        return scheduler;
     }
 
     //csrfトークンを管理するリポジトリ

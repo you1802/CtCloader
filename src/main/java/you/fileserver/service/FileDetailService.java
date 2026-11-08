@@ -3,6 +3,7 @@ package you.fileserver.service;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.stereotype.Service;
 import you.fileserver.security.annotation.IsAdmin;
+import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.AllFileSizeInfo;
 import you.fileserver.dto.FileDetail;
@@ -34,7 +35,7 @@ public class FileDetailService {
      * ユーザーに提示するファイルリストの情報を返す
      * @return ファイルリスト
      */
-    public List<FileDetail> userFileDetails(CustomUserDetails userDetail) {
+    public List<FileDetail> userForumFileDetails(CustomUserDetails userDetail) {
         Optional<CustomUserDetails> userDetailOpt = Optional.ofNullable(userDetail); //userDetailをオプショナルでラップ
 
         //オプショナルのメソッドを使って必要な情報をリポジトリから取り出す
@@ -58,6 +59,31 @@ public class FileDetailService {
                     .uploadDate(userFileInfo.getUploadDate())
                     .downloadLock(userFileInfo.isDownloadLocked())
                     .owned(owned)
+                    .downloadCount(userFileInfo.getDownloadCount())
+                    .lastDownloadDate(userFileInfo.getLastDownloadDate())
+                    .comment(userFileInfo.getComment())
+                    .build());
+        }
+        return fileDetailList;
+    }
+
+    /**
+     * 自身のアップロードしたファイルの詳細を取得する(ログイン中ユーザー専用)
+     * @param userDetail ログイン中ユーザー
+     * @return ファイルリスト
+     */
+    @IsUser
+    public List<FileDetail> userOwnedFileDetails(CustomUserDetails userDetail) {
+        List<UserUploadFileInfoProjection> ownedUploadFiles = uploadFileInfoRepository.findByOwner(userDetail.getUsername(), UserUploadFileInfoProjection.class);
+        List<FileDetail> fileDetailList = new ArrayList<>();
+        for (UserUploadFileInfoProjection userFileInfo : ownedUploadFiles) {
+            fileDetailList.add(FileDetail.builder()
+                    .fileID(userFileInfo.getFileID())
+                    .size(userFileInfo.getSize())
+                    .name(userFileInfo.getOriginalFileName())
+                    .uploadDate(userFileInfo.getUploadDate())
+                    .downloadLock(userFileInfo.isDownloadLocked())
+                    .owned(true)
                     .downloadCount(userFileInfo.getDownloadCount())
                     .lastDownloadDate(userFileInfo.getLastDownloadDate())
                     .comment(userFileInfo.getComment())
