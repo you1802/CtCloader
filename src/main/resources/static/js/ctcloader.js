@@ -122,7 +122,7 @@ $(function () {
     const $fileDetailModal = $("#fileDetailModal");
 
     //ファイル個別メニュー表示用
-    window.openFileDetailModal = function(uniqueFileName) {
+    window.openFileDetailModal = function(fileID) {
         bootstrap.Modal.getOrCreateInstance($fileDetailModal[0]).show();
     };
 
