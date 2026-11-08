@@ -1,16 +1,15 @@
 package you.fileserver.service;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import you.fileserver.security.annotation.IsAdmin;
+import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.entity.DownloadTokenInfo;
 import you.fileserver.dto.entity.UploadFileInfo;
@@ -57,7 +56,7 @@ public class DownloadService {
      * @param password パスワード
      * @return 結果のレスポンス
      */
-    public ResponseEntity<?> passwordAuth (String fileID, String password, CustomUserDetails userDetail, HttpServletRequest request) {
+    public ResponseEntity<?> passwordAuth (String fileID, String password, CustomUserDetails userDetail, String ipAddress) {
         String currentUserName = userDetail == null ? null : userDetail.getUsername(); //ユーザー名を取得
 
         //ファイルの存在チェック
@@ -68,11 +67,15 @@ public class DownloadService {
 
         if (downloadFileInfo.isDownloadLocked()) { //ダウンロードロックされてる場合
             if (!(passwordEncoder.matches(password, targetFilePassword.getDownloadPassword()) ||  Objects.equals(currentUserName, downloadFileInfo.getOwner()))) { //ダウンロードパスワードまたはアップロードユーザー名が一致しない場合
-                log.info("download password not match. fileID:{} ip:{}" ,fileID , request.getRemoteAddr()); //ログを出力
-                return ResponseEntity.ok(Map.of("code", 401, "message", "パスワードが一致しません"));
+                log.info("download password not match. fileID:{} ip:{}" ,fileID , ipAddress); //ログを出力
+                return ResponseEntity.ok(Map.of(
+                        "code", 401, "message",
+                        "パスワードが一致しません"));
             }
         }
-        return ResponseEntity.ok(Map.of("code", 200, "token", createToken(fileID, 30))); //30秒有効期限のトークンをレスポンスとして返す
+        return ResponseEntity.ok(Map.of(
+                "code", 200,
+                "token", createToken(fileID, 30))); //30秒有効期限のトークンをレスポンスとして返す
     }
 
     /**
@@ -81,11 +84,14 @@ public class DownloadService {
      * @param userDetail ログイン中のユーザー情報
      * @return URL情報が入ったレスポンス
      */
+    @IsUser
     public ResponseEntity<?> createFileTransferUrl(String fileID, CustomUserDetails userDetail) {
         Optional<UploadFileInfo> targetFile = uploadFileInfoRepository.findById(fileID);
         if (targetFile.isEmpty() || userDetail == null || !Objects.equals(targetFile.get().getOwner(), userDetail.getUsername())) return ResponseEntity.badRequest().build(); //ファイルが自身のアップロードしたものでない場合バッドリクエスト
 
-        return ResponseEntity.ok(Map.of("code", 200, "URL", ROOT_URL + DOWNLOAD_PATH + "?fileID=" + fileID + "&token=" + createToken(fileID, 86400))); //DL用URLを組み立てて返す(有効期限１日)
+        return ResponseEntity.ok(Map.of(
+                "code", 200,
+                "URL", ROOT_URL + DOWNLOAD_PATH + "?fileID=" + fileID + "&token=" + createToken(fileID, 86400))); //DL用URLを組み立てて返す(有効期限１日)
     }
 
     /**
@@ -94,7 +100,7 @@ public class DownloadService {
      * @param token トークン
      * @return ファイルデータストリーミングのレスポンス
      */
-    public ResponseEntity<StreamingResponseBody> downloadFile(String fileID, String token, HttpServletRequest request) {
+    public ResponseEntity<StreamingResponseBody> downloadFile(String fileID, String token, String ipAddress) {
         Optional<UploadFileInfo> targetFileInfo = uploadFileInfoRepository.findById(fileID);
         Optional<DownloadTokenInfo> tokenInfo = downloadTokenInfoRepository.findById(token);
 
@@ -102,7 +108,7 @@ public class DownloadService {
 
         if (targetFileInfo.get().isDownloadLocked()) { //ファイルがダウンロードロックされている場合
             if (tokenInfo.isEmpty() || !Objects.equals(fileID, tokenInfo.get().getFileID()) || LocalDateTime.now().isAfter(tokenInfo.get().getExpirationDate())) {
-                log.warn("token not match or expired. fileID:{} ip:{}" ,fileID , request.getRemoteAddr());
+                log.warn("token not match or expired. fileID:{} ip:{}" ,fileID , ipAddress);
                 return ResponseEntity.status(HttpStatus.GONE).build(); //トークンが存在しないまたはトークンに紐づけされているファイル名に一致しない場合またはトークン期限切れの時は 410 gone
             }
         }
@@ -111,7 +117,7 @@ public class DownloadService {
 
         uploadFileInfoRepository.updateDownloadCountAndDate(fileID, LocalDateTime.now()); //最終ダウンロード時間とダウンロード数を更新
 
-        log.info("file downloaded. fileID:{} ip:{}", fileID, request.getRemoteAddr()); //ログを出力
+        log.info("file downloaded. fileID:{} ip:{}", fileID, ipAddress); //ログを出力
 
         return createStreamingResponseEntity(fileID, targetFileInfo.get().getOriginalFileName());
     }
@@ -174,13 +180,5 @@ public class DownloadService {
         headers.setContentLength(file.length()); //ファイルのサイズをセット(これがあると正確な残りDL時間がブラウザに表示される)
 
         return new ResponseEntity<>(streamingResponseBody, headers, HttpStatus.OK);
-    }
-
-    /**
-     * 期限切れトークンの削除(１時間に１回実行)
-     */
-    @Scheduled(fixedRate = 3600000)
-    private void deleteExpiredTokens() {
-        downloadTokenInfoRepository.deleteByExpirationDateLessThan(LocalDateTime.now());
     }
 }
