@@ -115,7 +115,7 @@ $(function () {
     ファイルのダウンロードとアップロード関係
      */
     const $fileControlModal = $("#fileControlModal");
-    const $targetFileName = $("#targetFileName");
+    const $fileID = $("#fileID");
     const $fileControlModalTitle = $("#fileControlModalTitle");
     const $fileControlExecuteButton = $("#fileControlExecuteButton");
     const $fileControlPassword = $("#fileControlPassword");
@@ -133,42 +133,42 @@ $(function () {
     })
 
     //ファイル削除用モーダルを呼び出す
-    function fileDeleteModal(targetFileName) {
-        $targetFileName.val(targetFileName);
+    function fileDeleteModal(fileID) {
+        $fileID.val(fileID);
         $fileControlModalTitle.text("ファイルの削除");
         $fileControlExecuteButton.text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
-            deleteFile($targetFileName.val(), $fileControlPassword.val());
+            deleteFile($fileID.val(), $fileControlPassword.val());
         })
         $fileControlModal.modal("show");
     }
 
     //パスワードロックされたファイルダウンロード用モーダルを呼び出す
-    function lockedFileDownloadModal(targetFileName) {
-        $targetFileName.val(targetFileName);
+    function lockedFileDownloadModal(fileID) {
+        $fileID.val(fileID);
         $fileControlModalTitle.text("ファイルのダウンロード");
         $fileControlExecuteButton.text("ダウンロード").removeClass("btn-danger").addClass("btn-success").off().on("click", function () {
-            downloadFile($targetFileName.val(), $fileControlPassword.val());
+            downloadFile($fileID.val(), $fileControlPassword.val());
         })
         $fileControlModal.modal("show");
     }
 
     /**
      * パスワードが一致する場合、サーバー側からワンタイムトークンを受け取りファイルをダウンロードする
-     * @param targetFileName ダウンロードするファイル名
+     * @param fileID ダウンロードするファイル名
      * @param fileControlPassword ダウンロードするファイルのパスワード
      */
-    function downloadFile(targetFileName, fileControlPassword) {
+    function downloadFile(fileID, fileControlPassword) {
         $.ajax({
             url: "/api/download/auth",
             type: "POST",
             dataType: "json",
             data: {
-                targetFileName: targetFileName,
+                fileID: fileID,
                 fileControlPassword: fileControlPassword
             }
         }).done(function (data) {
             if (data.code === 200) {
-                window.location.href = `/api/download?targetFileName=${targetFileName}&token=${data.token}`;
+                window.location.href = `/api/download?fileID=${fileID}&token=${data.token}`;
             } else {
                 showToast(data.message, "danger");
             }
@@ -179,16 +179,16 @@ $(function () {
 
     /**
      * 削除用関数
-     * @param targetFileName 削除するファイル名
+     * @param fileID 削除するファイルid
      * @param fileControlPassword 削除用パスワード
      */
-    function deleteFile(targetFileName, fileControlPassword) {
+    function deleteFile(fileID, fileControlPassword) {
         $.ajax({
             url: "/api/delete",
             type: "POST",
             dataType: 'json',
             data: {
-                targetFileName: targetFileName,
+                targetFileName: fileID,
                 fileControlPassword: fileControlPassword
             }
         }).done(function (data) {
