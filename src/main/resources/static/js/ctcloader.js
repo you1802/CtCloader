@@ -41,7 +41,7 @@ $(function () {
                 data: "name", title: "ファイル名", render: function (data, type, row) {
                     if (type === "display") {
                         return `
-                        <button type="button" class="btn btn-link text-start text-decoration-none p-0" onclick="openFileDetailModal('${row.uniqueFileName}')">
+                        <button type="button" class="btn btn-link text-start text-decoration-none p-0" onclick="openFileDetailModal('${row.fileID}')">
                         ${data}
                         </button>
                         `;
