@@ -29,7 +29,7 @@ $(function () {
             {searchable: false, "targets": [0, 2, 3, 4, 5]}
         ],
         ajax: {
-            url: "/api/file-details.json",
+            url: "/api/forum-file-details.json",
             dataSrc: ""
         },
         columns: [

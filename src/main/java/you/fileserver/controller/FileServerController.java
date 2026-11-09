@@ -10,11 +10,8 @@ import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import you.fileserver.dto.DefaultApiResponse;
-import you.fileserver.dto.UserLoginHistory;
+import you.fileserver.dto.*;
 import you.fileserver.security.authentication.CustomUserDetails;
-import you.fileserver.dto.AllFileSizeInfo;
-import you.fileserver.dto.FileDetail;
 import you.fileserver.service.*;
 import you.fileserver.utility.FileSizeLimitCalculator;
 
@@ -62,11 +59,18 @@ public class FileServerController {
     /*
      * テーブル関係
      */
-    //ファイルリスト取得用API
-    @GetMapping(FILE_DETAILS_JSON_PATH)
+    //掲示板のファイルリスト取得用API
+    @GetMapping(FORUM_FILE_DETAILS_JSON_PATH)
     @ResponseBody
-    public List<FileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return fileDetailService.userForumFileDetails(userDetail);
+    public List<ForumFileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        return fileDetailService.getUserForumFileDetails(userDetail);
+    }
+
+    //対象ファイルの詳細情報取得API
+    @GetMapping(TARGET_FILE_DETAIL)
+    @ResponseBody
+    public TargetFileDetail getTargetFileDetail(@RequestParam String fileID, @AuthenticationPrincipal CustomUserDetails userDetail) {
+        return fileDetailService.getTargetFileDetail(fileID, userDetail);
     }
 
     //掲示板のすべてのファイルのサイズ合計とログインユーザーのファイル材図合計をかえすAPI(非ログイン時はログインユーザーファイルサイズは-1を返す)
