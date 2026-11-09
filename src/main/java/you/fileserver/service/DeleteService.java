@@ -1,11 +1,14 @@
 package you.fileserver.service;
 
+import jakarta.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import you.fileserver.dto.DefaultApiResponse;
+import you.fileserver.dto.projection.DeleteFileInfoProjection;
+import you.fileserver.exception.DeleteFailureException;
+import you.fileserver.security.annotation.IsAdmin;
 import you.fileserver.security.authentication.CustomUserDetails;
-import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.entity.UploadFilePassword;
 import you.fileserver.repository.UploadFileInfoRepository;
 import you.fileserver.repository.UploadFilePasswordRepository;
@@ -14,7 +17,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import static you.fileserver.config.Constants.AUTH_ADMIN;
 import static you.fileserver.config.Constants.FILE_PATH;
 
 /**
@@ -37,20 +39,56 @@ public class DeleteService {
      * ファイル削除メソッド
      * @param fileID ファイルの実際の保存名(ID)
      * @param deletePassword ユーザーが設定したパスワード
-     * @return 削除成功したかどうかのレスポンス
+     * @return 成功時のレスポンス
      */
-    public DefaultApiResponse deleteFile(String fileID, String deletePassword, CustomUserDetails userDetail, String ipAddress) {
-        //リポジトリにフェイル情報があるかの確認
-        Optional<UploadFileInfo> uploadFileInfo = uploadFileInfoRepository.findById(fileID);
-        if (uploadFileInfo.isEmpty()) return new DefaultApiResponse(400, "削除に失敗しました");
+    public DefaultApiResponse deleteFile(String fileID, String deletePassword, @Nullable CustomUserDetails userDetail, String ipAddress) {
+        Optional<CustomUserDetails> userDetailOpt = Optional.ofNullable(userDetail); //ユーザー情報をオプショナルでラップ
+        //リポジトリにフェイル情報があるかの確認して、あるなら変数に格納
+        DeleteFileInfoProjection fileInfo = uploadFileInfoRepository.findByFileID(fileID, DeleteFileInfoProjection.class)
+                .orElseThrow(() -> new DeleteFailureException("既にデータが存在しません。")); //アップロードの情報がDBにない場合
 
-        if (!(!(userDetail == null) && (userDetail.userAccount().getRole().equals(AUTH_ADMIN) || userDetail.getUsername().equals(uploadFileInfo.get().getOwner())))) { //ログイン中のユーザーがadminまたはアップロードしたidの場合はパスワード認証を飛ばす
-            //ユーザーが設定したファイルとパスワードが一致するかの確認
-            Optional<UploadFilePassword> uploadFilePassword = uploadFilePasswordRepository.findById(fileID);
-            if (uploadFilePassword.isEmpty()) return new DefaultApiResponse(400, "削除に失敗しました");
-            if (!passwordEncoder.matches(deletePassword, uploadFilePassword.get().getDeletePassword())) return new DefaultApiResponse(400, "削除に失敗しました");
+        UploadFilePassword filePassword = uploadFilePasswordRepository.findById(fileID)
+                        .orElseThrow(() -> { //通常あり得ないがアップロード情報は残っていてパスワード情報のみない場合
+                            executeDeleteFile(fileID); //ファイル情報を削除
+                            return new DeleteFailureException("既にデータが存在しません。");
+                        });
+
+        if (passwordEncoder.matches(filePassword.getDeletePassword(), deletePassword)) { //削除用パスワードが一致しない場合
+            userDetailOpt.ifPresentOrElse(user -> { //ユーザーがログイン中の場合
+                if (!user.getUsername().equals(fileInfo.getOwner())) throw new DeleteFailureException(""); //ファイル所有者出ない場合は削除失敗
+            }, () -> {
+                throw new DeleteFailureException(""); //非ログインなら削除失敗
+            });
         }
 
+        executeDeleteFile(fileID); //ファイルの実態とDB情報を削除
+
+        //ログを出力
+        log.info("file delete complete. fileID:{} ip:{}", fileID, ipAddress);
+
+        return new DefaultApiResponse(200, "削除に成功しました。");
+    }
+
+    /**
+     * ADMIN用ファイル削除メソッド。パスワード不要
+     * @param fileID ファイルid
+     * @return 成功時のレスポンス
+     */
+    @IsAdmin
+    public DefaultApiResponse adminDeleteFile(String fileID) {
+        if (uploadFileInfoRepository.existsById(fileID)) throw new DeleteFailureException("既にデータが存在しません。"); //既にデータがない場合
+
+        executeDeleteFile(fileID);
+        log.info("file delete complete. fileID:{}", fileID);
+
+        return new DefaultApiResponse(200, "削除に成功しました。");
+    }
+
+    /**
+     * 対象ファイルの実態とDB上の情報を削除する
+     * @param fileID ファイルid
+     */
+    private void executeDeleteFile(String fileID) {
         //リポジトリからファイル情報とパスワードを削除
         uploadFileInfoRepository.deleteById(fileID);
         uploadFilePasswordRepository.deleteById(fileID);
@@ -59,10 +97,5 @@ public class DeleteService {
         File file = Path.of(FILE_PATH, fileID).toFile();
 
         file.delete();
-
-        //ログを出力
-        log.info("file delete complete. fileID:{} ip:{}", fileID, ipAddress);
-
-        return new DefaultApiResponse(200, "削除に成功しました。");
     }
 }
