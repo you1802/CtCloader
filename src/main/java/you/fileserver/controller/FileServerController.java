@@ -77,7 +77,7 @@ public class FileServerController {
     @GetMapping(ALL_FILESIZE_INFO_PATH)
     @ResponseBody
     public AllFileSizeInfo getAllFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return fileDetailService.allFileDetails(userDetail);
+        return fileDetailService.getAllFileSize(userDetail);
     }
 
     /*
@@ -185,8 +185,8 @@ public class FileServerController {
     //ログイン中ユーザー自身が、アップロードしたファイルのみの詳細リストを取得するAPI(ログイン時専用)
     @GetMapping(OWNED_FILE_DETAILS_JSON_PATH)
     @ResponseBody
-    public List<FileDetail> ownedFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return fileDetailService.userOwnedFileDetails(userDetail);
+    public List<ForumFileDetail> ownedFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        return fileDetailService.getUserOwnedFileDetails(userDetail);
     }
 
     //ログイン履歴を取得するAPI(ログイン時専用)
