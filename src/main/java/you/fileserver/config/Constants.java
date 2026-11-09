@@ -7,7 +7,8 @@ public class Constants {
     //エンドポイント
     public static final String UPLOADER_ROOT_PATH = "/CtCloader";
     //API
-    public static final String FILE_DETAILS_JSON_PATH = "/api/file-details.json";
+    public static final String FORUM_FILE_DETAILS_JSON_PATH = "/api/forum-file-details.json";
+    public static final String TARGET_FILE_DETAIL = "/api/target-file-detail";
     public static final String UPLOAD_PATH = "/api/upload/**";
     public static final String TRANSFER_PATH = "/api/transfer";
     public static final String DOWNLOAD_AUTH_PATH = "/api/download/auth";
