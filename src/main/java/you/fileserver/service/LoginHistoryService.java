@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import you.fileserver.dto.UserLoginHistory;
 import you.fileserver.dto.entity.LoginHistory;
 import you.fileserver.repository.LoginHistoryRepository;
+import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
 
 import java.time.LocalDateTime;
@@ -37,15 +38,12 @@ public class LoginHistoryService {
     }
 
     /**
-     * 最新１０件のログイン履歴をDBから取得する
+     * 最新１０件のログイン履歴をDBから取得する(ログイン時専用)
      * @param userDetail ログイン中ユーザー情報
      * @return リスト
      */
+    @IsUser
     public List<UserLoginHistory> getLoginHistory(CustomUserDetails userDetail) {
-        Optional<CustomUserDetails> userDetailOpt = Optional.ofNullable(userDetail);
-
-        return userDetailOpt.map(user ->
-                loginHistoryRepository.findTop10ByUsernameOrderByLoginAtDesc(user.getUsername(), UserLoginHistory.class))
-                .orElse(null);
+        return loginHistoryRepository.findTop10ByUsernameOrderByLoginAtDesc(userDetail.getUsername(), UserLoginHistory.class);
     }
 }
