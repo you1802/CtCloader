@@ -20,5 +20,5 @@ public class ForumFileDetail {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") //ブラウザにJSONを送るときに見やすい表示に変更する
     private LocalDateTime lastDownloadDate; //最終ダウンロード日時
     private boolean owned; //ファイルの所有者かどうか
-    private boolean downloadLock; //ダウンロードのパスワードロック
+    private boolean downloadLocked; //ダウンロードのパスワードロック
 }

@@ -63,7 +63,7 @@ public class FileDetailService {
                     .size(forumFileInfo.getSize())
                     .uploadDate(forumFileInfo.getUploadDate())
                     .lastDownloadDate(forumFileInfo.getLastDownloadDate())
-                    .downloadLock(forumFileInfo.isDownloadLocked())
+                    .downloadLocked(forumFileInfo.isDownloadLocked())
                     .owned(owned)
                     .build());
         }
@@ -97,8 +97,8 @@ public class FileDetailService {
                         .downloadCount(fileDetail.getDownloadCount())
                         .build();
             }
-            return null;
-        }).orElse(null);
+            return null; //ファイル所有者でない場合NULLをかえす
+        }).orElse(null); //ログイン中でない場合NULLをかえす
     }
 
     /**
@@ -131,7 +131,7 @@ public class FileDetailService {
      * @param userDetail ログインユーザー
      * @return DTO
      */
-    public AllFileSizeInfo allFileDetails(CustomUserDetails userDetail) {
+    public AllFileSizeInfo allFileDetails(@Nullable CustomUserDetails userDetail) {
         Optional<CustomUserDetails> userDetailOpt = Optional.ofNullable(userDetail); //userDetailをオプショナルでラップ
         List<FileSizeInfoProjection> fileSizeInfoList = uploadFileInfoRepository.findAllBy(FileSizeInfoProjection.class); //ファイルサイズ情報をリポジトリから取得
 
