@@ -1,7 +1,12 @@
 package you.fileserver.service;
 
+import jakarta.annotation.Nullable;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.stereotype.Service;
+import you.fileserver.dto.ForumFileDetail;
+import you.fileserver.dto.TargetFileDetail;
+import you.fileserver.dto.projection.TargetFileDetailProjection;
+import you.fileserver.dto.projection.UserForumFileInfoProjection;
 import you.fileserver.security.annotation.IsAdmin;
 import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
@@ -32,39 +37,68 @@ public class FileDetailService {
     }
 
     /**
-     * ユーザーに提示するファイルリストの情報を返す
-     * @return ファイルリスト
+     * ユーザーに表示するファイル掲示板のリストを取得する
+     * @param userDetail ログインユーザー情報(NULL可)
+     * @return 掲示板用ファイルリスト
      */
-    public List<FileDetail> userForumFileDetails(CustomUserDetails userDetail) {
+    public List<ForumFileDetail> getUserForumFileDetails(@Nullable CustomUserDetails userDetail) {
         Optional<CustomUserDetails> userDetailOpt = Optional.ofNullable(userDetail); //userDetailをオプショナルでラップ
+        List<ForumFileDetail> forumFileList = new ArrayList<>(); //掲示板用のファイル詳細リスト
 
         //オプショナルのメソッドを使って必要な情報をリポジトリから取り出す
-        List<UserUploadFileInfoProjection> userUploadFileList = userDetailOpt
-                .map(user -> uploadFileInfoRepository.findByOwnerOrVisible(user.getUsername(), true, UserUploadFileInfoProjection.class)) //ログイン中なら自分のファイル+可視設定に応じて
-                .orElseGet(() -> uploadFileInfoRepository.findByVisible(true, UserUploadFileInfoProjection.class)); //非ログインなら可視設定のみ
+        List<UserForumFileInfoProjection> userForumFileList = userDetailOpt
+                .map(user -> uploadFileInfoRepository.findByOwnerOrVisible(user.getUsername(), true, UserForumFileInfoProjection.class)) //ログイン中なら自分のファイル+可視設定に応じて
+                .orElseGet(() -> uploadFileInfoRepository.findByVisible(true, UserForumFileInfoProjection.class)); //非ログインなら可視設定のみ
 
-        List<FileDetail> fileDetailList = new ArrayList<>(); //ユーザーに送るファイルリスト
-
-        for (UserUploadFileInfoProjection userFileInfo : userUploadFileList) {
-            //ファイルが自分のアップロードしたものかどうかの判定
+        for (UserForumFileInfoProjection forumFileInfo : userForumFileList) {
+            //ファイルが自分のアップロードしたものかの判定
             boolean owned = userDetailOpt
-                    .map(user -> user.getUsername().equals(userFileInfo.getOwner()))
+                    .map(user -> user.getUsername().equals(forumFileInfo.getOwner()))
                     .orElse(false);
 
             //ユーザーに送る情報をリストに格納
-            fileDetailList.add(FileDetail.builder()
-                    .fileID(userFileInfo.getFileID())
-                    .size(userFileInfo.getSize())
-                    .name(userFileInfo.getOriginalFileName())
-                    .uploadDate(userFileInfo.getUploadDate())
-                    .downloadLock(userFileInfo.isDownloadLocked())
+            forumFileList.add(ForumFileDetail.builder()
+                    .fileID(forumFileInfo.getFileID())
+                    .name(forumFileInfo.getOriginalFileName())
+                    .size(forumFileInfo.getSize())
+                    .uploadDate(forumFileInfo.getUploadDate())
+                    .lastDownloadDate(forumFileInfo.getLastDownloadDate())
+                    .downloadLock(forumFileInfo.isDownloadLocked())
                     .owned(owned)
-                    .downloadCount(userFileInfo.getDownloadCount())
-                    .lastDownloadDate(userFileInfo.getLastDownloadDate())
-                    .comment(userFileInfo.getComment())
                     .build());
         }
-        return fileDetailList;
+        return forumFileList;
+    }
+
+    /**
+     * 対象のファイルの詳細情報を返す
+     * @param fileID ファイルID
+     * @param userDetail ログイン中ユーザー情報(NULL可)
+     * @return 対象ファイルの情報
+     */
+    public TargetFileDetail getTargetFileDetail(String fileID, @Nullable CustomUserDetails userDetail) {
+        Optional<CustomUserDetails> userDetailOpt = Optional.ofNullable(userDetail); //userDetailをオプショナルでラップ
+
+        TargetFileDetailProjection fileDetail = uploadFileInfoRepository.findByFileID(fileID, TargetFileDetailProjection.class).orElse(null); //DBから対象ファイルの必要な情報を取得
+
+        if (fileDetail == null) return null; //対象ファイルが存在しない場合はNULLを返す
+        if (fileDetail.isVisible()) { //対象ファイルが可視設定の場合
+            return TargetFileDetail.builder() //情報をビルドしてかえす
+                    .comment(fileDetail.getComment())
+                    .downloadCount(fileDetail.getDownloadCount())
+                    .build();
+        }
+
+        //以下不可視設定の場合、ログイン中かどうかの分岐
+        return userDetailOpt.map(user -> { //ログイン中の場合
+            if (fileDetail.getOwner().equals(user.getUsername())) { //ファイルの所有者の場合
+                return TargetFileDetail.builder() //情報をビルドしてかえす
+                        .comment(fileDetail.getComment())
+                        .downloadCount(fileDetail.getDownloadCount())
+                        .build();
+            }
+            return null;
+        }).orElse(null);
     }
 
     /**
