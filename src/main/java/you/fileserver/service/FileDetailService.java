@@ -100,13 +100,13 @@ public class FileDetailService {
 
     /**
      * 自身のアップロードしたファイルの詳細を取得する(ログイン中ユーザー専用)
-     * @param userDetail ログイン中ユーザー
+     * @param username ログイン中ユーザー名
      * @return ファイルリスト
      */
     @IsUser
-    public List<ForumFileDetail> getUserOwnedFileDetails(CustomUserDetails userDetail) {
+    public List<ForumFileDetail> getUserOwnedFileDetails(String username) {
         //ユーザーが自分でアップロードしたファイルリストを取得
-        List<UserForumFileInfoProjection> ownedUploadFiles = uploadFileInfoRepository.findByOwner(userDetail.getUsername(), UserForumFileInfoProjection.class);
+        List<UserForumFileInfoProjection> ownedUploadFiles = uploadFileInfoRepository.findByOwner(username, UserForumFileInfoProjection.class);
 
         List<ForumFileDetail> fileDetailList = new ArrayList<>(); //ユーザーに送るデータリスト
 

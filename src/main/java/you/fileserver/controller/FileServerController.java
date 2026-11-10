@@ -186,13 +186,13 @@ public class FileServerController {
     @GetMapping(OWNED_FILE_DETAILS_JSON_PATH)
     @ResponseBody
     public List<ForumFileDetail> ownedFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return fileDetailService.getUserOwnedFileDetails(userDetail);
+        return fileDetailService.getUserOwnedFileDetails(userDetail.getUsername());
     }
 
     //ログイン履歴を取得するAPI(ログイン時専用)
     @GetMapping(LOGIN_HISTORY_PATH)
     @ResponseBody
     public List<UserLoginHistory> loginHistory(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return loginHistoryService.getLoginHistory(userDetail);
+        return loginHistoryService.getLoginHistory(userDetail.getUsername());
     }
 }

@@ -1,5 +1,6 @@
 package you.fileserver.config;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,8 +17,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 
-import static you.fileserver.config.Constants.LOGIN_PATH;
-import static you.fileserver.config.Constants.LOGOUT_PATH;
+import static you.fileserver.config.Constants.*;
 
 @Configuration
 @EnableWebSecurity
@@ -34,7 +34,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/**").permitAll()) //仮置き(すべて許可)
+                        .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll() //サーバー内部で発生する転送(FORWARD),エラー処理(ERROR)はすべて許可
+                        .requestMatchers("/CtCloader/**", "/api/**", CSS_PATH, JS_PATH, IMG_PATH).permitAll() //非ログイン中でもアクセス可能な領域
+                        .requestMatchers("/user/api/**").hasRole(AUTH_USER) //ユーザーでログイン中のみアクセス可能なAPI
+                        .requestMatchers("/admin/**").hasRole(AUTH_ADMIN) //ADMINのみアクセス可能な領域
+                        .requestMatchers("/h2-console/**").permitAll() //H2コンソール(開発用)
+                        .anyRequest().denyAll()) //残りはすべてアクセス不可
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/h2-console/**")) //h2コンソール用(開発用)
                 .headers(headers -> headers
@@ -60,6 +65,7 @@ public class SecurityConfig {
                                     "csrfToken", encodeCsrfToken.getToken()
                             ));
                         }))
+
                 //ログインフォームをAPI向けにカスタム
                 .formLogin(login -> login
                         .loginProcessingUrl(LOGIN_PATH)
