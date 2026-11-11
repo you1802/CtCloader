@@ -63,24 +63,27 @@ public class UploadService {
         if (uploadInfo != null && !uploadInfo.isUploadInProgress()) {
             Map<String, String> metaData = uploadInfo.getMetadata(); //ユーザーから送信されたメタデータを取得
             boolean downloadPasswordEnabled = Boolean.parseBoolean(metaData.get("downloadPasswordEnabled"));//ダウンロードパスワードが有効かどうか
-            boolean login = userDetail != null; //ログイン済みかどうか
+            boolean login = userDetail != null; //ログイン中かどうか
 
             String deletePassword = metaData.get("deletePassword");
             String downloadPassword = metaData.get("downloadPassword");
 
             //パスワードの正規表現最終チェック(通常の使用ではこれを満たすことはない)
-            if (!deletePassword.matches(FILE_PASSWORD_REGEX)) {
-                log.warn("file delete password regex not match password:{}", deletePassword);
-                return;
-            }
-            if (downloadPasswordEnabled) {
-                if (!downloadPassword.matches(FILE_PASSWORD_REGEX)) {
-                    log.warn("file download password regex not match password:{}", downloadPassword);
+            if (!login) { //ログイン中ではない場合
+                if (!deletePassword.matches(FILE_PASSWORD_REGEX)) { //正規表現チェック
+                    log.warn("file delete password regex not match password:{}", deletePassword); //ログを出力
                     return;
                 }
             }
 
-            InputStream is = tusFileUploadService.getUploadedBytes(uploadUri);
+            if (downloadPasswordEnabled) { //ダウンロードパスワードロックが有効の場合
+                if (!downloadPassword.matches(FILE_PASSWORD_REGEX)) { //正規表現チェック
+                    log.warn("file download password regex not match password:{}", downloadPassword); //ログを出力
+                    return;
+                }
+            }
+
+            InputStream is = tusFileUploadService.getUploadedBytes(uploadUri); //インプットストリームを取得
 
             String originalFileName = uploadInfo.getFileName().replace(" ", "-"); //オリジナルのファイル名にあるスペースを-に変換する
             String fileID = uploadUri.substring(uploadUri.lastIndexOf("/") + 1); //アップロードURIからアップロードIDを取得しファイルのIDに
@@ -118,8 +121,8 @@ public class UploadService {
             //データベースにパスワードを登録
             UploadFilePassword ufp = UploadFilePassword.builder()
                     .fileID(fileID)
-                    .deletePassword(passwordEncoder.encode(deletePassword))
-                    .downloadPassword(downloadPasswordEnabled ? passwordEncoder.encode(downloadPassword) : "")
+                    .deletePassword(login ? "" : passwordEncoder.encode(deletePassword)) //ログイン中なら削除パスは不要
+                    .downloadPassword(downloadPasswordEnabled ? passwordEncoder.encode(downloadPassword) : "") //ダウンロードロックされてない場合はパス不要
                     .build();
             uploadFilePasswordRepository.save(ufp);
 

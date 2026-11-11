@@ -18,4 +18,9 @@ public class GlobalExceptionHandler {
     public DefaultApiResponse handleServerErrorException(ServerErrorException e) {
         return new DefaultApiResponse(500, "サーバー内部エラー 原因:" + e.getMessage());
     }
+
+    @ExceptionHandler(DeleteFailureException.class)
+    public DefaultApiResponse handleDeleteFailureException(DeleteFailureException e) {
+        return new DefaultApiResponse(500, "削除に失敗しました。" + e.getMessage());
+    }
 }

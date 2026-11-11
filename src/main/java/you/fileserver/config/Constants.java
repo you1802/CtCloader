@@ -22,10 +22,14 @@ public class Constants {
     public static final String FILE_REPORT_PATH = "/api/file_report";
     public static final String ALL_FILESIZE_INFO_PATH = "/api/all_filesize_info";
     public static final String ENABLE_CREATE_ACCOUNT_PATH = "/api/enable_create_account";
-    public static final String DELETE_USER_PATH = "/api/delete_user";
-    public static final String USER_PASSWORD_CHANGE_PATH = "/api/password_change";
-    public static final String OWNED_FILE_DETAILS_JSON_PATH = "/api/owned-file-details.json";
-    public static final String LOGIN_HISTORY_PATH = "/api/login-history";
+    //以下ユーザーログイン中専用API
+    public static final String DELETE_USER_PATH = "/user/api/delete_user";
+    public static final String USER_PASSWORD_CHANGE_PATH = "/user/api/password_change";
+    public static final String OWNED_FILE_DETAILS_JSON_PATH = "/user/api/owned-file-details.json";
+    public static final String LOGIN_HISTORY_PATH = "/user/api/login-history";
+    //以下ADMIN専用
+    public static final String ADMIN_LOGIN_PATH = "/admin/login"; //ADMIN用ログイン画面。ここは全員許可
+    public static final String ADMIN_HOME_PATH = "/admin/home";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";
