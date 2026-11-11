@@ -193,4 +193,10 @@ public class ApiController {
     public DefaultApiResponse adminDeleteFile(@RequestParam String fileID) {
         return deleteService.adminDeleteFile(fileID);
     }
+
+    //ファイルダウンロード用API
+    @GetMapping(ADMIN_DOWNLOAD_PATH)
+    public ResponseEntity<StreamingResponseBody> adminDownload(@RequestParam String fileID) {
+        return downloadService.adminFileDownload(fileID);
+    }
 }

@@ -32,6 +32,7 @@ public class Constants {
     public static final String ADMIN_HOME_PATH = "/admin/home";
     public static final String ADMIN_DELETE_USER_PATH = "/admin/api/delete_user";
     public static final String ADMIN_DELETE_FILE_PATH = "/admin/api/delete_file";
+    public static final String ADMIN_DOWNLOAD_PATH = "/admin/api/download";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";
