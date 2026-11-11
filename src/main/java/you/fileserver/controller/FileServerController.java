@@ -195,4 +195,19 @@ public class FileServerController {
     public List<UserLoginHistory> loginHistory(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return loginHistoryService.getLoginHistory(userDetail.getUsername());
     }
+
+    /*
+    ADMIN関係
+     */
+    //ADMIN用機能がまとまったページ
+    @GetMapping(ADMIN_HOME_PATH)
+    public String adminHome() {
+        return "admin/home";
+    }
+
+    //ADMIN用ログイン画面
+    @GetMapping(ADMIN_LOGIN_PATH)
+    public String adminLogin() {
+        return "admin/login";
+    }
 }

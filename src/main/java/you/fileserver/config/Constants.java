@@ -27,6 +27,9 @@ public class Constants {
     public static final String USER_PASSWORD_CHANGE_PATH = "/user/api/password_change";
     public static final String OWNED_FILE_DETAILS_JSON_PATH = "/user/api/owned-file-details.json";
     public static final String LOGIN_HISTORY_PATH = "/user/api/login-history";
+    //以下ADMIN専用
+    public static final String ADMIN_LOGIN_PATH = "/admin/login"; //ADMIN用ログイン画面。ここは全員許可
+    public static final String ADMIN_HOME_PATH = "/admin/home";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";

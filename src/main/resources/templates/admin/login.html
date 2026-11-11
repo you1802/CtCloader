@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!-- csrfトークンとヘッダー -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>管理者用ログイン画面</title>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>管理者用ログイン画面</h2>
+
+    <!-- ログインフォーム -->
+    <form id="login-form">
+        <div class="form-group">
+            <label for="username">ユーザー名</label>
+            <input type="text" id="username" name="username" required autofocus />
+        </div>
+
+        <div class="form-group">
+            <label for="password">パスワード</label>
+            <input type="password" id="password" name="password" required />
+        </div>
+
+        <p id="error-message" style="display: none; color: red;"></p>
+
+        <button id="login-button" type="submit">ログイン</button>
+    </form>
+
+    <p>こちらは、管理者用ログイン画面です。</p>
+    <p>管理者でない方は、以下のリンクよりトップページへ移動してください。</p>
+    <a href="/CtCloader" class="btn">トップページへ戻る</a>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('login-form');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const errorMessage = document.getElementById('error-message');
+        const loginButton = document.getElementById('login-button');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            // 前回のエラーを消す
+            errorMessage.textContent = '';
+            errorMessage.style.display = 'none';
+            loginButton.disabled = true;
+
+            try {
+                // ヘッダーのmetaタグからCSRFトークンとヘッダー名を取得
+                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+                const headers = {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                };
+                if (csrfToken && csrfHeader) {
+                    headers[csrfHeader] = csrfToken;
+                }
+
+                // AJAXでログイン処理
+                const loginResponse = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: headers,
+                    credentials: 'same-origin',
+                    body: new URLSearchParams({
+                        username: usernameInput.value,
+                        password: passwordInput.value
+                    })
+                });
+
+                const loginResult = await loginResponse.json();
+
+                // code=200 以外は失敗
+                if (loginResult.code !== 200) {
+                    errorMessage.textContent = 'ユーザー名またはパスワードが一致しません。';
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                // 成功時は /api/user にGETでアクセス
+                const userResponse = await fetch('/api/user', {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                });
+
+                const userResult = await userResponse.json();
+                const user = userResult.user ?? userResult.data?.user;
+
+                // user=admin なら /admin/home、それ以外は /CtCloader へ
+                window.location.href = user === 'admin' ? '/admin/home' : '/CtCloader';
+            } catch (error) {
+                errorMessage.textContent = 'ログイン処理中にエラーが発生しました。時間をおいて再度お試しください。';
+                errorMessage.style.display = 'block';
+            } finally {
+                loginButton.disabled = false;
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
