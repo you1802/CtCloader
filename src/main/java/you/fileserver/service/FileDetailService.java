@@ -11,13 +11,10 @@ import you.fileserver.security.annotation.IsAdmin;
 import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.dto.AllFileSizeInfo;
-import you.fileserver.dto.FileDetail;
 import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.projection.FileSizeInfoProjection;
-import you.fileserver.dto.projection.UserUploadFileInfoProjection;
 import you.fileserver.repository.UploadFileInfoRepository;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -72,7 +69,7 @@ public class FileDetailService {
 
     /**
      * 対象のファイルの詳細情報を返す
-     * @param fileID ファイルID
+     * @param fileID ファイルid
      * @param userDetail ログイン中ユーザー情報(NULL可)
      * @return 対象ファイルの情報
      */
@@ -103,24 +100,26 @@ public class FileDetailService {
 
     /**
      * 自身のアップロードしたファイルの詳細を取得する(ログイン中ユーザー専用)
-     * @param userDetail ログイン中ユーザー
+     * @param username ログイン中ユーザー名
      * @return ファイルリスト
      */
     @IsUser
-    public List<FileDetail> userOwnedFileDetails(CustomUserDetails userDetail) {
-        List<UserUploadFileInfoProjection> ownedUploadFiles = uploadFileInfoRepository.findByOwner(userDetail.getUsername(), UserUploadFileInfoProjection.class);
-        List<FileDetail> fileDetailList = new ArrayList<>();
-        for (UserUploadFileInfoProjection userFileInfo : ownedUploadFiles) {
-            fileDetailList.add(FileDetail.builder()
+    public List<ForumFileDetail> getUserOwnedFileDetails(String username) {
+        //ユーザーが自分でアップロードしたファイルリストを取得
+        List<UserForumFileInfoProjection> ownedUploadFiles = uploadFileInfoRepository.findByOwner(username, UserForumFileInfoProjection.class);
+
+        List<ForumFileDetail> fileDetailList = new ArrayList<>(); //ユーザーに送るデータリスト
+
+        //必要な情報をビルドしてリストに格納
+        for (UserForumFileInfoProjection userFileInfo : ownedUploadFiles) {
+            fileDetailList.add(ForumFileDetail.builder()
                     .fileID(userFileInfo.getFileID())
                     .size(userFileInfo.getSize())
                     .name(userFileInfo.getOriginalFileName())
                     .uploadDate(userFileInfo.getUploadDate())
-                    .downloadLock(userFileInfo.isDownloadLocked())
+                    .downloadLocked(userFileInfo.isDownloadLocked())
                     .owned(true)
-                    .downloadCount(userFileInfo.getDownloadCount())
                     .lastDownloadDate(userFileInfo.getLastDownloadDate())
-                    .comment(userFileInfo.getComment())
                     .build());
         }
         return fileDetailList;
@@ -131,7 +130,7 @@ public class FileDetailService {
      * @param userDetail ログインユーザー
      * @return DTO
      */
-    public AllFileSizeInfo allFileDetails(@Nullable CustomUserDetails userDetail) {
+    public AllFileSizeInfo getAllFileSize(@Nullable CustomUserDetails userDetail) {
         Optional<CustomUserDetails> userDetailOpt = Optional.ofNullable(userDetail); //userDetailをオプショナルでラップ
         List<FileSizeInfoProjection> fileSizeInfoList = uploadFileInfoRepository.findAllBy(FileSizeInfoProjection.class); //ファイルサイズ情報をリポジトリから取得
 
@@ -157,20 +156,20 @@ public class FileDetailService {
         return uploadFileInfoRepository.findAll();
     }
 
-    //テスト用
-    public List<FileDetail> test(){
-        List<FileDetail> fileDetails = new ArrayList<>();
-
-        for (int i = 0; i < 100; i++) {
-            fileDetails.add(FileDetail.builder()
-                            .fileID("uniqueFile" + i)
-                            .size(i * 1000)
-                            .owned(false)
-                            .name("name" + i)
-                            .downloadLock(false)
-                            .uploadDate(LocalDateTime.now().minusSeconds(i))
-                    .build());
-        }
-        return fileDetails;
-    }
+//    //テスト用
+//    public List<FileDetail> test(){
+//        List<FileDetail> fileDetails = new ArrayList<>();
+//
+//        for (inti = 0; i < 100; i++) {
+//            fileDetails.add(FileDetail.builder()
+//                            .fileID("uniqueFile" + i)
+//                            .size(i * 1000)
+//                            .owned(false)
+//                            .name("name" + i)
+//                            .downloadLock(false)
+//                            .uploadDate(LocalDateTime.now().minusSeconds(i))
+//                    .build());
+//        }
+//        return fileDetails;
+//    }
 }

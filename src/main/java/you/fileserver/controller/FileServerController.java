@@ -77,7 +77,7 @@ public class FileServerController {
     @GetMapping(ALL_FILESIZE_INFO_PATH)
     @ResponseBody
     public AllFileSizeInfo getAllFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return fileDetailService.allFileDetails(userDetail);
+        return fileDetailService.getAllFileSize(userDetail);
     }
 
     /*
@@ -97,7 +97,7 @@ public class FileServerController {
         return downloadService.passwordAuth(fileID, fileControlPassword, userDetail, request.getRemoteAddr());
     }
 
-    //ファイル転送用URLを発行するAPI
+    //ファイル転送用URLを発行するAPI(ログイン中ユーザー専用)
     @PostMapping(TRANSFER_PATH)
     public ResponseEntity<?> transferUrl(@RequestParam String fileID, @AuthenticationPrincipal CustomUserDetails userDetail) {
         return downloadService.createFileTransferUrl(fileID, userDetail);
@@ -164,6 +164,7 @@ public class FileServerController {
         SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
         logoutHandler.logout(request, response, null);
 
+        //メッセージとcsrfトークンの情報を入れてかえす
         return Map.of(
                 "code", 200,
                 "message", "ユーザーの削除に成功しました。",
@@ -184,14 +185,29 @@ public class FileServerController {
     //ログイン中ユーザー自身が、アップロードしたファイルのみの詳細リストを取得するAPI(ログイン時専用)
     @GetMapping(OWNED_FILE_DETAILS_JSON_PATH)
     @ResponseBody
-    public List<FileDetail> ownedFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return fileDetailService.userOwnedFileDetails(userDetail);
+    public List<ForumFileDetail> ownedFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
+        return fileDetailService.getUserOwnedFileDetails(userDetail.getUsername());
     }
 
-    //ログイン履歴を取得するAPI
+    //ログイン履歴を取得するAPI(ログイン時専用)
     @GetMapping(LOGIN_HISTORY_PATH)
     @ResponseBody
     public List<UserLoginHistory> loginHistory(@AuthenticationPrincipal CustomUserDetails userDetail) {
-        return loginHistoryService.getLoginHistory(userDetail);
+        return loginHistoryService.getLoginHistory(userDetail.getUsername());
+    }
+
+    /*
+    ADMIN関係
+     */
+    //ADMIN用機能がまとまったページ
+    @GetMapping(ADMIN_HOME_PATH)
+    public String adminHome() {
+        return "admin/home";
+    }
+
+    //ADMIN用ログイン画面
+    @GetMapping(ADMIN_LOGIN_PATH)
+    public String adminLogin() {
+        return "admin/login";
     }
 }
