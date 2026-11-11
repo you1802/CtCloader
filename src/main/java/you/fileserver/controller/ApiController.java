@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import you.fileserver.dto.*;
@@ -21,8 +20,11 @@ import java.util.Map;
 
 import static you.fileserver.config.Constants.*;
 
-@Controller
-public class FileServerController {
+/**
+ * Apiをまとめたコントローラー
+ */
+@RestController
+public class ApiController {
     private final UploadService uploadService;
     private final DownloadService downloadService;
     private final DeleteService deleteService;
@@ -32,14 +34,14 @@ public class FileServerController {
     private final FileSizeLimitCalculator fileSizeLimitCalculator;
     private final LoginHistoryService loginHistoryService;
 
-    public FileServerController(UploadService uploadService,
-                                DownloadService DownloadService,
-                                AuthService authService,
-                                DeleteService deleteService,
-                                ReportService reportService,
-                                FileDetailService fileDetailService,
-                                FileSizeLimitCalculator fileSizeLimitCalculator,
-                                LoginHistoryService loginHistoryService) {
+    public ApiController(UploadService uploadService,
+                         DownloadService DownloadService,
+                         AuthService authService,
+                         DeleteService deleteService,
+                         ReportService reportService,
+                         FileDetailService fileDetailService,
+                         FileSizeLimitCalculator fileSizeLimitCalculator,
+                         LoginHistoryService loginHistoryService) {
         this.uploadService = uploadService;
         this.downloadService = DownloadService;
         this.authService = authService;
@@ -50,32 +52,23 @@ public class FileServerController {
         this.loginHistoryService = loginHistoryService;
     }
 
-    //全ての機能があるページ
-    @GetMapping(UPLOADER_ROOT_PATH)
-    public String file() {
-        return "ctcloader";
-    }
-
     /*
      * テーブル関係
      */
     //掲示板のファイルリスト取得用API
     @GetMapping(FORUM_FILE_DETAILS_JSON_PATH)
-    @ResponseBody
     public List<ForumFileDetail> fileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return fileDetailService.getUserForumFileDetails(userDetail);
     }
 
     //対象ファイルの詳細情報取得API
     @GetMapping(TARGET_FILE_DETAIL)
-    @ResponseBody
     public TargetFileDetail getTargetFileDetail(@RequestParam String fileID, @AuthenticationPrincipal CustomUserDetails userDetail) {
         return fileDetailService.getTargetFileDetail(fileID, userDetail);
     }
 
     //掲示板のすべてのファイルのサイズ合計とログインユーザーのファイル材図合計をかえすAPI(非ログイン時はログインユーザーファイルサイズは-1を返す)
     @GetMapping(ALL_FILESIZE_INFO_PATH)
-    @ResponseBody
     public AllFileSizeInfo getAllFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return fileDetailService.getAllFileSize(userDetail);
     }
@@ -111,14 +104,12 @@ public class FileServerController {
 
     //ファイル削除用API
     @PostMapping(DELETE_PATH)
-    @ResponseBody
     public DefaultApiResponse delete(@RequestParam String fileID, @RequestParam String fileControlPassword, @AuthenticationPrincipal CustomUserDetails userDetail, HttpServletRequest request) {
         return deleteService.deleteFile(fileID, fileControlPassword, userDetail, request.getRemoteAddr());
     }
 
     //問題報告用API
     @PostMapping(FILE_REPORT_PATH)
-    @ResponseBody
     public DefaultApiResponse fileReport(@RequestParam String fileID, @RequestParam String comment, HttpServletRequest request) {
         return reportService.saveReport(fileID, comment, request.getRemoteAddr());
     }
@@ -128,35 +119,30 @@ public class FileServerController {
      */
     //ユーザー登録用API
     @PostMapping(REGISTER_PATH)
-    @ResponseBody
     public DefaultApiResponse register(@RequestParam String username, @RequestParam String password) {
         return authService.register(username, password);
     }
 
     //ユーザーネームが登録済みかをチェックするAPI
     @GetMapping(USER_NAME_EXISTS_PATH)
-    @ResponseBody
     public Map<String, Object> UserNameExists(@RequestParam String username) {
         return authService.userNameExists(username);
     }
 
     //ユーザー登録できるかを返すAPI
     @GetMapping(ENABLE_CREATE_ACCOUNT_PATH)
-    @ResponseBody
     public Map<String, Object> enableCreateAccount() {
         return fileSizeLimitCalculator.enableCreateAccount();
     }
 
     //ログイン中のユーザー名取得用API
     @GetMapping(USER_ID_PATH)
-    @ResponseBody
     public Map<String, Object> getUser(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return authService.getUser(userDetail);
     }
 
     //ユーザー削除用API
     @PostMapping(DELETE_USER_PATH)
-    @ResponseBody
     public Map<String, Object> deleteUser(HttpServletRequest request, HttpServletResponse response, CsrfToken csrfToken, @AuthenticationPrincipal CustomUserDetails userDetail) {
         authService.deleteUser(userDetail.getUsername());
 
@@ -174,7 +160,6 @@ public class FileServerController {
 
     //ユーザーパスワード変更用API
     @PostMapping(USER_PASSWORD_CHANGE_PATH)
-    @ResponseBody
     public DefaultApiResponse userPasswordChange(@RequestParam String oldPassword, @RequestParam String newPassword, @AuthenticationPrincipal CustomUserDetails userDetail) {
         return authService.changePassword(oldPassword, newPassword, userDetail);
     }
@@ -184,30 +169,28 @@ public class FileServerController {
      */
     //ログイン中ユーザー自身が、アップロードしたファイルのみの詳細リストを取得するAPI(ログイン時専用)
     @GetMapping(OWNED_FILE_DETAILS_JSON_PATH)
-    @ResponseBody
     public List<ForumFileDetail> ownedFileDetails(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return fileDetailService.getUserOwnedFileDetails(userDetail.getUsername());
     }
 
     //ログイン履歴を取得するAPI(ログイン時専用)
     @GetMapping(LOGIN_HISTORY_PATH)
-    @ResponseBody
     public List<UserLoginHistory> loginHistory(@AuthenticationPrincipal CustomUserDetails userDetail) {
         return loginHistoryService.getLoginHistory(userDetail.getUsername());
     }
 
     /*
-    ADMIN関係
+     * ADMIN関係
      */
-    //ADMIN用機能がまとまったページ
-    @GetMapping(ADMIN_HOME_PATH)
-    public String adminHome() {
-        return "admin/home";
+    //ユーザーを削除するAPI
+    @PostMapping(ADMIN_DELETE_USER_PATH)
+    public DefaultApiResponse adminDeleteUser(@RequestParam String username) {
+        return authService.adminDeleteUser(username);
     }
 
-    //ADMIN用ログイン画面
-    @GetMapping(ADMIN_LOGIN_PATH)
-    public String adminLogin() {
-        return "admin/login";
+    //ファイルを削除するAPI
+    @PostMapping(ADMIN_DELETE_FILE_PATH)
+    public DefaultApiResponse adminDeleteFile(@RequestParam String fileID) {
+        return deleteService.adminDeleteFile(fileID);
     }
 }
