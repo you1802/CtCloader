@@ -22,10 +22,12 @@ $(function () {
         },
         order: [], // 初期ソートを無効化
         columnDefs: [
-            {className: "dt-center", "targets": "_all"},
+            {className: "text-end", "targets": 0},
+            {className: "text-start", "targets": 2},
+            {className: "text-center", "targets": 1},
             //{"orderable": false, "targets": [3, 4]},
-            //{"width": 120, "targets": 3},
-            {"width": 60, "targets": [0, 2]},
+            {"width": 180, "targets": [4, 5]},
+            {"width": 20, "targets": [0, 2]},
             {searchable: false, "targets": [0, 2, 3, 4, 5]}
         ],
         ajax: {
@@ -34,22 +36,33 @@ $(function () {
         },
         columns: [
             {
-                data: "owned", render: function () {
-
+                data: "owned", render: function (data) {
+                    if (data) {
+                        return `<span class="badge text-bg-info p-1 d-inline-block">👤</span>`;
+                    } else {
+                        return "";
+                    }
                 }},
             {
                 data: "name", title: "ファイル名", render: function (data, type, row) {
                     if (type === "display") {
                         return `
-                        <button type="button" class="btn btn-link text-start text-decoration-none p-0" onclick="openFileDetailModal('${row.fileID}')">
-                        ${data}
-                        </button>
+                        <div class="text-truncate" style="max-width: 540px;" title="${data}">
+                            <button type="button" class="btn btn-link text-start text-decoration-none p-0 text-truncate" onclick="openFileDetailModal('${row.fileID}')">
+                                ${data}
+                            </button>
+                        </div>
                         `;
                     }
+                    return data;
                 }},
             {
-                data: "downloadLock", render: function () {
-
+                data: "downloadLocked", render: function (data) {
+                    if (!data) {
+                        return `<i class="bi bi-file-earmark-lock2"></i>`;
+                    } else {
+                        return "";
+                    }
                 }},
             {
                 data: "size", title: "サイズ", render: function (data, type) {
@@ -59,11 +72,13 @@ $(function () {
                     return data;
                 }},
             {data: "uploadDate", title: "アップロード日時"},
-            {data: "lastDownloadDate", title: "最終ダウンロード日時"},
+            {data: "lastDownloadDate", title: "最終ダウンロード日時", render: function (data, type, row) {
+                    return row.uploadDate === data ? "" : data;
+                }},
 
             // {
             //     data: "uniqueFileName", title: "ダウンロード", render: function (data, type, row) {
-            //         if (row.downloadLock === true) {
+            //         if (row.downloadLocked === true) {
             //             return `
             //         <button type="button" class="btn btn-link" onclick="lockedFileDownloadModal('${row.uniqueFileName}')">
             //         <i class="bi bi-file-earmark-lock"></i>
