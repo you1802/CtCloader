@@ -95,7 +95,7 @@ public class SecurityConfig {
                 }))
 
                 //例外処理
-                .exceptionHandling(exception -> { exception
+                .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, _) -> { //認可チェックではじかれた時の処理
                             if (request.getRequestURI().equals(ADMIN_HOME_PATH)) { //管理者用のトップページの場合は管理者用ログイン画面にリダイレクト
                                 response.sendRedirect(ADMIN_LOGIN_PATH);
@@ -114,8 +114,7 @@ public class SecurityConfig {
                                     response.sendError(HttpServletResponse.SC_FORBIDDEN); //ページがある場合は403
                                 }
                             }
-                        });
-                });
+                        }));
         return http.build();
     }
 
