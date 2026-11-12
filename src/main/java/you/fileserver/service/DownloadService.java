@@ -157,7 +157,7 @@ public class DownloadService {
     /**
      * 大容量ファイルをストリーミング配信するためのresponse bodyをが入ったresponse entityを作成する
      * @param fileID サーバー上のファイル名
-     * @param Filename　もともとのファイル名
+     * @param filename　もともとのファイル名
      * @return response entity
      */
     private ResponseEntity<StreamingResponseBody> createStreamingResponseEntity(String fileID, String filename) {
