@@ -12,7 +12,6 @@ import you.fileserver.repository.UploadFilePasswordRepository;
 import you.fileserver.security.annotation.IsAdmin;
 import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
-import you.fileserver.security.authentication.UserDetailServiceImpl;
 import you.fileserver.repository.UserAccountRepository;
 import you.fileserver.utility.FileSizeLimitCalculator;
 
@@ -29,20 +28,17 @@ import static you.fileserver.config.Constants.*;
 @Service
 @Slf4j
 public class AuthService {
-    private final UserDetailServiceImpl userDetailsServiceImpl;
     private final UserAccountRepository userAccountRepository;
     private final FileSizeLimitCalculator fileSizeLimitCalculator;
     private final UploadFileInfoRepository uploadFileInfoRepository;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UserDetailServiceImpl userDetailsServiceImpl,
-                       UserAccountRepository userAccountRepository,
+    public AuthService(UserAccountRepository userAccountRepository,
                        FileSizeLimitCalculator fileSizeLimitCalculator,
                        UploadFileInfoRepository uploadFileInfoRepository,
                        UploadFilePasswordRepository uploadFilePasswordRepository,
                        PasswordEncoder passwordEncoder) {
-        this.userDetailsServiceImpl = userDetailsServiceImpl;
         this.userAccountRepository = userAccountRepository;
         this.fileSizeLimitCalculator = fileSizeLimitCalculator;
         this.uploadFileInfoRepository = uploadFileInfoRepository;
@@ -62,7 +58,7 @@ public class AuthService {
         //サーバーの容量上限の最終チェック
         if (fileSizeLimitCalculator.userAccountLimit()) return new DefaultApiResponse(400, "ユーザー数上限に達しました");
 
-        return userDetailsServiceImpl.saveUserAccount(username, password) ?
+        return saveUserAccount(username, password) ?
                 new DefaultApiResponse(200, "登録完了しました") : new DefaultApiResponse(400, "既に登録されてるユーザー名です");
     }
 
@@ -139,5 +135,25 @@ public class AuthService {
     public DefaultApiResponse adminDeleteUser(String username) {
         deleteUser(username); //同じクラスからのメソッド呼び出しはspring aopを迂回できる(@IsUserチェックを迂回)
         return new DefaultApiResponse(200, "対象のユーザーを情報を削除しました。");
+    }
+
+    /**
+     * ユーザーアカウントとハッシュ化したパスワードをDBに登録する
+     * @param username ユーザーネーム
+     * @param password パスワード
+     * @return 既に使われてる名前ならfalse,登録できたならtrue
+     */
+    private boolean saveUserAccount(String username, String password) {
+        if (userAccountRepository.findById(username).isPresent()) {
+            return false;
+        }
+
+        UserAccount account = UserAccount.builder()
+                .username(username)
+                .password(passwordEncoder.encode(password))
+                .role(AUTH_USER)
+                .build();
+        userAccountRepository.save(account);
+        return true;
     }
 }
