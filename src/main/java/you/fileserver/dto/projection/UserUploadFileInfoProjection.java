@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public interface UserUploadFileInfoProjection {
     String getFileID();
     String getOwner();
-    String getOriginalFileName();
+    String getFilename();
     long getSize();
     LocalDateTime getUploadDate();
     boolean isDownloadLocked();

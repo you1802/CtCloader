@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class ForumFileDetail {
     private String fileID; //ファイルid
-    private String name; //ファイルのもともとの名前
+    private String filename; //ファイルのもともとの名前
     private long size; //ファイルサイズ
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss") //ブラウザにJSONを送るときに見やすい表示に変更する
     private LocalDateTime uploadDate; //アップロード日時
