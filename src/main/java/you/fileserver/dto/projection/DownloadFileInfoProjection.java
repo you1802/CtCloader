@@ -5,7 +5,7 @@ package you.fileserver.dto.projection;
  */
 public interface DownloadFileInfoProjection {
     String getOwner();
-    String getOriginalFileName();
+    String getFilename();
     boolean isVisible();
     boolean isDownloadLocked();
 }

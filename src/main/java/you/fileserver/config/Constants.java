@@ -30,6 +30,9 @@ public class Constants {
     //以下ADMIN専用
     public static final String ADMIN_LOGIN_PATH = "/admin/login"; //ADMIN用ログイン画面。ここは全員許可
     public static final String ADMIN_HOME_PATH = "/admin/home";
+    public static final String ADMIN_DELETE_USER_PATH = "/admin/api/delete_user";
+    public static final String ADMIN_DELETE_FILE_PATH = "/admin/api/delete_file";
+    public static final String ADMIN_DOWNLOAD_PATH = "/admin/api/download";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";

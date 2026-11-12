@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
  */
 public interface UserForumFileInfoProjection {
     String getFileID();
-    String getOriginalFileName();
+    String getFilename();
     long getSize();
     LocalDateTime getUploadDate();
     LocalDateTime getLastDownloadDate();

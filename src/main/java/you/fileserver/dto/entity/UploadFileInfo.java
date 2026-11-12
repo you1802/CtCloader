@@ -19,7 +19,7 @@ public class UploadFileInfo {
     @Id
     private String fileID; //サーバーに保存するファイルの実態の名前
     private String owner; //アップロード時のユーザーID
-    private String originalFileName; //ファイルのもともとの名前
+    private String filename; //ファイルのもともとの名前
     private long size; //ファイルサイズ
     private LocalDateTime uploadDate; //アップロード日時
     private boolean visible; //可視化設定

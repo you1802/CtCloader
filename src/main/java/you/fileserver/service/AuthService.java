@@ -9,6 +9,7 @@ import you.fileserver.dto.projection.DeleteFileInfoProjection;
 import you.fileserver.exception.ServerErrorException;
 import you.fileserver.repository.UploadFileInfoRepository;
 import you.fileserver.repository.UploadFilePasswordRepository;
+import you.fileserver.security.annotation.IsAdmin;
 import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
 import you.fileserver.security.authentication.UserDetailServiceImpl;
@@ -128,5 +129,15 @@ public class AuthService {
         userAccountRepository.deleteById(username); //ユーザー情報を削除
 
         log.info("delete user {} success", username); //ログを出力
+    }
+
+    /**
+     * ADMIN用ユーザー削除メソッド
+     * @param username 対象ユーザー名
+     */
+    @IsAdmin
+    public DefaultApiResponse adminDeleteUser(String username) {
+        deleteUser(username); //同じクラスからのメソッド呼び出しはspring aopを迂回できる(@IsUserチェックを迂回)
+        return new DefaultApiResponse(200, "対象のユーザーを情報を削除しました。");
     }
 }

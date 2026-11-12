@@ -56,7 +56,7 @@ public class FileDetailService {
             //ユーザーに送る情報をリストに格納
             forumFileList.add(ForumFileDetail.builder()
                     .fileID(forumFileInfo.getFileID())
-                    .name(forumFileInfo.getOriginalFileName())
+                    .filename(forumFileInfo.getFilename())
                     .size(forumFileInfo.getSize())
                     .uploadDate(forumFileInfo.getUploadDate())
                     .lastDownloadDate(forumFileInfo.getLastDownloadDate())
@@ -115,7 +115,7 @@ public class FileDetailService {
             fileDetailList.add(ForumFileDetail.builder()
                     .fileID(userFileInfo.getFileID())
                     .size(userFileInfo.getSize())
-                    .name(userFileInfo.getOriginalFileName())
+                    .filename(userFileInfo.getFilename())
                     .uploadDate(userFileInfo.getUploadDate())
                     .downloadLocked(userFileInfo.isDownloadLocked())
                     .owned(true)
