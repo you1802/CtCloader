@@ -85,7 +85,7 @@ public class UploadService {
 
             InputStream is = tusFileUploadService.getUploadedBytes(uploadUri); //インプットストリームを取得
 
-            String originalFileName = uploadInfo.getFileName().replace(" ", "-"); //オリジナルのファイル名にあるスペースを-に変換する
+            String filename = uploadInfo.getFileName().replace(" ", "-"); //オリジナルのファイル名にあるスペースを-に変換する
             String fileID = uploadUri.substring(uploadUri.lastIndexOf("/") + 1); //アップロードURIからアップロードIDを取得しファイルのIDに
 
             Files.copy(is, Path.of(FILE_PATH, fileID)); //保存用ファイル名(ID)でファイルを保存
@@ -105,7 +105,7 @@ public class UploadService {
             //データベースにファイル情報を登録
             UploadFileInfo fileInfo = UploadFileInfo.builder()
                     .owner(ownerName)
-                    .originalFileName(originalFileName)
+                    .filename(filename)
                     .fileID(fileID)
                     .size(uploadInfo.getLength())
                     .uploadDate(now)

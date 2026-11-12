@@ -119,7 +119,7 @@ public class DownloadService {
 
         log.info("file downloaded. fileID:{} ip:{}", fileID, ipAddress); //ログを出力
 
-        return createStreamingResponseEntity(fileID, targetFileInfo.get().getOriginalFileName());
+        return createStreamingResponseEntity(fileID, targetFileInfo.get().getFilename());
     }
 
     /**
@@ -132,7 +132,7 @@ public class DownloadService {
         DownloadFileInfoProjection downloadFileInfo = uploadFileInfoRepository.findByFileID(fileID, DownloadFileInfoProjection.class)
                 .orElseThrow(() -> new TargetFileNotFoundException(fileID));
 
-        return createStreamingResponseEntity(fileID, downloadFileInfo.getOriginalFileName());
+        return createStreamingResponseEntity(fileID, downloadFileInfo.getFilename());
     }
 
     /**
@@ -157,10 +157,10 @@ public class DownloadService {
     /**
      * 大容量ファイルをストリーミング配信するためのresponse bodyをが入ったresponse entityを作成する
      * @param fileID サーバー上のファイル名
-     * @param originalFileName　もともとのファイル名
+     * @param filename　もともとのファイル名
      * @return response entity
      */
-    private ResponseEntity<StreamingResponseBody> createStreamingResponseEntity(String fileID, String originalFileName) {
+    private ResponseEntity<StreamingResponseBody> createStreamingResponseEntity(String fileID, String filename) {
         File file = Path.of(FILE_PATH, fileID).toFile(); //サーバー内のディレクトリと対象ファイル名からファイルオブジェクトを作成
 
         StreamingResponseBody streamingResponseBody = outputStream -> {
@@ -176,7 +176,7 @@ public class DownloadService {
 
         HttpHeaders headers = new HttpHeaders(); //ヘッダーの設定
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM); //コンテンツタイプをOCTET_STREAMに設定(このタイプが設定されているとブラウザで通常表示できる画像データなども自動でDLされる)
-        headers.setContentDispositionFormData("attachment", URLEncoder.encode(originalFileName, StandardCharsets.UTF_8)); //ファイル名をセット
+        headers.setContentDispositionFormData("attachment", URLEncoder.encode(filename, StandardCharsets.UTF_8)); //ファイル名をセット
         headers.setContentLength(file.length()); //ファイルのサイズをセット(これがあると正確な残りDL時間がブラウザに表示される)
 
         return new ResponseEntity<>(streamingResponseBody, headers, HttpStatus.OK);
