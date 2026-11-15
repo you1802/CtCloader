@@ -3,6 +3,7 @@ package you.fileserver.service;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import you.fileserver.dto.AdminUserDetail;
 import you.fileserver.dto.DefaultApiResponse;
 import you.fileserver.dto.entity.UserAccount;
 import you.fileserver.dto.projection.DeleteFileInfoProjection;
@@ -127,15 +128,7 @@ public class AuthService {
         log.info("delete user {} success", username); //ログを出力
     }
 
-    /**
-     * ADMIN用ユーザー削除メソッド
-     * @param username 対象ユーザー名
-     */
-    @IsAdmin
-    public DefaultApiResponse adminDeleteUser(String username) {
-        deleteUser(username); //同じクラスからのメソッド呼び出しはspring aopを迂回できる(@IsUserチェックを迂回)
-        return new DefaultApiResponse(200, "対象のユーザーを情報を削除しました。");
-    }
+
 
     /**
      * ユーザーアカウントとハッシュ化したパスワードをDBに登録する
@@ -155,5 +148,19 @@ public class AuthService {
                 .build();
         userAccountRepository.save(account);
         return true;
+    }
+
+    /**
+     * ADMIN用ユーザー削除メソッド
+     * @param username 対象ユーザー名
+     */
+    @IsAdmin
+    public DefaultApiResponse adminDeleteUser(String username) {
+        deleteUser(username); //同じクラスからのメソッド呼び出しはspring aopを迂回できる(@IsUserチェックを迂回)
+        return new DefaultApiResponse(200, "対象のユーザーを情報を削除しました。");
+    }
+
+    public List<AdminUserDetail> getAdminUserDetails() {
+        return userAccountRepository.findAllWithLastLoginAt();
     }
 }
