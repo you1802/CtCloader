@@ -1,9 +1,10 @@
 package you.fileserver.dto.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.experimental.Tolerate;
+import lombok.NoArgsConstructor;
 
 /**
  * ファイルの問題報告用DTO
@@ -11,6 +12,8 @@ import lombok.experimental.Tolerate;
 @Entity
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class FileReport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +21,4 @@ public class FileReport {
     private String fileID; //ファイルID
     private String comment; //ファイルに対する問題
     private String ipAddress; //報告者のIP
-
-    @Tolerate
-    public FileReport() {}
 }

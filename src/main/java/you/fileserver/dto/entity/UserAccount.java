@@ -2,9 +2,10 @@ package you.fileserver.dto.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.experimental.Tolerate;
+import lombok.NoArgsConstructor;
 
 /**
  * ユーザーアカウントのDTO
@@ -12,12 +13,11 @@ import lombok.experimental.Tolerate;
 @Data
 @Builder
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserAccount {
     @Id
     private String username; //ユーザーネーム
     private String password; //パスワード
     private String role; //ロール
-
-    @Tolerate //builderを使いたいのでこのアノテーションでディフォルトコンストラクタをLombokに隠ぺいする
-    public UserAccount() {}
 }

@@ -182,6 +182,18 @@ public class ApiController {
     /*
      * ADMIN関係
      */
+    //掲示板に表示する情報を取得するAPI
+    @GetMapping(ADMIN_FORUM_FILE_DETAILS_JSON_PATH)
+    public List<AdminForumFileDetail> getAdminForumFileDetails() {
+        return fileDetailService.getAdminForumFileDetails();
+    }
+
+    //対象ファイル詳細情報を取得するAPI
+    @GetMapping(ADMIN_TARGET_FILE_DETAIL_PATH)
+    public AdminTargetFileDetail getAdminTargetFileDetails(@RequestParam String fileID) {
+        return fileDetailService.getAdminTargetFileDetail(fileID);
+    }
+
     //ユーザーを削除するAPI
     @PostMapping(ADMIN_DELETE_USER_PATH)
     public DefaultApiResponse adminDeleteUser(@RequestParam String username) {

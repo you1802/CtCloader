@@ -4,12 +4,9 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import you.fileserver.dto.entity.UserAccount;
 import you.fileserver.repository.UserAccountRepository;
-
-import static you.fileserver.config.Constants.AUTH_USER;
 
 @Component
 public class UserDetailServiceImpl implements UserDetailsService {
