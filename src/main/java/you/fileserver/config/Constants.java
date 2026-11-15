@@ -36,6 +36,7 @@ public class Constants {
     public static final String ADMIN_FORUM_FILE_DETAILS_JSON_PATH = "/admin/api/forum-file-details.json";
     public static final String ADMIN_TARGET_FILE_DETAIL_PATH = "/admin/api/target-file-detail";
     public static final String ADMIN_USER_LIST_PATH = "/admin/user_list";
+    public static final String ADMIN_TARGET_USER_LOGIN_HISTORY_PATH = "/admin/api/target-user-login-history";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";

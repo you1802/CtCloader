@@ -160,6 +160,11 @@ public class AuthService {
         return new DefaultApiResponse(200, "対象のユーザーを情報を削除しました。");
     }
 
+    /**
+     * ADMIN用ユーザー一覧リスト取得メソッド
+     * @return ユーザー一覧リスト
+     */
+    @IsAdmin
     public List<AdminUserDetail> getAdminUserDetails() {
         return userAccountRepository.findAllWithLastLoginAt();
     }

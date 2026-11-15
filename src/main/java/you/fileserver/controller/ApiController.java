@@ -212,6 +212,11 @@ public class ApiController {
         return authService.getAdminUserDetails();
     }
 
+    @GetMapping(ADMIN_TARGET_USER_LOGIN_HISTORY_PATH)
+    public List<UserLoginHistory> getAdminUserLoginHistory(@RequestParam String username) {
+        return loginHistoryService.getAdminLonginHistory(username);
+    }
+
     //ユーザーを削除するAPI
     @PostMapping(ADMIN_DELETE_USER_PATH)
     public DefaultApiResponse adminDeleteUser(@RequestParam String username) {

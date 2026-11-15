@@ -1,9 +1,11 @@
 package you.fileserver.service;
 
 import org.springframework.stereotype.Service;
+import you.fileserver.dto.AdminUserDetail;
 import you.fileserver.dto.UserLoginHistory;
 import you.fileserver.dto.entity.LoginHistory;
 import you.fileserver.repository.LoginHistoryRepository;
+import you.fileserver.security.annotation.IsAdmin;
 import you.fileserver.security.annotation.IsUser;
 
 import java.time.LocalDateTime;
@@ -43,5 +45,10 @@ public class LoginHistoryService {
     @IsUser
     public List<UserLoginHistory> getLoginHistory(String username) {
         return loginHistoryRepository.findTop10ByUsernameOrderByLoginAtDesc(username, UserLoginHistory.class);
+    }
+
+    @IsAdmin
+    public List<UserLoginHistory> getAdminLonginHistory(String username) {
+        return getLoginHistory(username); //同じクラスからのメソッド呼び出しはspring aopを迂回できる(@IsUserチェックを迂回)
     }
 }
