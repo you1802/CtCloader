@@ -67,4 +67,7 @@ public class Constants {
     public static final long FORUM_FILESIZE_LIMIT = 107374182400L; //100ギガバイト
     //サーバーのファイルサイズ上限
     public static final long SERVER_SIZE_LIMIT = 536870912000L; //500ギガバイト
+
+    //1ファイル当たりのサイズ制限
+    public static final long UPLOAD_FILE_SIZE_LIMIT = 5368709120L; //5ギガバイト
 }
