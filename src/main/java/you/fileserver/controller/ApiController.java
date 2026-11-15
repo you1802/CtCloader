@@ -194,12 +194,6 @@ public class ApiController {
         return fileDetailService.getAdminTargetFileDetail(fileID);
     }
 
-    //ユーザーを削除するAPI
-    @PostMapping(ADMIN_DELETE_USER_PATH)
-    public DefaultApiResponse adminDeleteUser(@RequestParam String username) {
-        return authService.adminDeleteUser(username);
-    }
-
     //ファイルを削除するAPI
     @PostMapping(ADMIN_DELETE_FILE_PATH)
     public DefaultApiResponse adminDeleteFile(@RequestParam String fileID) {
@@ -210,5 +204,17 @@ public class ApiController {
     @GetMapping(ADMIN_DOWNLOAD_PATH)
     public ResponseEntity<StreamingResponseBody> adminDownload(@RequestParam String fileID) {
         return downloadService.adminFileDownload(fileID);
+    }
+
+    //ユーザーリスト取得API
+    @GetMapping(ADMIN_USER_LIST_PATH)
+    public List<AdminUserDetail> getAdminUserDetails() {
+        return authService.getAdminUserDetails();
+    }
+
+    //ユーザーを削除するAPI
+    @PostMapping(ADMIN_DELETE_USER_PATH)
+    public DefaultApiResponse adminDeleteUser(@RequestParam String username) {
+        return authService.adminDeleteUser(username);
     }
 }
