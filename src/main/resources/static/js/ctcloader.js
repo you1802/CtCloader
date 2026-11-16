@@ -21,14 +21,14 @@ $(function () {
             url: "https://cdn.datatables.net/plug-ins/3.0.1/i18n/ja.json",
         },
         order: [], // 初期ソートを無効化
+        autoWidth: false,
         columnDefs: [
-            {className: "text-end", "targets": 0},
-            {className: "text-start", "targets": 2},
-            {className: "text-center", "targets": 1},
-            //{"orderable": false, "targets": [3, 4]},
-            {"width": 180, "targets": [4, 5]},
-            {"width": 20, "targets": [0, 2]},
-            {searchable: false, "targets": [0, 2, 3, 4, 5]}
+            {width: 25, targets: 0},
+            {className: "text-center", targets: 1},
+            {width: 20, targets: 2},
+            {width: 90, targets: 3},
+            {width: 175, targets: [4, 5]},
+            {searchable: false, targets: [0, 2, 3, 4, 5]}
         ],
         ajax: {
             url: "/api/forum-file-details.json",
@@ -44,15 +44,11 @@ $(function () {
                     }
                 }},
             {
-                data: "name", title: "ファイル名", render: function (data, type, row) {
+                data: "filename", title: "ファイル名", render: function (data, type, row) {
                     if (type === "display") {
-                        return `
-                        <div class="text-truncate" style="max-width: 540px;" title="${data}">
-                            <button type="button" class="btn btn-link text-start text-decoration-none p-0 text-truncate" onclick="openFileDetailModal('${row.fileID}')">
-                                ${data}
-                            </button>
-                        </div>
-                        `;
+                        const $wrapper = $("<div>", {class: "d-flex filename-container align-items-center w-100 min-w-0"});
+                        const $button = $("<button>", {type: "button", class: "btn btn-link filename text-decoration-none p-0 text-truncate", title: data, text: data, on: {click: function() {openFileDetailModal(row)}}});
+                        return $wrapper.append($button)[0];
                     }
                     return data;
                 }},
@@ -75,31 +71,6 @@ $(function () {
             {data: "lastDownloadDate", title: "最終ダウンロード日時", render: function (data, type, row) {
                     return row.uploadDate === data ? "" : data;
                 }},
-
-            // {
-            //     data: "uniqueFileName", title: "ダウンロード", render: function (data, type, row) {
-            //         if (row.downloadLocked === true) {
-            //             return `
-            //         <button type="button" class="btn btn-link" onclick="lockedFileDownloadModal('${row.uniqueFileName}')">
-            //         <i class="bi bi-file-earmark-lock"></i>
-            //         </button>
-            //         `
-            //         } else {
-            //             return `<a href="api/download?targetFileName=${data}&token=" class="icon-link"><i class="bi-download"></a>`
-            //         }
-            //     }
-            // },
-
-            // {
-            //     data: null, title: "削除", render: function (data, type, row) {
-            //         //if (!row.owned === true) {return null;}
-            //         return `
-            //         <button type="button" class="btn btn-link" onclick="fileDeleteModal('${row.uniqueFileName}')">
-            //         <i class="bi bi-trash"></i>
-            //         </button>
-            //         `
-            //     }
-            // }
         ]
     });
 
@@ -135,9 +106,12 @@ $(function () {
     const $fileControlExecuteButton = $("#fileControlExecuteButton");
     const $fileControlPassword = $("#fileControlPassword");
     const $fileDetailModal = $("#fileDetailModal");
+    const $fileDetailHeader = $("#fileDetailHeader");
 
-    //ファイル個別メニュー表示用
-    window.openFileDetailModal = function(fileID) {
+    //ファイル詳細モーダル表示用関数
+    window.openFileDetailModal = function(row) {
+        const ownedIcon = row.owned ? "<span class=\"badge text-bg-info p-1 d-inline-block\">👤</span>" : "";
+        $fileDetailHeader.html(ownedIcon` ${row.filename}`);
         bootstrap.Modal.getOrCreateInstance($fileDetailModal[0]).show();
     };
 
