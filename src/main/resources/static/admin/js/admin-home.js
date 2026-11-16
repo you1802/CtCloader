@@ -274,23 +274,23 @@ $(function () {
     }
 
     // ファイル一覧・ユーザーファイル一覧の詳細 / ダウンロード / 削除ボタン（委譲）
-    $('#fileTable tbody, #userFileTable tbody').on('click', '.btn-detail', function () {
-        var $btn = $(this);
-        var table = $btn.closest('table').DataTable();
-        var row = table.row($btn.closest('tr')).data();
-        openFileDetail($btn.data('file-id'), row);
-    });
-
-    $('#fileTable tbody, #userFileTable tbody').on('click', '.btn-download', function () {
-        downloadFile($(this).data('file-id'));
-    });
-
-    $('#fileTable tbody, #userFileTable tbody').on('click', '.btn-delete-file', function () {
-        var $btn = $(this);
-        openConfirm(
-            'ファイル「' + $btn.data('filename') + '」を削除しますか？この操作は取り消せません。',
-            function () { deleteFile($btn.data('file-id')); }
-        );
+    $('#fileTable tbody, #userFileTable tbody')
+        .on('click', '.btn-detail', function () {
+            var $btn = $(this);
+            var table = $btn.closest('table').DataTable();
+            var row = table.row($btn.closest('tr')).data();
+            openFileDetail($btn.data('file-id'), row);
+    })
+        .on('click', '.btn-download', function () {
+            downloadFile($(this).data('file-id'));
+    })
+        .on('click', '.btn-delete-file', function () {
+            var $btn = $(this);
+            openConfirm(
+                'ファイル「' + $btn.data('filename') + '」を削除しますか？この操作は取り消せません。',
+                function () {
+                    deleteFile($btn.data('file-id'));
+                });
     });
 
     // ---------- ダウンロード ----------
@@ -411,16 +411,18 @@ $(function () {
         });
     }
 
-    $('#userTable tbody').on('click', '.btn-user-detail', function () {
-        loadUserDetail($(this).data('username'));
-    });
-
-    $('#userTable tbody').on('click', '.btn-delete-user', function () {
-        var username = $(this).data('username');
-        openConfirm(
-            'ユーザー「' + username + '」を削除しますか？この操作は取り消せません。',
-            function () { deleteUser(username); }
-        );
+    $('#userTable tbody')
+        .on('click', '.btn-user-detail', function () {
+            loadUserDetail($(this).data('username'));
+        })
+        .on('click', '.btn-delete-user', function () {
+            var username = $(this).data('username');
+            openConfirm(
+                'ユーザー「' + username + '」を削除しますか？この操作は取り消せません。',
+                function () {
+                    deleteUser(username);
+                }
+            );
     });
 
     $('#closeUserDetailBtn').on('click', function () {
