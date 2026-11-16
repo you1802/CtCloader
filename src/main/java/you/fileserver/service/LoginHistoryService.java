@@ -1,7 +1,8 @@
 package you.fileserver.service;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.stereotype.Service;
-import you.fileserver.dto.AdminUserDetail;
 import you.fileserver.dto.UserLoginHistory;
 import you.fileserver.dto.entity.LoginHistory;
 import you.fileserver.repository.LoginHistoryRepository;
@@ -15,12 +16,10 @@ import java.util.List;
  * ログイン履歴を保存するクラス
  */
 @Service
+@RequiredArgsConstructor
+@EnableMethodSecurity
 public class LoginHistoryService {
     private final LoginHistoryRepository loginHistoryRepository;
-
-    public LoginHistoryService(LoginHistoryRepository loginHistoryRepository) {
-        this.loginHistoryRepository = loginHistoryRepository;
-    }
 
     /**
      * ログイン情報をDBに記録する

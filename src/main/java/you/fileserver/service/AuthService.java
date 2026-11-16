@@ -1,5 +1,6 @@
 package you.fileserver.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import static you.fileserver.config.Constants.*;
  * 認可認証関係のサービスクラス
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class AuthService {
     private final UserAccountRepository userAccountRepository;
@@ -34,18 +36,6 @@ public class AuthService {
     private final UploadFileInfoRepository uploadFileInfoRepository;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public AuthService(UserAccountRepository userAccountRepository,
-                       FileSizeLimitCalculator fileSizeLimitCalculator,
-                       UploadFileInfoRepository uploadFileInfoRepository,
-                       UploadFilePasswordRepository uploadFilePasswordRepository,
-                       PasswordEncoder passwordEncoder) {
-        this.userAccountRepository = userAccountRepository;
-        this.fileSizeLimitCalculator = fileSizeLimitCalculator;
-        this.uploadFileInfoRepository = uploadFileInfoRepository;
-        this.uploadFilePasswordRepository = uploadFilePasswordRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     /**
      * 会員登録用メソッド

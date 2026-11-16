@@ -1,5 +1,6 @@
 package you.fileserver.security;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
@@ -11,12 +12,9 @@ import you.fileserver.service.LoginHistoryService;
  * ログイン成功または失敗時のイベントリスナー用クラス
  */
 @Component
+@RequiredArgsConstructor
 public class LoginEventListener {
     private final LoginHistoryService loginHistoryService;
-
-    public LoginEventListener(LoginHistoryService loginHistoryService) {
-        this.loginHistoryService = loginHistoryService;
-    }
 
     /**
      * ログイン成功時に呼び出されるメソッド

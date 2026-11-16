@@ -2,6 +2,7 @@ package you.fileserver.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import me.desair.tus.server.TusFileUploadService;
 import me.desair.tus.server.exception.TusException;
@@ -27,22 +28,13 @@ import static you.fileserver.config.Constants.FILE_PASSWORD_REGEX;
  * アップロード関係のサービスクラス
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class UploadService {
     TusFileUploadService tusFileUploadService;
     UploadFileInfoRepository uploadFileInfoRepository;
     UploadFilePasswordRepository uploadFilePasswordRepository;
     PasswordEncoder passwordEncoder;
-
-    public UploadService(TusFileUploadService tusFileUploadService,
-                         UploadFileInfoRepository uploadFileInfoRepository,
-                         UploadFilePasswordRepository uploadFilePasswordRepository,
-                         PasswordEncoder passwordEncoder) {
-        this.tusFileUploadService = tusFileUploadService;
-        this.uploadFileInfoRepository = uploadFileInfoRepository;
-        this.uploadFilePasswordRepository = uploadFilePasswordRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     /**
      * 条件を満たせばアップロードしデータベースに情報を保存する

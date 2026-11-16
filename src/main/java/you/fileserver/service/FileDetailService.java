@@ -1,6 +1,7 @@
 package you.fileserver.service;
 
 import jakarta.annotation.Nullable;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.stereotype.Service;
 import you.fileserver.dto.*;
@@ -23,13 +24,10 @@ import static you.fileserver.config.Constants.*;
  * ユーザーにかえすファイルリスト関係のサービスクラス
  */
 @Service
+@RequiredArgsConstructor
 @EnableMethodSecurity
 public class FileDetailService {
     private final UploadFileInfoRepository uploadFileInfoRepository;
-
-    public FileDetailService(UploadFileInfoRepository uploadFileInfoRepository) {
-        this.uploadFileInfoRepository = uploadFileInfoRepository;
-    }
 
     /**
      * ユーザーに表示するファイル掲示板のリストを取得する

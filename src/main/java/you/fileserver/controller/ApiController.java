@@ -2,6 +2,7 @@ package you.fileserver.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import me.desair.tus.server.exception.TusException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,6 +25,7 @@ import static you.fileserver.config.Constants.*;
  * Apiをまとめたコントローラー
  */
 @RestController
+@RequiredArgsConstructor
 public class ApiController {
     private final UploadService uploadService;
     private final DownloadService downloadService;
@@ -33,24 +35,6 @@ public class ApiController {
     private final FileDetailService fileDetailService;
     private final FileSizeLimitCalculator fileSizeLimitCalculator;
     private final LoginHistoryService loginHistoryService;
-
-    public ApiController(UploadService uploadService,
-                         DownloadService DownloadService,
-                         AuthService authService,
-                         DeleteService deleteService,
-                         ReportService reportService,
-                         FileDetailService fileDetailService,
-                         FileSizeLimitCalculator fileSizeLimitCalculator,
-                         LoginHistoryService loginHistoryService) {
-        this.uploadService = uploadService;
-        this.downloadService = DownloadService;
-        this.authService = authService;
-        this.deleteService = deleteService;
-        this.reportService = reportService;
-        this.fileDetailService = fileDetailService;
-        this.fileSizeLimitCalculator = fileSizeLimitCalculator;
-        this.loginHistoryService = loginHistoryService;
-    }
 
     /*
      * テーブル関係

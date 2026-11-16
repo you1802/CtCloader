@@ -1,6 +1,7 @@
 package you.fileserver.service;
 
 import jakarta.annotation.Nullable;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,17 +24,12 @@ import static you.fileserver.config.Constants.FILE_PATH;
  * ファイルの削除関係のサービスクラス
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class DeleteService {
     private final PasswordEncoder passwordEncoder;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
     private final UploadFileInfoRepository uploadFileInfoRepository;
-
-    public DeleteService(PasswordEncoder passwordEncoder, UploadFilePasswordRepository uploadFilePasswordRepository, UploadFileInfoRepository uploadFileInfoRepository) {
-        this.passwordEncoder = passwordEncoder;
-        this.uploadFilePasswordRepository = uploadFilePasswordRepository;
-        this.uploadFileInfoRepository = uploadFileInfoRepository;
-    }
 
     /**
      * ファイル削除メソッド
