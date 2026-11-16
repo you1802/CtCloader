@@ -1,5 +1,6 @@
 package you.fileserver.utility;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import you.fileserver.repository.DownloadTokenInfoRepository;
@@ -7,12 +8,9 @@ import you.fileserver.repository.DownloadTokenInfoRepository;
 import java.time.LocalDateTime;
 
 @Component
+@RequiredArgsConstructor
 public class ScheduledTask {
     DownloadTokenInfoRepository downloadTokenInfoRepository;
-
-    public ScheduledTask(DownloadTokenInfoRepository downloadTokenInfoRepository) {
-        this.downloadTokenInfoRepository = downloadTokenInfoRepository;
-    }
 
     /**
      * 定期実行メソッド(１時間に１回実行)

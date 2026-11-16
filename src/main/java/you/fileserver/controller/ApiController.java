@@ -2,6 +2,7 @@ package you.fileserver.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import me.desair.tus.server.exception.TusException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,6 +25,7 @@ import static you.fileserver.config.Constants.*;
  * Apiをまとめたコントローラー
  */
 @RestController
+@RequiredArgsConstructor
 public class ApiController {
     private final UploadService uploadService;
     private final DownloadService downloadService;
@@ -33,24 +35,6 @@ public class ApiController {
     private final FileDetailService fileDetailService;
     private final FileSizeLimitCalculator fileSizeLimitCalculator;
     private final LoginHistoryService loginHistoryService;
-
-    public ApiController(UploadService uploadService,
-                         DownloadService DownloadService,
-                         AuthService authService,
-                         DeleteService deleteService,
-                         ReportService reportService,
-                         FileDetailService fileDetailService,
-                         FileSizeLimitCalculator fileSizeLimitCalculator,
-                         LoginHistoryService loginHistoryService) {
-        this.uploadService = uploadService;
-        this.downloadService = DownloadService;
-        this.authService = authService;
-        this.deleteService = deleteService;
-        this.reportService = reportService;
-        this.fileDetailService = fileDetailService;
-        this.fileSizeLimitCalculator = fileSizeLimitCalculator;
-        this.loginHistoryService = loginHistoryService;
-    }
 
     /*
      * テーブル関係
@@ -182,10 +166,16 @@ public class ApiController {
     /*
      * ADMIN関係
      */
-    //ユーザーを削除するAPI
-    @PostMapping(ADMIN_DELETE_USER_PATH)
-    public DefaultApiResponse adminDeleteUser(@RequestParam String username) {
-        return authService.adminDeleteUser(username);
+    //掲示板に表示する情報を取得するAPI
+    @GetMapping(ADMIN_FORUM_FILE_DETAILS_JSON_PATH)
+    public List<AdminForumFileDetail> getAdminForumFileDetails() {
+        return fileDetailService.getAdminForumFileDetails();
+    }
+
+    //対象ファイル詳細情報を取得するAPI
+    @GetMapping(ADMIN_TARGET_FILE_DETAIL_PATH)
+    public AdminTargetFileDetail getAdminTargetFileDetails(@RequestParam String fileID) {
+        return fileDetailService.getAdminTargetFileDetail(fileID);
     }
 
     //ファイルを削除するAPI
@@ -198,5 +188,29 @@ public class ApiController {
     @GetMapping(ADMIN_DOWNLOAD_PATH)
     public ResponseEntity<StreamingResponseBody> adminDownload(@RequestParam String fileID) {
         return downloadService.adminFileDownload(fileID);
+    }
+
+    //ユーザーリスト取得API
+    @GetMapping(ADMIN_USER_LIST_PATH)
+    public List<AdminUserDetail> getAdminUserDetails() {
+        return authService.getAdminUserDetails();
+    }
+
+    //ユーザーのログイン履歴取得API
+    @GetMapping(ADMIN_TARGET_USER_LOGIN_HISTORY_PATH)
+    public List<UserLoginHistory> getAdminUserLoginHistory(@RequestParam String username) {
+        return loginHistoryService.getAdminLonginHistory(username);
+    }
+
+    //ユーザーがアップロードしたファイルリスト取得API
+    @GetMapping(ADMIN_TARGET_USER_FILE_DETAILS_PATH)
+    public List<AdminForumFileDetail> getAdminForumFileDetails(@RequestParam String username) {
+        return fileDetailService.getAdminTargetUserFileDetails(username);
+    }
+
+    //ユーザーを削除するAPI
+    @PostMapping(ADMIN_DELETE_USER_PATH)
+    public DefaultApiResponse adminDeleteUser(@RequestParam String username) {
+        return authService.adminDeleteUser(username);
     }
 }

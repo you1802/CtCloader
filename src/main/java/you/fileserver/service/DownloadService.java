@@ -1,5 +1,6 @@
 package you.fileserver.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -33,22 +34,13 @@ import static you.fileserver.config.Constants.*;
  * ダウンロード関係のサービスクラス
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class DownloadService {
     private final PasswordEncoder passwordEncoder;
     private final UploadFileInfoRepository uploadFileInfoRepository;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
     private final DownloadTokenInfoRepository downloadTokenInfoRepository;
-
-    public DownloadService(PasswordEncoder passwordEncoder,
-                           UploadFileInfoRepository uploadFileInfoRepository,
-                           UploadFilePasswordRepository uploadFilePasswordRepository,
-                           DownloadTokenInfoRepository downloadTokenInfoRepository) {
-        this.passwordEncoder = passwordEncoder;
-        this.uploadFileInfoRepository = uploadFileInfoRepository;
-        this.uploadFilePasswordRepository = uploadFilePasswordRepository;
-        this.downloadTokenInfoRepository = downloadTokenInfoRepository;
-    }
 
     /**
      * ダウンロード対象のファイル名とパスワードを受け取ってパスワードが一致した場合または権限が適性の場合、ダウンロードに必要なトークンを返す

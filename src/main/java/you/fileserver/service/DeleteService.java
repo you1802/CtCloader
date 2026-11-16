@@ -1,6 +1,7 @@
 package you.fileserver.service;
 
 import jakarta.annotation.Nullable;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -23,17 +24,12 @@ import static you.fileserver.config.Constants.FILE_PATH;
  * ファイルの削除関係のサービスクラス
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class DeleteService {
     private final PasswordEncoder passwordEncoder;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
     private final UploadFileInfoRepository uploadFileInfoRepository;
-
-    public DeleteService(PasswordEncoder passwordEncoder, UploadFilePasswordRepository uploadFilePasswordRepository, UploadFileInfoRepository uploadFileInfoRepository) {
-        this.passwordEncoder = passwordEncoder;
-        this.uploadFilePasswordRepository = uploadFilePasswordRepository;
-        this.uploadFileInfoRepository = uploadFileInfoRepository;
-    }
 
     /**
      * ファイル削除メソッド
@@ -78,7 +74,7 @@ public class DeleteService {
      */
     @IsAdmin
     public DefaultApiResponse adminDeleteFile(String fileID) {
-        if (uploadFileInfoRepository.existsById(fileID)) throw new DeleteFailureException("既にデータが存在しません。"); //既にデータがない場合
+        if (!uploadFileInfoRepository.existsById(fileID)) throw new DeleteFailureException("既にデータが存在しません。"); //既にデータがない場合
 
         executeDeleteFile(fileID);
         log.info("file delete complete. fileID:{}", fileID);
@@ -98,6 +94,6 @@ public class DeleteService {
         //ファイル実体を削除
         File file = Path.of(FILE_PATH, fileID).toFile();
 
-        file.delete();
+        if (!file.delete()) log.error("server file delete fail fileID:{}.", fileID);
     }
 }

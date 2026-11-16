@@ -2,9 +2,10 @@ package you.fileserver.dto.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.experimental.Tolerate;
+import lombok.NoArgsConstructor;
 
 /**
  * アップロードされたファイルのパスワード用DTO
@@ -12,12 +13,11 @@ import lombok.experimental.Tolerate;
 @Data
 @Entity
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UploadFilePassword {
     @Id
-    private String fileID; //ファイルID
+    private String fileID; //ファイルid
     private String downloadPassword; //ダウンロードパスワード
     private String deletePassword; //削除パスワード
-
-    @Tolerate //builderを使いたいのでこのアノテーションでディフォルトコンストラクタをLombokに隠ぺいする
-    public UploadFilePassword() {}
 }

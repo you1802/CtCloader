@@ -1,17 +1,16 @@
 package you.fileserver.service;
 
 import jakarta.annotation.Nullable;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.stereotype.Service;
-import you.fileserver.dto.ForumFileDetail;
-import you.fileserver.dto.TargetFileDetail;
+import you.fileserver.dto.*;
+import you.fileserver.dto.projection.AdminTargetFileDetailProjection;
 import you.fileserver.dto.projection.TargetFileDetailProjection;
 import you.fileserver.dto.projection.UserForumFileInfoProjection;
 import you.fileserver.security.annotation.IsAdmin;
 import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
-import you.fileserver.dto.AllFileSizeInfo;
-import you.fileserver.dto.entity.UploadFileInfo;
 import you.fileserver.dto.projection.FileSizeInfoProjection;
 import you.fileserver.repository.UploadFileInfoRepository;
 
@@ -25,13 +24,10 @@ import static you.fileserver.config.Constants.*;
  * ユーザーにかえすファイルリスト関係のサービスクラス
  */
 @Service
+@RequiredArgsConstructor
 @EnableMethodSecurity
 public class FileDetailService {
     private final UploadFileInfoRepository uploadFileInfoRepository;
-
-    public FileDetailService(UploadFileInfoRepository uploadFileInfoRepository) {
-        this.uploadFileInfoRepository = uploadFileInfoRepository;
-    }
 
     /**
      * ユーザーに表示するファイル掲示板のリストを取得する
@@ -148,12 +144,41 @@ public class FileDetailService {
     }
 
     /**
-     * ADMIN用ファイル詳細情報
+     * ADMIN用掲示板表示ファイル詳細取得
      * @return DTO
      */
     @IsAdmin
-    public List<UploadFileInfo> adminFileDetails() {
-        return uploadFileInfoRepository.findAll();
+    public List<AdminForumFileDetail> getAdminForumFileDetails() {
+        return uploadFileInfoRepository.adminFindAllForumFiles();
+    }
+
+    /**
+     * ADMIN用対象ファイル詳細情報
+     * @param fileID ファイルid
+     * @return DTO
+     */
+    @IsAdmin
+    public AdminTargetFileDetail getAdminTargetFileDetail(String fileID) {
+        AdminTargetFileDetailProjection fileDetail = uploadFileInfoRepository.findByFileID(fileID, AdminTargetFileDetailProjection.class).orElse(null);
+
+        //対象ファイルの情報が存在するなら情報を入れてDTOをかえす。存在しないならNULLを返す
+        return fileDetail == null ? null :
+                AdminTargetFileDetail.builder()
+                        .comment(fileDetail.getComment())
+                        .ipAddress(fileDetail.getIpAddress())
+                        .downloadCount(fileDetail.getDownloadCount())
+                        .fileReports(fileDetail.getFileReports())
+                        .build();
+    }
+
+    /**
+     * ADMIN用、ユーザーがアップロードしたファイルリストを返す
+     * @param username 対象ユーザー名
+     * @return ファイルリスト
+     */
+    @IsAdmin
+    public List<AdminForumFileDetail> getAdminTargetUserFileDetails(String username) {
+        return uploadFileInfoRepository.adminFindByUsernameForumFiles(username);
     }
 
 //    //テスト用

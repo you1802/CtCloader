@@ -1,5 +1,6 @@
 package you.fileserver.service;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import you.fileserver.dto.DefaultApiResponse;
 import you.fileserver.dto.entity.FileReport;
@@ -9,12 +10,9 @@ import you.fileserver.repository.FileReportRepository;
  * ファイルの問題報告関係のサービスクラス
  */
 @Service
+@RequiredArgsConstructor
 public class ReportService {
     private final FileReportRepository fileReportRepository;
-
-    public ReportService(FileReportRepository fileReportRepository) {
-        this.fileReportRepository = fileReportRepository;
-    }
 
     /**
      * ユーザーから受け取った報告をDBに登録する

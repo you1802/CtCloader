@@ -1,5 +1,6 @@
 package you.fileserver.utility;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import you.fileserver.repository.UserAccountRepository;
 
@@ -8,12 +9,9 @@ import java.util.Map;
 import static you.fileserver.config.Constants.*;
 
 @Component
+@RequiredArgsConstructor
 public class FileSizeLimitCalculator {
     private final UserAccountRepository userAccountRepository;
-
-    public FileSizeLimitCalculator(UserAccountRepository userAccountRepository) {
-        this.userAccountRepository = userAccountRepository;
-    }
 
     /**
      * ユーザー登録の時サーバーのサイズ上限を超えないかをチェックする

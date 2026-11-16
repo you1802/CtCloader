@@ -1,8 +1,10 @@
 package you.fileserver.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import you.fileserver.dto.AdminUserDetail;
 import you.fileserver.dto.DefaultApiResponse;
 import you.fileserver.dto.entity.UserAccount;
 import you.fileserver.dto.projection.DeleteFileInfoProjection;
@@ -12,7 +14,6 @@ import you.fileserver.repository.UploadFilePasswordRepository;
 import you.fileserver.security.annotation.IsAdmin;
 import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
-import you.fileserver.security.authentication.UserDetailServiceImpl;
 import you.fileserver.repository.UserAccountRepository;
 import you.fileserver.utility.FileSizeLimitCalculator;
 
@@ -27,28 +28,14 @@ import static you.fileserver.config.Constants.*;
  * 認可認証関係のサービスクラス
  */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class AuthService {
-    private final UserDetailServiceImpl userDetailsServiceImpl;
     private final UserAccountRepository userAccountRepository;
     private final FileSizeLimitCalculator fileSizeLimitCalculator;
     private final UploadFileInfoRepository uploadFileInfoRepository;
     private final UploadFilePasswordRepository uploadFilePasswordRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public AuthService(UserDetailServiceImpl userDetailsServiceImpl,
-                       UserAccountRepository userAccountRepository,
-                       FileSizeLimitCalculator fileSizeLimitCalculator,
-                       UploadFileInfoRepository uploadFileInfoRepository,
-                       UploadFilePasswordRepository uploadFilePasswordRepository,
-                       PasswordEncoder passwordEncoder) {
-        this.userDetailsServiceImpl = userDetailsServiceImpl;
-        this.userAccountRepository = userAccountRepository;
-        this.fileSizeLimitCalculator = fileSizeLimitCalculator;
-        this.uploadFileInfoRepository = uploadFileInfoRepository;
-        this.uploadFilePasswordRepository = uploadFilePasswordRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     /**
      * 会員登録用メソッド
@@ -62,7 +49,7 @@ public class AuthService {
         //サーバーの容量上限の最終チェック
         if (fileSizeLimitCalculator.userAccountLimit()) return new DefaultApiResponse(400, "ユーザー数上限に達しました");
 
-        return userDetailsServiceImpl.saveUserAccount(username, password) ?
+        return saveUserAccount(username, password) ?
                 new DefaultApiResponse(200, "登録完了しました") : new DefaultApiResponse(400, "既に登録されてるユーザー名です");
     }
 
@@ -122,13 +109,35 @@ public class AuthService {
             // ファイル実体を削除
             File targetFile = Path.of(FILE_PATH, fileID).toFile();
             if (targetFile.exists()) {
-                targetFile.delete();
+                if (!targetFile.delete()) log.error("server file delete fail fileID:{}.", fileID);
             }
         });
 
         userAccountRepository.deleteById(username); //ユーザー情報を削除
 
         log.info("delete user {} success", username); //ログを出力
+    }
+
+
+
+    /**
+     * ユーザーアカウントとハッシュ化したパスワードをDBに登録する
+     * @param username ユーザーネーム
+     * @param password パスワード
+     * @return 既に使われてる名前ならfalse,登録できたならtrue
+     */
+    private boolean saveUserAccount(String username, String password) {
+        if (userAccountRepository.findById(username).isPresent()) {
+            return false;
+        }
+
+        UserAccount account = UserAccount.builder()
+                .username(username)
+                .password(passwordEncoder.encode(password))
+                .role(AUTH_USER)
+                .build();
+        userAccountRepository.save(account);
+        return true;
     }
 
     /**
@@ -139,5 +148,14 @@ public class AuthService {
     public DefaultApiResponse adminDeleteUser(String username) {
         deleteUser(username); //同じクラスからのメソッド呼び出しはspring aopを迂回できる(@IsUserチェックを迂回)
         return new DefaultApiResponse(200, "対象のユーザーを情報を削除しました。");
+    }
+
+    /**
+     * ADMIN用ユーザー一覧リスト取得メソッド
+     * @return ユーザー一覧リスト
+     */
+    @IsAdmin
+    public List<AdminUserDetail> getAdminUserDetails() {
+        return userAccountRepository.findAllWithLastLoginAt();
     }
 }

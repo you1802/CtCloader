@@ -2,6 +2,7 @@ package you.fileserver.config;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -21,22 +22,13 @@ import java.util.Map;
 import static you.fileserver.config.Constants.*;
 
 @Configuration
+@RequiredArgsConstructor
 @EnableWebSecurity
 public class SecurityConfig {
     private final ObjectMapper objectMapper;
     private final CsrfTokenRepository csrfTokenRepository;
     private final XorCsrfTokenRequestAttributeHandler tokenHandler;
     private final RequestMappingHandlerMapping handlerMapping;
-
-    public SecurityConfig(ObjectMapper objectMapper,
-                          CsrfTokenRepository csrfTokenRepository,
-                          XorCsrfTokenRequestAttributeHandler tokenHandler,
-                          RequestMappingHandlerMapping handlerMapping) {
-        this.objectMapper = objectMapper;
-        this.csrfTokenRepository = csrfTokenRepository;
-        this.tokenHandler = tokenHandler;
-        this.handlerMapping = handlerMapping;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -109,9 +101,9 @@ public class SecurityConfig {
                                 } catch (Exception _) {} //エラー時は存在しないものとして扱う
 
                                 if (isPageExists) {
-                                    response.sendError(HttpServletResponse.SC_NOT_FOUND); //ページがない場合は404
-                                } else {
                                     response.sendError(HttpServletResponse.SC_FORBIDDEN); //ページがある場合は403
+                                } else {
+                                    response.sendError(HttpServletResponse.SC_NOT_FOUND); //ページがない場合は404
                                 }
                             }
                         }));
