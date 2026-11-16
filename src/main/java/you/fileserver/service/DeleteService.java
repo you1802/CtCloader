@@ -78,7 +78,7 @@ public class DeleteService {
      */
     @IsAdmin
     public DefaultApiResponse adminDeleteFile(String fileID) {
-        if (uploadFileInfoRepository.existsById(fileID)) throw new DeleteFailureException("既にデータが存在しません。"); //既にデータがない場合
+        if (!uploadFileInfoRepository.existsById(fileID)) throw new DeleteFailureException("既にデータが存在しません。"); //既にデータがない場合
 
         executeDeleteFile(fileID);
         log.info("file delete complete. fileID:{}", fileID);

@@ -173,6 +173,16 @@ public class FileDetailService {
                         .build();
     }
 
+    /**
+     * ADMIN用、ユーザーがアップロードしたファイルリストを返す
+     * @param username 対象ユーザー名
+     * @return ファイルリスト
+     */
+    @IsAdmin
+    public List<AdminForumFileDetail> getAdminTargetUserFileDetails(String username) {
+        return uploadFileInfoRepository.adminFindByUsernameForumFiles(username);
+    }
+
 //    //テスト用
 //    public List<FileDetail> test(){
 //        List<FileDetail> fileDetails = new ArrayList<>();

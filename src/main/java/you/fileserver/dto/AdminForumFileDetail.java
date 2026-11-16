@@ -18,5 +18,6 @@ public class AdminForumFileDetail {
     private LocalDateTime lastDownloadDate; //最終ダウンロード日時
     private String owner; //アップロードしたユーザー名
     private boolean downloadLocked; //ダウンロードのパスワードロック
+    private boolean visible; //可視設定
     private int reportCount; //問題報告件数
 }

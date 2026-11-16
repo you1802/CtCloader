@@ -75,12 +75,32 @@ public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,S
                     f.lastDownloadDate,
                     f.owner,
                     f.downloadLocked,
+                    f.visible,
                     SIZE(f.fileReports)
                 )
                 FROM UploadFileInfo f
             """)
     List<AdminForumFileDetail> adminFindAllForumFiles();
 
+    /**
+     * ADMIN専用、対象ユーザーのファイルデータすべてと問題報告件数を取得する
+     * @return リスト
+     */
+    @Query("""
+                SELECT new you.fileserver.dto.AdminForumFileDetail(
+                    f.fileID,
+                    f.filename,
+                    f.size,
+                    f.uploadDate,
+                    f.lastDownloadDate,
+                    f.owner,
+                    f.downloadLocked,
+                    f.visible,
+                    SIZE(f.fileReports)
+                )
+                FROM UploadFileInfo f WHERE f.owner = :username
+            """)
+    List<AdminForumFileDetail> adminFindByUsernameForumFiles(@Param("username") String username);
     /**
      * ダウンロード数を＋1し最終ダウンロード日時を更新する
      * @param fileID 対象ファイルID

@@ -212,9 +212,16 @@ public class ApiController {
         return authService.getAdminUserDetails();
     }
 
+    //ユーザーのログイン履歴取得API
     @GetMapping(ADMIN_TARGET_USER_LOGIN_HISTORY_PATH)
     public List<UserLoginHistory> getAdminUserLoginHistory(@RequestParam String username) {
         return loginHistoryService.getAdminLonginHistory(username);
+    }
+
+    //ユーザーがアップロードしたファイルリスト取得API
+    @GetMapping(ADMIN_TARGET_USER_FILE_DETAILS_PATH)
+    public List<AdminForumFileDetail> getAdminForumFileDetails(@RequestParam String username) {
+        return fileDetailService.getAdminTargetUserFileDetails(username);
     }
 
     //ユーザーを削除するAPI
