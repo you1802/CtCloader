@@ -50,7 +50,7 @@ public class DeleteService {
                         });
 
         if (fileInfo.getOwner().isEmpty()) { //非ログイン中にアップロードされたファイルの場合
-            if (!passwordEncoder.matches(filePassword.getDeletePassword(), deletePassword)) throw new DeleteFailureException("削除用パスワードが一致しません。"); //削除用パスが一致しない場合
+            if (!passwordEncoder.matches(deletePassword, filePassword.getDeletePassword())) throw new DeleteFailureException("削除用パスワードが一致しません。"); //削除用パスが一致しない場合
         } else { //ログイン中にアップロードされたファイルの場合
             userDetailOpt.ifPresentOrElse(user -> { //ユーザーがログイン中の場合
                 if (!user.getUsername().equals(fileInfo.getOwner())) throw new DeleteFailureException("ログイン中にアップロードされたファイルです。あなたが所有者の場合はアップロードしたユーザーでログインしてから削除を実行してください。"); //ファイル所有者でない場合は削除失敗

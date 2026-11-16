@@ -31,10 +31,10 @@ import static you.fileserver.config.Constants.FILE_PASSWORD_REGEX;
 @RequiredArgsConstructor
 @Slf4j
 public class UploadService {
-    TusFileUploadService tusFileUploadService;
-    UploadFileInfoRepository uploadFileInfoRepository;
-    UploadFilePasswordRepository uploadFilePasswordRepository;
-    PasswordEncoder passwordEncoder;
+    private final TusFileUploadService tusFileUploadService;
+    private final UploadFileInfoRepository uploadFileInfoRepository;
+    private final UploadFilePasswordRepository uploadFilePasswordRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 条件を満たせばアップロードしデータベースに情報を保存する
