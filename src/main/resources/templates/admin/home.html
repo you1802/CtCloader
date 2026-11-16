@@ -1,10 +1,223 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>管理者用ページ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- CSRFトークンとヘッダー名（login.html と同じ） -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <title>管理者ページ</title>
+    <!-- Bootstrap 5 -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- DataTables (Bootstrap 5) -->
+    <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 </head>
 <body>
-TEST
+
+<!-- ヘッダー -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">管理者ページ</span>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-light btn-sm" href="/CtCloader">トップへ戻る</a>
+            <a class="btn btn-outline-light btn-sm" href="/admin/home">管理者ホーム</a>
+            <button type="button" id="logoutBtn" class="btn btn-outline-warning btn-sm">ログアウト</button>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid py-4">
+
+    <!-- メッセージ表示エリア（成功・失敗を Bootstrap の alert で表示） -->
+    <div id="alertArea"></div>
+
+    <!-- タブ -->
+    <ul class="nav nav-tabs" id="adminTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="files-tab" data-bs-toggle="tab" data-bs-target="#files-pane"
+                    type="button" role="tab" aria-controls="files-pane" aria-selected="true">ファイル一覧</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-pane"
+                    type="button" role="tab" aria-controls="users-pane" aria-selected="false">ユーザー一覧</button>
+        </li>
+    </ul>
+
+    <div class="tab-content pt-3" id="adminTabContent">
+
+        <!-- ===== ファイル一覧 ===== -->
+        <div class="tab-pane fade show active" id="files-pane" role="tabpanel" aria-labelledby="files-tab">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>すべてのファイル</span>
+                    <button type="button" id="reloadFilesBtn" class="btn btn-outline-primary btn-sm">更新</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="fileTable" class="table table-striped table-hover w-100">
+                            <thead>
+                            <tr>
+                                <th>ファイル名</th>
+                                <th>サイズ</th>
+                                <th>アップロード日時</th>
+                                <th>最終ダウンロード日時</th>
+                                <th>所有者</th>
+                                <th>ロック</th>
+                                <th>公開</th>
+                                <th>報告件数</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ユーザー一覧 ===== -->
+        <div class="tab-pane fade" id="users-pane" role="tabpanel" aria-labelledby="users-tab">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>ユーザー</span>
+                    <button type="button" id="reloadUsersBtn" class="btn btn-outline-primary btn-sm">更新</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="userTable" class="table table-striped table-hover w-100">
+                            <thead>
+                            <tr>
+                                <th>ユーザー名</th>
+                                <th>最終ログイン日時</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 選択したユーザーの詳細（AJAXで表示・ページ遷移なし） -->
+            <div id="userDetailSection" class="card mt-3 d-none">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>ユーザー詳細：<span id="userDetailName" class="fw-bold"></span></span>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="deleteUserBtn" class="btn btn-danger btn-sm">このユーザーを削除</button>
+                        <button type="button" id="closeUserDetailBtn" class="btn btn-outline-secondary btn-sm">閉じる</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">ログイン履歴</h6>
+                    <div class="table-responsive">
+                        <table id="loginHistoryTable" class="table table-striped table-hover w-100">
+                            <thead>
+                            <tr>
+                                <th>ログイン日時</th>
+                                <th>接続元IP</th>
+                                <th>結果</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="card-title mt-4">アップロードしたファイル</h6>
+                    <div class="table-responsive">
+                        <table id="userFileTable" class="table table-striped table-hover w-100">
+                            <thead>
+                            <tr>
+                                <th>ファイル名</th>
+                                <th>サイズ</th>
+                                <th>アップロード日時</th>
+                                <th>最終ダウンロード日時</th>
+                                <th>ロック</th>
+                                <th>公開</th>
+                                <th>報告件数</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ファイル詳細モーダル ===== -->
+<div class="modal fade" id="fileDetailModal" tabindex="-1" aria-labelledby="fileDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fileDetailModalLabel">ファイル詳細</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+            </div>
+            <div class="modal-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">ファイル名</dt>
+                    <dd class="col-sm-8" id="detailFilename">-</dd>
+                    <dt class="col-sm-4">ファイルID</dt>
+                    <dd class="col-sm-8" id="detailFileId">-</dd>
+                    <dt class="col-sm-4">所有者</dt>
+                    <dd class="col-sm-8" id="detailOwner">-</dd>
+                    <dt class="col-sm-4">サイズ</dt>
+                    <dd class="col-sm-8" id="detailSize">-</dd>
+                    <dt class="col-sm-4">アップロード日時</dt>
+                    <dd class="col-sm-8" id="detailUploadDate">-</dd>
+                    <dt class="col-sm-4">最終ダウンロード日時</dt>
+                    <dd class="col-sm-8" id="detailLastDownloadDate">-</dd>
+                    <dt class="col-sm-4">ダウンロード数</dt>
+                    <dd class="col-sm-8" id="detailDownloadCount">-</dd>
+                    <dt class="col-sm-4">ダウンロードのパスワードロック</dt>
+                    <dd class="col-sm-8" id="detailDownloadLocked">-</dd>
+                    <dt class="col-sm-4">可視設定</dt>
+                    <dd class="col-sm-8" id="detailVisible">-</dd>
+                    <dt class="col-sm-4">問題報告件数</dt>
+                    <dd class="col-sm-8" id="detailReportCount">-</dd>
+                    <dt class="col-sm-4">コメント</dt>
+                    <dd class="col-sm-8" id="detailComment">-</dd>
+                    <dt class="col-sm-4">アップロード者のIP</dt>
+                    <dd class="col-sm-8" id="detailIpAddress">-</dd>
+                </dl>
+                <h6 class="mt-4">問題報告</h6>
+                <ul class="list-group" id="detailFileReports"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="detailDownloadBtn" class="btn btn-primary">ダウンロード</button>
+                <button type="button" id="detailDeleteBtn" class="btn btn-danger">削除</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">閉じる</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 削除確認モーダル（ファイル・ユーザー共通） ===== -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">確認</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="閉じる"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage" class="mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="button" id="confirmButton" class="btn btn-danger">削除する</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery / Bootstrap / DataTables -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/js/bootstrap.bundle.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+
+<script src="/admin/js/admin-home.js"></script>
 </body>
 </html>

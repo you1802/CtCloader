@@ -1,9 +1,12 @@
 package you.fileserver.service;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.stereotype.Service;
 import you.fileserver.dto.UserLoginHistory;
 import you.fileserver.dto.entity.LoginHistory;
 import you.fileserver.repository.LoginHistoryRepository;
+import you.fileserver.security.annotation.IsAdmin;
 import you.fileserver.security.annotation.IsUser;
 
 import java.time.LocalDateTime;
@@ -13,12 +16,10 @@ import java.util.List;
  * ログイン履歴を保存するクラス
  */
 @Service
+@RequiredArgsConstructor
+@EnableMethodSecurity
 public class LoginHistoryService {
     private final LoginHistoryRepository loginHistoryRepository;
-
-    public LoginHistoryService(LoginHistoryRepository loginHistoryRepository) {
-        this.loginHistoryRepository = loginHistoryRepository;
-    }
 
     /**
      * ログイン情報をDBに記録する
@@ -43,5 +44,10 @@ public class LoginHistoryService {
     @IsUser
     public List<UserLoginHistory> getLoginHistory(String username) {
         return loginHistoryRepository.findTop10ByUsernameOrderByLoginAtDesc(username, UserLoginHistory.class);
+    }
+
+    @IsAdmin
+    public List<UserLoginHistory> getAdminLonginHistory(String username) {
+        return getLoginHistory(username); //同じクラスからのメソッド呼び出しはspring aopを迂回できる(@IsUserチェックを迂回)
     }
 }

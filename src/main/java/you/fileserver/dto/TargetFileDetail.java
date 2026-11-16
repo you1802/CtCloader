@@ -9,6 +9,6 @@ import lombok.Data;
 @Data
 @Builder
 public class TargetFileDetail {
-    String comment; //ファイルのコメント
-    int downloadCount; //ダウンロード数
+    private String comment; //ファイルのコメント
+    private int downloadCount; //ダウンロード数
 }

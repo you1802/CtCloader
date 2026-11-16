@@ -28,11 +28,16 @@ public class Constants {
     public static final String OWNED_FILE_DETAILS_JSON_PATH = "/user/api/owned-file-details.json";
     public static final String LOGIN_HISTORY_PATH = "/user/api/login-history";
     //以下ADMIN専用
-    public static final String ADMIN_LOGIN_PATH = "/admin/login"; //ADMIN用ログイン画面。ここは全員許可
+    public static final String ADMIN_LOGIN_PATH = "/admin/login"; //ADMIN用ログイン画面。ここは非ログインならアクセス許可
     public static final String ADMIN_HOME_PATH = "/admin/home";
     public static final String ADMIN_DELETE_USER_PATH = "/admin/api/delete_user";
     public static final String ADMIN_DELETE_FILE_PATH = "/admin/api/delete_file";
     public static final String ADMIN_DOWNLOAD_PATH = "/admin/api/download";
+    public static final String ADMIN_FORUM_FILE_DETAILS_JSON_PATH = "/admin/api/forum-file-details.json";
+    public static final String ADMIN_TARGET_FILE_DETAIL_PATH = "/admin/api/target-file-detail";
+    public static final String ADMIN_USER_LIST_PATH = "/admin/user_list";
+    public static final String ADMIN_TARGET_USER_LOGIN_HISTORY_PATH = "/admin/api/target_user_login_history";
+    public static final String ADMIN_TARGET_USER_FILE_DETAILS_PATH = "/admin/api/target-user-file-details.json";
 
     //htmlコンポーネント
     public static final String CSS_PATH = "/css/**";
@@ -65,4 +70,7 @@ public class Constants {
     public static final long FORUM_FILESIZE_LIMIT = 107374182400L; //100ギガバイト
     //サーバーのファイルサイズ上限
     public static final long SERVER_SIZE_LIMIT = 536870912000L; //500ギガバイト
+
+    //1ファイル当たりのサイズ制限
+    public static final long UPLOAD_FILE_SIZE_LIMIT = 5368709120L; //5ギガバイト
 }

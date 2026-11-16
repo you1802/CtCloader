@@ -1,11 +1,13 @@
 package you.fileserver.repository;
 
 import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import you.fileserver.dto.AdminForumFileDetail;
 import you.fileserver.dto.entity.UploadFileInfo;
 
 import java.time.LocalDateTime;
@@ -57,20 +59,50 @@ public interface UploadFileInfoRepository extends JpaRepository<UploadFileInfo,S
      * @return 必要な情報
      * @param <T> ジェネリックメソッド
      */
+    @EntityGraph(attributePaths = {"fileReports"}) //fileReportsを取得するときは遅延読み込みを即時読み込みにする
     <T> Optional<T> findByFileID(String fileID, Class<T> type);
 
     /**
-     * ログイン中のユーザーの不可視設定ファイル取得用
-     * @param owner ログインユーザー
-     * @param visible 不可視設定
-     * @param type プロジェクション
-     * @return 必要な情報
-     * @param <T> ジェネリックメソッド
+     * ADMIN専用、ファイルデータすべてと問題報告件数を取得する
+     * @return リスト
      */
-    <T> List<T> findByOwnerAndVisible(String owner, boolean visible, Class<T> type);
+    @Query("""
+                SELECT new you.fileserver.dto.AdminForumFileDetail(
+                    f.fileID,
+                    f.filename,
+                    f.size,
+                    f.uploadDate,
+                    f.lastDownloadDate,
+                    f.owner,
+                    f.downloadLocked,
+                    f.visible,
+                    SIZE(f.fileReports)
+                )
+                FROM UploadFileInfo f
+            """)
+    List<AdminForumFileDetail> adminFindAllForumFiles();
 
     /**
-     * ダウンロード数を＋1し最終ダウンロード日時を更新するメソッド
+     * ADMIN専用、対象ユーザーのファイルデータすべてと問題報告件数を取得する
+     * @return リスト
+     */
+    @Query("""
+                SELECT new you.fileserver.dto.AdminForumFileDetail(
+                    f.fileID,
+                    f.filename,
+                    f.size,
+                    f.uploadDate,
+                    f.lastDownloadDate,
+                    f.owner,
+                    f.downloadLocked,
+                    f.visible,
+                    SIZE(f.fileReports)
+                )
+                FROM UploadFileInfo f WHERE f.owner = :username
+            """)
+    List<AdminForumFileDetail> adminFindByUsernameForumFiles(@Param("username") String username);
+    /**
+     * ダウンロード数を＋1し最終ダウンロード日時を更新する
      * @param fileID 対象ファイルID
      * @param now 現在時刻
      */

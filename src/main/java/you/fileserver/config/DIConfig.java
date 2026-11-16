@@ -7,8 +7,7 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 
-import static you.fileserver.config.Constants.TEMP_PATH;
-import static you.fileserver.config.Constants.TUS_UPLOAD_PATH;
+import static you.fileserver.config.Constants.*;
 
 @Configuration
 public class DIConfig {
@@ -17,7 +16,8 @@ public class DIConfig {
     public TusFileUploadService tusFileUploadService() {
         return new TusFileUploadService()
                 .withUploadUri(TUS_UPLOAD_PATH) //アップロード先のエンドポイントを指定
-                .withStoragePath(TEMP_PATH); //一時ファイルの場所指定
+                .withStoragePath(TEMP_PATH) //一時ファイルの場所指定
+                .withMaxUploadSize(UPLOAD_FILE_SIZE_LIMIT); //1つ当たりのアップロードファイルサイズ上限
     }
 
     //csrfトークンを管理するリポジトリ

@@ -1,9 +1,10 @@
 package you.fileserver.dto.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.experimental.Tolerate;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,6 +16,8 @@ import java.util.List;
 @Data
 @Entity
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UploadFileInfo {
     @Id
     private String fileID; //サーバーに保存するファイルの実態の名前
@@ -31,7 +34,4 @@ public class UploadFileInfo {
 
     @OneToMany(mappedBy = "fileID", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<FileReport> fileReports = new ArrayList<>(); //ファイルの問題報告のリスト
-
-    @Tolerate //builderを使いたいのでこのアノテーションでディフォルトコンストラクタをLombokに隠ぺいする
-    public UploadFileInfo() {}
 }
