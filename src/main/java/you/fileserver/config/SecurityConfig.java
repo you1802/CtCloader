@@ -101,9 +101,9 @@ public class SecurityConfig {
                                 } catch (Exception _) {} //エラー時は存在しないものとして扱う
 
                                 if (isPageExists) {
-                                    response.sendError(HttpServletResponse.SC_NOT_FOUND); //ページがない場合は404
-                                } else {
                                     response.sendError(HttpServletResponse.SC_FORBIDDEN); //ページがある場合は403
+                                } else {
+                                    response.sendError(HttpServletResponse.SC_NOT_FOUND); //ページがない場合は404
                                 }
                             }
                         }));
