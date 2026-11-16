@@ -109,7 +109,7 @@ public class AuthService {
             // ファイル実体を削除
             File targetFile = Path.of(FILE_PATH, fileID).toFile();
             if (targetFile.exists()) {
-                targetFile.delete();
+                if (!targetFile.delete()) log.error("server file delete fail fileID:{}.", fileID);
             }
         });
 

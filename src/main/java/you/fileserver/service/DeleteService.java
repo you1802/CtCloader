@@ -94,6 +94,6 @@ public class DeleteService {
         //ファイル実体を削除
         File file = Path.of(FILE_PATH, fileID).toFile();
 
-        file.delete();
+        if (!file.delete()) log.error("server file delete fail fileID:{}.", fileID);
     }
 }
