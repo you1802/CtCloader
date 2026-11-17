@@ -77,7 +77,7 @@ public class UploadService {
 
             InputStream is = tusFileUploadService.getUploadedBytes(uploadUri); //インプットストリームを取得
 
-            String filename = uploadInfo.getFileName().replace(" ", "-"); //オリジナルのファイル名にあるスペースを-に変換する
+            String filename = sanitizeFilename(uploadInfo.getFileName()); //ファイル名をサニタイズする
             String fileID = uploadUri.substring(uploadUri.lastIndexOf("/") + 1); //アップロードURIからアップロードIDを取得しファイルのIDに
 
             Files.copy(is, Path.of(FILE_PATH, fileID)); //保存用ファイル名(ID)でファイルを保存
@@ -121,5 +121,18 @@ public class UploadService {
             log.info("file upload complete ip:{} user:{} fileID:{}", request.getRemoteAddr(), login ? userDetail.getUsername() : null, fileID); //ログを出力
         }
         tusFileUploadService.deleteUpload(uploadUri);
+    }
+
+    /**
+     * ファイル名をサニタイズする
+     * @param filename ファイル名
+     * @return 無害化されたファイル名
+     */
+    private String sanitizeFilename(String filename) {
+        if (filename == null || filename.isBlank()) return "unnamed"; //ファイルネームがNULLか空の場合はunnamed
+        String sanitized = filename.replaceAll("\\p{Cntrl}", "") // 制御文字を除去
+                .replace(" ", "-"); //スペースは-に変換
+        if (sanitized.isEmpty()) return "unnamed"; //制御文字のみのファイルの場合空になるのでその時はunnamed
+        return sanitized.length() > 255 ? sanitized.substring(0, 255) : sanitized; //ファイル名は２５５文字まで
     }
 }
