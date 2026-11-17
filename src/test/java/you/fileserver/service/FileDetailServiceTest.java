@@ -78,8 +78,8 @@ class FileDetailServiceTest {
         List<ForumFileDetail> result = fileDetailService.getUserForumFileDetails(null);
 
         assertEquals(1, result.size());
-        assertEquals("file1", result.get(0).getFileID());
-        assertFalse(result.get(0).isOwned()); // ゲストは owned にならない
+        assertEquals("file1", result.getFirst().getFileID());
+        assertFalse(result.getFirst().isOwned()); // ゲストは owned にならない
         verify(uploadFileInfoRepository, never())
                 .findByOwnerOrVisible(anyString(), anyBoolean(), any());
     }
@@ -169,8 +169,8 @@ class FileDetailServiceTest {
         List<ForumFileDetail> result = fileDetailService.getUserOwnedFileDetails("me");
 
         assertEquals(1, result.size());
-        assertTrue(result.get(0).isOwned());
-        assertEquals("file1", result.get(0).getFileID());
+        assertTrue(result.getFirst().isOwned());
+        assertEquals("file1", result.getFirst().getFileID());
     }
 
     // ---------- getAllFileSize ----------
