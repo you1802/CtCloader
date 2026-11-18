@@ -89,6 +89,30 @@ class UploadServiceTest {
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
     }
 
+    // sanitizeFilename の分岐を確認するための、ファイル名だけ変えられる版
+    private void stubUploadBytesWithFilename(String uri, String filename) throws Exception {
+        when(uploadInfo.getFileName()).thenReturn(filename);
+        when(uploadInfo.getLength()).thenReturn(123L);
+        when(tusFileUploadService.getUploadedBytes(uri))
+                .thenReturn(new ByteArrayInputStream("hello".getBytes()));
+        when(request.getRemoteAddr()).thenReturn("127.0.0.1");
+    }
+
+    private UploadFileInfo uploadAsGuestWithFilename(String uri, String filename) throws Exception {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("downloadPasswordEnabled", "false");
+        metadata.put("deletePassword", "abcd1234");
+        stubCompletedUpload(uri, metadata);
+        stubUploadBytesWithFilename(uri, filename);
+        when(passwordEncoder.encode("abcd1234")).thenReturn("hashedDelete");
+
+        uploadService.upload(request, response, null);
+
+        ArgumentCaptor<UploadFileInfo> infoCaptor = ArgumentCaptor.forClass(UploadFileInfo.class);
+        verify(uploadFileInfoRepository).save(infoCaptor.capture());
+        return infoCaptor.getValue();
+    }
+
     @Test
     void upload_inProgress_doesNothingButCleanup() throws Exception {
         when(request.getRequestURI()).thenReturn("/api/upload/abc123");
@@ -202,5 +226,39 @@ class UploadServiceTest {
         verify(uploadFilePasswordRepository).save(passCaptor.capture());
         assertEquals("", passCaptor.getValue().getDeletePassword()); // ログイン中は削除パス不要
         assertEquals("hashedDl", passCaptor.getValue().getDownloadPassword());
+    }
+
+    // ------------- サニタイズテスト --------------
+
+    @Test
+    void upload_filename_null_savesUnnamed() throws Exception {
+        UploadFileInfo saved = uploadAsGuestWithFilename("/api/upload/abc123", null);
+        assertEquals("unnamed", saved.getFilename());
+    }
+
+    @Test
+    void upload_filename_blank_savesUnnamed() throws Exception {
+        UploadFileInfo saved = uploadAsGuestWithFilename("/api/upload/abc123", "   ");
+        assertEquals("unnamed", saved.getFilename());
+    }
+
+    @Test
+    void upload_filename_controlChars_removed() throws Exception {
+        UploadFileInfo saved = uploadAsGuestWithFilename("/api/upload/abc123", "a\u0001b\nc.txt");
+        assertEquals("abc.txt", saved.getFilename());
+    }
+
+    @Test
+    void upload_filename_onlyControlChars_savesUnnamed() throws Exception {
+        UploadFileInfo saved = uploadAsGuestWithFilename("/api/upload/abc123", "\u0001\u0002");
+        assertEquals("unnamed", saved.getFilename());
+    }
+
+    @Test
+    void upload_filename_tooLong_truncatedTo255() throws Exception {
+        String longName = "a".repeat(300) + ".txt";
+        UploadFileInfo saved = uploadAsGuestWithFilename("/api/upload/abc123", longName);
+        assertEquals(255, saved.getFilename().length());
+        assertTrue(saved.getFilename().startsWith("aaa"));
     }
 }
