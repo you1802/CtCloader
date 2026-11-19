@@ -3,3 +3,26 @@
     opacity: 0.6;
     cursor: not-allowed;
 }
+#files-table {
+    table-layout: fixed;
+    width: 100% !important;
+    min-width: 620px;
+}
+/* ウィンドウ縮小時テーブル部分だけを横スクロールさせる */
+div.dt-container .dt-layout-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.filename-container {
+    max-width: 540px;
+    width: 100%;
+}
+.filename {
+    min-width: 100px;
+    width: 100%;
+}
+textarea {
+    field-sizing: content;
+    min-height: 1lh;
+    max-height: 4lh;
+}

@@ -21,12 +21,14 @@ $(function () {
             url: "https://cdn.datatables.net/plug-ins/3.0.1/i18n/ja.json",
         },
         order: [], // 初期ソートを無効化
+        autoWidth: false,
         columnDefs: [
-            {className: "dt-center", "targets": "_all"},
-            //{"orderable": false, "targets": [3, 4]},
-            //{"width": 120, "targets": 3},
-            {"width": 60, "targets": [0, 2]},
-            {searchable: false, "targets": [0, 2, 3, 4, 5]}
+            {width: 25, targets: 0},
+            {className: "text-center", targets: 1},
+            {width: 20, targets: 2},
+            {width: 90, targets: 3},
+            {width: 175, targets: [4, 5]},
+            {searchable: false, targets: [0, 2, 3, 4, 5]}
         ],
         ajax: {
             url: "/api/forum-file-details.json",
@@ -34,22 +36,29 @@ $(function () {
         },
         columns: [
             {
-                data: "owned", render: function () {
-
-                }},
-            {
-                data: "name", title: "ファイル名", render: function (data, type, row) {
-                    if (type === "display") {
-                        return `
-                        <button type="button" class="btn btn-link text-start text-decoration-none p-0" onclick="openFileDetailModal('${row.fileID}')">
-                        ${data}
-                        </button>
-                        `;
+                data: "owned", render: function (data) {
+                    if (data) {
+                        return `<span class="badge text-bg-info p-1 d-inline-block" title="あなたがアップロードしたファイルです">👤</span>`;
+                    } else {
+                        return "";
                     }
                 }},
             {
-                data: "downloadLock", render: function () {
-
+                data: "filename", title: "ファイル名", render: function (data, type, row) {
+                    if (type === "display") {
+                        const $wrapper = $("<div>", {class: "d-flex filename-container align-items-center w-100 min-w-0"});
+                        const $button = $("<button>", {type: "button", class: "btn btn-link filename text-decoration-none p-0 text-truncate", title: data, text: data, on: {click: function() {openFileDetailModal(row)}}});
+                        return $wrapper.append($button)[0];
+                    }
+                    return data;
+                }},
+            {
+                data: "downloadLocked", render: function (data) {
+                    if (data) {
+                        return `<i class="bi bi-file-earmark-lock2" title="要パスワード"></i>`;
+                    } else {
+                        return "";
+                    }
                 }},
             {
                 data: "size", title: "サイズ", render: function (data, type) {
@@ -59,32 +68,9 @@ $(function () {
                     return data;
                 }},
             {data: "uploadDate", title: "アップロード日時"},
-            {data: "lastDownloadDate", title: "最終ダウンロード日時"},
-
-            // {
-            //     data: "uniqueFileName", title: "ダウンロード", render: function (data, type, row) {
-            //         if (row.downloadLock === true) {
-            //             return `
-            //         <button type="button" class="btn btn-link" onclick="lockedFileDownloadModal('${row.uniqueFileName}')">
-            //         <i class="bi bi-file-earmark-lock"></i>
-            //         </button>
-            //         `
-            //         } else {
-            //             return `<a href="api/download?targetFileName=${data}&token=" class="icon-link"><i class="bi-download"></a>`
-            //         }
-            //     }
-            // },
-
-            // {
-            //     data: null, title: "削除", render: function (data, type, row) {
-            //         //if (!row.owned === true) {return null;}
-            //         return `
-            //         <button type="button" class="btn btn-link" onclick="fileDeleteModal('${row.uniqueFileName}')">
-            //         <i class="bi bi-trash"></i>
-            //         </button>
-            //         `
-            //     }
-            // }
+            {data: "lastDownloadDate", title: "最終ダウンロード日時", render: function (data, type, row) {
+                    return row.uploadDate === data ? "" : data;
+                }},
         ]
     });
 
@@ -120,10 +106,82 @@ $(function () {
     const $fileControlExecuteButton = $("#fileControlExecuteButton");
     const $fileControlPassword = $("#fileControlPassword");
     const $fileDetailModal = $("#fileDetailModal");
+    const $fileDetailHeader = $("#fileDetailHeader");
+    const $fileDetailSize = $("#fileDetailSize");
+    const $fileDetailDownloadCount = $("#fileDetailDownloadCount");
+    const $fileDetailUploadDate = $("#fileDetailUploadDate");
+    const $fileDetailLastDownloadDate = $("#fileDetailLastDownloadDate");
+    const $fileDetailComment = $("#fileDetailComment");
+    const $fileDetailDeleteBtn = $("#fileDetailDeleteBtn");
+    const $fileDetailReportBtn = $("#fileDetailReportBtn");
+    const $fileDetailTransferBtn = $("#fileDetailTransferBtn");
+    const $fileDetailDownloadBtn = $("#fileDetailDownloadBtn");
+    const $fileDetailLockIcon = $("#fileDetailLockIcon");
+    const $fileDetailDownloadIcon = $("#fileDetailDownloadIcon");
+    const $fileControlText = $("#fileControlText");
+    const $fileControlForm = $("#fileControlForm");
 
-    //ファイル個別メニュー表示用
-    window.openFileDetailModal = function(fileID) {
-        bootstrap.Modal.getOrCreateInstance($fileDetailModal[0]).show();
+
+    //ファイル詳細モーダル表示用関数
+    let isModalOpenProcessing = false;
+
+    window.openFileDetailModal = function(row) {
+        if (isModalOpenProcessing) return;  // 既に処理中なら何もしない
+        spinner.show();
+        isModalOpenProcessing = true;
+        const modalInstance = bootstrap.Modal.getOrCreateInstance($fileDetailModal[0]);
+        // ヘッダー
+        const ownedIcon = row.owned ? '<span class="badge text-bg-info p-1 d-inline-block me-2" title="あなたがアップロードしたファイルです">👤</span>' : '';
+        const safeFilename = DataTable.render.text().display(row.filename); // エスケープ処理
+        $fileDetailHeader.html(`${ownedIcon}${safeFilename}`);
+
+        // ボディ
+        $fileDetailSize.text(formatBytes(row.size));
+        $fileDetailUploadDate.text(row.uploadDate);
+        $fileDetailLastDownloadDate.text(row.uploadDate === row.lastDownloadDate ? "-" : row.lastDownloadDate);
+
+
+        // フッター
+        // 問題を報告ボタン
+
+        // 削除ボタン
+        $fileDetailDeleteBtn.off().on("click", function () {
+            modalInstance.hide();
+            fileDeleteModal(row);
+        })
+        // ダウンロードボタン
+        if (row.downloadLocked) {
+            $fileDetailDownloadIcon.addClass("d-none");
+            $fileDetailLockIcon.removeClass("d-none");
+        } else {
+            $fileDetailDownloadIcon.removeClass("d-none");
+            $fileDetailLockIcon.addClass("d-none");
+        }
+        $fileDetailDownloadBtn.off().on("click", function () {
+            modalInstance.hide();
+            lockedFileDownloadModal(row);
+        })
+
+        $.getJSON(`/api/target-file-detail?fileID=${row.fileID}`)
+            .done(function (json) {
+                if (!json) {
+                    showToast("このファイルは表示できません", "danger");
+                    return;
+                }
+                $fileDetailComment.text(json.comment);
+                $fileDetailDownloadCount.text(json.downloadCount + " 回");
+
+                modalInstance.show();
+            })
+            .fail(function () {
+                showToast("通信エラー", "danger");
+            })
+            .always(function () {
+                spinner.hide();
+                isModalOpenProcessing = false;
+            });
+
+
     };
 
 
@@ -133,20 +191,34 @@ $(function () {
     })
 
     //ファイル削除用モーダルを呼び出す
-    function fileDeleteModal(fileID) {
-        $fileID.val(fileID);
+    function fileDeleteModal(row) {
+        if (row.owned) {
+            $fileControlForm.addClass("d-none");
+            $fileControlText.text("このファイルを削除しますか？").removeClass("d-none");
+        } else {
+            $fileControlForm.removeClass("d-none");
+            $fileControlText.addClass("d-none");
+        }
+        $fileID.val(row.fileID);
         $fileControlModalTitle.text("ファイルの削除");
-        $fileControlExecuteButton.text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
+        $fileControlExecuteButton.text("削除").removeClass("btn-primary").addClass("btn-danger").off().on("click", function () {
             deleteFile($fileID.val(), $fileControlPassword.val());
         })
         $fileControlModal.modal("show");
     }
 
     //パスワードロックされたファイルダウンロード用モーダルを呼び出す
-    function lockedFileDownloadModal(fileID) {
-        $fileID.val(fileID);
+    function lockedFileDownloadModal(row) {
+        if (!row.downloadLocked || row.owned) {
+            $fileControlForm.addClass("d-none");
+            $fileControlText.text("このファイルをダウンロードしますか？").removeClass("d-none");
+        } else {
+            $fileControlForm.removeClass("d-none");
+            $fileControlText.addClass("d-none");
+        }
+        $fileID.val(row.fileID);
         $fileControlModalTitle.text("ファイルのダウンロード");
-        $fileControlExecuteButton.text("ダウンロード").removeClass("btn-danger").addClass("btn-success").off().on("click", function () {
+        $fileControlExecuteButton.text("ダウンロード").removeClass("btn-danger").addClass("btn-primary").off().on("click", function () {
             downloadFile($fileID.val(), $fileControlPassword.val());
         })
         $fileControlModal.modal("show");
@@ -178,7 +250,7 @@ $(function () {
     }
 
     /**
-     * 削除用関数
+     * ファイル削除用関数
      * @param fileID 削除するファイルid
      * @param fileControlPassword 削除用パスワード
      */
@@ -501,11 +573,7 @@ $(function () {
     const $serverProgressBar = $("#serverProgressBar");
     const $userProgressBar = $("#userProgressBar");
 
-    //スピナー表示用関数
-    const spinner = {
-        show: function () {$loadingSpinner.removeClass("d-none");},
-        hide: function () {$loadingSpinner.addClass("d-none");}
-    };
+
 
     //ログイン状態による表示ボタンの切替
     /**
@@ -722,6 +790,12 @@ $(function () {
             spinner.hide();
         });
     });
+
+    //スピナー表示用関数
+    const spinner = {
+        show: function () {$loadingSpinner.removeClass("d-none");},
+        hide: function () {$loadingSpinner.addClass("d-none");}
+    };
 
     /**
      * バーの見た目を変更
