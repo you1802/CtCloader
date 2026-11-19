@@ -21,6 +21,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static you.fileserver.config.Constants.*;
 
@@ -146,8 +147,11 @@ public class AuthService {
      */
     @IsAdmin
     public DefaultApiResponse adminDeleteUser(String username) {
+        Optional<UserAccount> user = userAccountRepository.findById(username);
+        if (user.isPresent() && user.get().getRole().equals(AUTH_ADMIN)) return new DefaultApiResponse(400, "管理者用アカウントは削除できません。"); //管理者用アカウントの場合は削除不可
+
         deleteUser(username); //同じクラスからのメソッド呼び出しはspring aopを迂回できる(@IsUserチェックを迂回)
-        return new DefaultApiResponse(200, "対象のユーザーを情報を削除しました。");
+        return new DefaultApiResponse(200, "対象のユーザー情報を削除しました。");
     }
 
     /**
