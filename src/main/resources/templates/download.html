@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ファイルのダウンロード - CtCloader</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container py-5" style="max-width: 640px;">
+    <h1 class="h4 mb-4">ファイルのダウンロード</h1>
+
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h5 card-title text-break" th:text="${pageInfo.filename}"></h2>
+            <table class="table table-sm mt-3 mb-4">
+                <tbody>
+                <tr>
+                    <th scope="row" style="width: 30%;">サイズ</th>
+                    <td><span id="fileSize" th:data-size="${pageInfo.size}" th:text="${pageInfo.size}"></span></td>
+                </tr>
+                <tr>
+                    <th scope="row">アップロード者</th>
+                    <td th:text="${#strings.isEmpty(pageInfo.owner) ? 'ゲスト' : pageInfo.owner}"></td>
+                </tr>
+                <tr>
+                    <th scope="row">コメント</th>
+                    <td style="white-space: pre-wrap;" th:text="${#strings.isEmpty(pageInfo.comment) ? '-' : pageInfo.comment}">-</td>
+                </tr>
+                <tr>
+                    <th scope="row">有効期限</th>
+                    <td th:text="${#temporals.format(pageInfo.expirationDate, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <a class="btn btn-primary w-100" th:href="${pageInfo.downloadUrl}">ダウンロード</a>
+            <p class="text-muted small mt-3 mb-0">このリンクは1回のみ有効です。有効期限を過ぎるとダウンロードできません。</p>
+        </div>
+    </div>
+</div>
+<script>
+    (function () {
+        var el = document.getElementById('fileSize');
+        var size = Number(el.dataset.size);
+        if (isNaN(size)) return;
+        var units = ['B', 'KB', 'MB', 'GB'];
+        var i = 0;
+        var value = size;
+        while (value >= 1024 && i < units.length - 1) {
+            value /= 1024;
+            i++;
+        }
+        el.textContent = (i === 0 ? value : value.toFixed(1)) + ' ' + units[i] + ' (' + size.toLocaleString() + ' B)';
+    })();
+</script>
+</body>
+</html>

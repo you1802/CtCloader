@@ -6,6 +6,7 @@ package you.fileserver.config;
 public class Constants {
     //エンドポイント
     public static final String UPLOADER_ROOT_PATH = "/CtCloader";
+    public static final String DOWNLOAD_BRIDGE_PAGE_PATH = "/download";
     //API
     public static final String FORUM_FILE_DETAILS_JSON_PATH = "/api/forum-file-details.json";
     public static final String TARGET_FILE_DETAIL = "/api/target-file-detail";

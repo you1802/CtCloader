@@ -34,7 +34,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http.authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.FORWARD, DispatcherType.ERROR).permitAll() //サーバー内部で発生する転送(FORWARD),エラー処理(ERROR)はすべて許可
-                        .requestMatchers("/CtCloader/**", "/api/**", CSS_PATH, JS_PATH, IMG_PATH).permitAll() //すべての人がアクセス可能な領域
+                        .requestMatchers("/CtCloader/**", "/api/**", DOWNLOAD_BRIDGE_PAGE_PATH, CSS_PATH, JS_PATH, IMG_PATH).permitAll() //すべての人がアクセス可能な領域
                         .requestMatchers(ADMIN_LOGIN_PATH).anonymous() //非ログイン中のみアクセス可能
                         .requestMatchers("/user/api/**").hasRole(AUTH_USER) //ユーザーでログイン中のみアクセス可能なAPI
                         .requestMatchers("/admin/**").hasRole(AUTH_ADMIN) //ADMINのみアクセス可能な領域
