@@ -2,8 +2,8 @@ $(function () {
     'use strict';
 
     // ---------- CSRF：ヘッダーの meta から取り、全 AJAX に付ける ----------
-    var csrfToken = $('meta[name="_csrf"]').attr('content');
-    var csrfHeader = $('meta[name="_csrf_header"]').attr('content');
+    const csrfToken = $('meta[name="_csrf"]').attr('content');
+    const csrfHeader = $('meta[name="_csrf_header"]').attr('content');
     $.ajaxSetup({
         beforeSend: function (xhr) {
             if (csrfToken && csrfHeader) {
@@ -15,11 +15,11 @@ $(function () {
     // ---------- 共通ヘルパー ----------
     function showAlert(type, message) {
         // type: 'success' / 'danger' / 'warning' / 'info'
-        var $alert = $('<div>')
+        const $alert = $('<div>')
             .addClass('alert alert-' + type + ' alert-dismissible fade show')
             .attr('role', 'alert')
             .text(message);
-        var $close = $('<button>')
+        const $close = $('<button>')
             .attr('type', 'button')
             .addClass('btn-close')
             .attr('data-bs-dismiss', 'alert')
@@ -32,9 +32,9 @@ $(function () {
         if (bytes == null) {
             return '-';
         }
-        var units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        var size = Number(bytes);
-        var i = 0;
+        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        let size = Number(bytes);
+        let i = 0;
         while (size >= 1024 && i < units.length - 1) {
             size /= 1024;
             i++;
@@ -55,12 +55,31 @@ $(function () {
     }
 
     // ---------- DataTables 日本語化 ----------
-    var dataTablesLanguage = {
-        url: 'https://cdn.datatables.net/plug-ins/1.13.8/i18n/ja.json'
+    const dataTablesLanguage = {
+        emptyTable: 'テーブルにデータがありません',
+        info: '_TOTAL_ 件中 _START_ から _END_ まで表示',
+        infoEmpty: '0 件中 0 から 0 まで表示',
+        infoFiltered: '（全 _MAX_ 件より抽出）',
+        infoThousands: ',',
+        lengthMenu: '_MENU_ 件表示',
+        loadingRecords: '読み込み中...',
+        processing: '処理中...',
+        search: '検索:',
+        zeroRecords: '一致するレコードがありません',
+        paginate: {
+            first: '先頭',
+            last: '最終',
+            next: '次',
+            previous: '前'
+        },
+        aria: {
+            sortAscending: ': 列を昇順に並べ替えるにはアクティブにする',
+            sortDescending: ': 列を降順に並べ替えるにはアクティブにする'
+        }
     };
 
     // ファイル一覧の列定義（AdminForumFileDetail）。ユーザーファイル一覧でも使い回す
-    var fileColumns = [
+    const fileColumns = [
         { data: 'filename' },
         {
             data: 'size',
@@ -74,7 +93,16 @@ $(function () {
             data: 'lastDownloadDate',
             render: function (data) { return formatDateTime(data); }
         },
-        { data: 'owner' },
+        {
+            data: 'owner',
+            render: function (data) {
+                if (!data) {
+                    return '-';
+                }
+                const escaped = $('<div>').text(data).html();
+                return '<button type="button" class="btn btn-link p-0 owner-link" data-username="' + escaped + '">' + escaped + '</button>';
+            }
+        },
         {
             data: 'downloadLocked',
             render: function (data) {
@@ -94,7 +122,7 @@ $(function () {
         {
             data: 'reportCount',
             render: function (data) {
-                var count = Number(data) || 0;
+                const count = Number(data) || 0;
                 return count > 0
                     ? '<span class="badge text-bg-danger">' + count + ' 件</span>'
                     : '<span class="badge text-bg-secondary">0 件</span>';
@@ -115,7 +143,7 @@ $(function () {
     ];
 
     // ---------- ファイル一覧 ----------
-    var fileTable = $('#fileTable').DataTable({
+    const fileTable = $('#fileTable').DataTable({
         ajax: {
             url: '/admin/api/forum-file-details.json',
             dataSrc: ''
@@ -130,7 +158,7 @@ $(function () {
     });
 
     // ---------- ユーザー一覧 ----------
-    var userTable = $('#userTable').DataTable({
+    const userTable = $('#userTable').DataTable({
         ajax: {
             url: '/admin/user_list',
             dataSrc: ''
@@ -162,7 +190,7 @@ $(function () {
     });
 
     // ---------- ログイン履歴・ユーザーファイル一覧（選択後に AJAX で読み込む） ----------
-    var loginHistoryTable = $('#loginHistoryTable').DataTable({
+    const loginHistoryTable = $('#loginHistoryTable').DataTable({
         data: [],
         columns: [
             {
@@ -184,10 +212,10 @@ $(function () {
     });
 
     // ユーザーファイル一覧は所有者列を除いた fileColumns を使う
-    var userFileColumns = $.map(fileColumns, function (col) {
+    const userFileColumns = $.map(fileColumns, function (col) {
         return col.data === 'owner' ? null : col;
     });
-    var userFileTable = $('#userFileTable').DataTable({
+    const userFileTable = $('#userFileTable').DataTable({
         data: [],
         columns: userFileColumns,
         order: [[2, 'desc']],
@@ -200,8 +228,8 @@ $(function () {
     });
 
     // ---------- ファイル詳細モーダル ----------
-    var currentFileId = null;
-    var currentFileRow = null;
+    let currentFileId = null;
+    let currentFileRow = null;
 
     function openFileDetail(fileID, row) {
         currentFileId = fileID;
@@ -246,8 +274,8 @@ $(function () {
             $('#detailIpAddress').text(textOrDash(detail.ipAddress));
             $('#detailDownloadCount').text(textOrDash(detail.downloadCount));
 
-            var reports = detail.fileReports || [];
-            var $list = $('#detailFileReports');
+            const reports = detail.fileReports || [];
+            const $list = $('#detailFileReports');
             $list.empty();
             if (reports.length === 0) {
                 $list.append($('<li>').addClass('list-group-item').text('問題報告はありません。'));
@@ -255,9 +283,9 @@ $(function () {
                 $.each(reports, function (i, report) {
                     // FileReport: comment（ファイルに対する問題）と
                     // ipAddress（報告者のIP）を表示する
-                    var $item = $('<li>').addClass('list-group-item');
-                    var $comment = $('<div>').text(textOrDash(report.comment));
-                    var $ip = $('<small>').addClass('text-muted')
+                    const $item = $('<li>').addClass('list-group-item');
+                    const $comment = $('<div>').text(textOrDash(report.comment));
+                    const $ip = $('<small>').addClass('text-muted')
                         .text('報告者IP：' + textOrDash(report.ipAddress));
                     $item.append($comment).append($ip);
                     $list.append($item);
@@ -275,17 +303,28 @@ $(function () {
 
     // ファイル一覧・ユーザーファイル一覧の詳細 / ダウンロード / 削除ボタン（委譲）
     $('#fileTable tbody, #userFileTable tbody')
+        .on('click', '.owner-link', function (e) {
+            e.preventDefault();
+            var username = $(this).data('username');
+            // ユーザータブに切り替えて、そのユーザーの詳細を表示する
+            bootstrap.Tab.getOrCreateInstance($('#users-tab')[0]).show();
+            loadUserDetail(username);
+            // 詳細カードまでスクロールする
+            setTimeout(function () {
+                $('#userDetailSection')[0].scrollIntoView({behavior: 'smooth', block: 'start'});
+            }, 300)
+        })
         .on('click', '.btn-detail', function () {
-            var $btn = $(this);
-            var table = $btn.closest('table').DataTable();
-            var row = table.row($btn.closest('tr')).data();
+            const $btn = $(this);
+            const table = $btn.closest('table').DataTable();
+            const row = table.row($btn.closest('tr')).data();
             openFileDetail($btn.data('file-id'), row);
-    })
+        })
         .on('click', '.btn-download', function () {
             downloadFile($(this).data('file-id'));
-    })
+        })
         .on('click', '.btn-delete-file', function () {
-            var $btn = $(this);
+            const $btn = $(this);
             openConfirm(
                 'ファイル「' + $btn.data('filename') + '」を削除しますか？この操作は取り消せません。',
                 function () {
@@ -324,7 +363,7 @@ $(function () {
     });
 
     // ---------- 削除確認モーダル ----------
-    var pendingConfirmAction = null;
+    let pendingConfirmAction = null;
 
     function openConfirm(message, onConfirm) {
         $('#confirmMessage').text(message);
@@ -352,7 +391,7 @@ $(function () {
                 showAlert('success', res.message || 'ファイルを削除しました。');
                 fileTable.ajax.reload(null, false);
                 userFileTable.ajax.reload(null, false);
-                var detailModal = bootstrap.Modal.getInstance($('#fileDetailModal')[0]);
+                const detailModal = bootstrap.Modal.getInstance($('#fileDetailModal')[0]);
                 if (detailModal) {
                     detailModal.hide();
                 }
@@ -368,7 +407,7 @@ $(function () {
         if (!currentFileId) {
             return;
         }
-        var filename = currentFileRow ? currentFileRow.filename : currentFileId;
+        const filename = currentFileRow ? currentFileRow.filename : currentFileId;
         bootstrap.Modal.getInstance($('#fileDetailModal')[0]).hide();
         openConfirm(
             'ファイル「' + filename + '」を削除しますか？この操作は取り消せません。',
@@ -377,7 +416,7 @@ $(function () {
     });
 
     // ---------- ユーザー詳細 ----------
-    var currentUsername = null;
+    let currentUsername = null;
 
     function loadUserDetail(username) {
         currentUsername = username;
@@ -416,7 +455,7 @@ $(function () {
             loadUserDetail($(this).data('username'));
         })
         .on('click', '.btn-delete-user', function () {
-            var username = $(this).data('username');
+            const username = $(this).data('username');
             openConfirm(
                 'ユーザー「' + username + '」を削除しますか？この操作は取り消せません。',
                 function () {
@@ -436,7 +475,7 @@ $(function () {
         if (!currentUsername) {
             return;
         }
-        var username = currentUsername;
+        const username = currentUsername;
         openConfirm(
             'ユーザー「' + username + '」を削除しますか？この操作は取り消せません。',
             function () { deleteUser(username); }

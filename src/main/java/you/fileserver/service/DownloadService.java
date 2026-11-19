@@ -8,7 +8,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import you.fileserver.dto.DownloadBridgePageInfo;
+import you.fileserver.dto.projection.DownloadBridgePageInfoProjection;
 import you.fileserver.security.annotation.IsAdmin;
 import you.fileserver.security.annotation.IsUser;
 import you.fileserver.security.authentication.CustomUserDetails;
@@ -48,24 +51,29 @@ public class DownloadService {
      * @param password パスワード
      * @return 結果のレスポンス
      */
-    public ResponseEntity<?> passwordAuth (String fileID, String password, CustomUserDetails userDetail, String ipAddress) {
-        String currentUserName = userDetail == null ? null : userDetail.getUsername(); //ユーザー名を取得
-
+    public ResponseEntity<?> passwordAuth(String fileID, String password, CustomUserDetails userDetail, String ipAddress) {
         //ファイルの存在チェック
         DownloadFileInfoProjection downloadFileInfo = uploadFileInfoRepository.findByFileID(fileID, DownloadFileInfoProjection.class)
                 .orElseThrow(() -> new TargetFileNotFoundException(fileID));
         UploadFilePassword targetFilePassword = uploadFilePasswordRepository.findById(fileID)
                 .orElseThrow(() -> new TargetFileNotFoundException(fileID));
 
-        if (downloadFileInfo.isDownloadLocked()) { //ダウンロードロックされてる場合
-            if (!(passwordEncoder.matches(password, targetFilePassword.getDownloadPassword()) ||  Objects.equals(currentUserName, downloadFileInfo.getOwner()))) { //ダウンロードパスワードまたはアップロードユーザー名が一致しない場合
-                log.info("download password not match. fileID:{} ip:{}" ,fileID , ipAddress); //ログを出力
-                return ResponseEntity.ok(Map.of(
-                        "code", 401, "message",
-                        "パスワードが一致しません"));
+        if (!(userDetail != null && userDetail.getUsername().equals(downloadFileInfo.getOwner()))) { //ユーザー自身でアップロードしたファイルの場合はパスワードチェックを迂回する
+            if (!downloadFileInfo.isVisible()) return ResponseEntity.ok(Map.of( //自身のファイルでない場合は不可視設定のファイルにはアクセス不可
+                    "code", 401,
+                    "message", "このファイルへのアクセス権がありません"
+            ));
+
+            if (downloadFileInfo.isDownloadLocked()) { //ダウンロードロックされてる場合
+                if (!(passwordEncoder.matches(password, targetFilePassword.getDownloadPassword()))) { //ダウンロードパスワードが一致しない場合
+                    log.info("download password not match. fileID:{} ip:{}", fileID, ipAddress); //ログを出力
+                    return ResponseEntity.ok(Map.of(
+                            "code", 401,
+                            "message", "パスワードが一致しません"));
+                }
             }
         }
-        return ResponseEntity.ok(Map.of(
+                return ResponseEntity.ok(Map.of(
                 "code", 200,
                 "token", createToken(fileID, 30))); //30秒有効期限のトークンをレスポンスとして返す
     }
@@ -79,31 +87,53 @@ public class DownloadService {
     @IsUser
     public ResponseEntity<?> createFileTransferUrl(String fileID, CustomUserDetails userDetail) {
         Optional<UploadFileInfo> targetFile = uploadFileInfoRepository.findById(fileID);
-        if (targetFile.isEmpty() || userDetail == null || !Objects.equals(targetFile.get().getOwner(), userDetail.getUsername())) return ResponseEntity.badRequest().build(); //ファイルが自身のアップロードしたものでない場合バッドリクエスト
+        if (targetFile.isEmpty() || userDetail == null || !Objects.equals(targetFile.get().getOwner(), userDetail.getUsername())) return ResponseEntity.ok(Map.of("code", 401, "message", "対象ファイルが存在しない、またはあなたがアップロードしたファイルではありません。"));
 
         return ResponseEntity.ok(Map.of(
                 "code", 200,
-                "URL", ROOT_URL + DOWNLOAD_PATH + "?fileID=" + fileID + "&token=" + createToken(fileID, 86400))); //DL用URLを組み立てて返す(有効期限１日)
+                "URL", ROOT_URL + DOWNLOAD_BRIDGE_PAGE_PATH + "?fileID=" + fileID + "&token=" + createToken(fileID, 86400))); //DL用URLを組み立てて返す(有効期限１日)
     }
 
     /**
-     * ダウンロード対象ファイル名とトークンを受け取って条件を満たす場合ダウンロードさせる(ファイルがダウンロードロックされてない場合のトークンは空)
+     * トークンとファイルidを検証して問題ない場合は、ダウンロード用クッションページに必要なデータを取得する
+     * @param fileID ファイルid
+     * @param token トークン
+     * @return DTO
+     */
+    public DownloadBridgePageInfo getTransferPageInfo(String fileID, String token) {
+        DownloadBridgePageInfoProjection projection = uploadFileInfoRepository.findByFileID(fileID, DownloadBridgePageInfoProjection.class)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.GONE)); //ファイル情報が存在しない場合は410
+        DownloadTokenInfo tokenInfo = downloadTokenInfoRepository.findById(token)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.GONE)); //トークンが存在しない場合は410
+
+        if (!tokenInfo.getFileID().equals(fileID) || LocalDateTime.now().isAfter(tokenInfo.getExpirationDate()))
+            throw new ResponseStatusException(HttpStatus.GONE); //トークンとファイルID紐づいていない場合,またはトークン期限切れの場合は410
+
+        //必要な情報をビルドしてかえす
+        return DownloadBridgePageInfo.builder()
+                .filename(projection.getFilename())
+                .size(projection.getSize())
+                .comment(projection.getComment())
+                .owner(projection.getOwner())
+                .expirationDate(tokenInfo.getExpirationDate())
+                .DownloadUrl(ROOT_URL + DOWNLOAD_PATH + "?fileID=" + fileID + "&token=" + token)
+                .build();
+    }
+
+    /**
+     * ダウンロード対象ファイル名とトークンを受け取って条件を満たす場合ダウンロードさせる
      * @param fileID ダウンロードするファイル名(実態のファイル名)
      * @param token トークン
      * @return ファイルデータストリーミングのレスポンス
      */
     public ResponseEntity<StreamingResponseBody> downloadFile(String fileID, String token, String ipAddress) {
-        Optional<UploadFileInfo> targetFileInfo = uploadFileInfoRepository.findById(fileID);
-        Optional<DownloadTokenInfo> tokenInfo = downloadTokenInfoRepository.findById(token);
+        DownloadBridgePageInfoProjection projection = uploadFileInfoRepository.findByFileID(fileID, DownloadBridgePageInfoProjection.class)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.GONE)); //ファイル情報が存在しない場合は410
+        DownloadTokenInfo tokenInfo = downloadTokenInfoRepository.findById(token)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.GONE)); //トークンが存在しない場合は410
 
-        if (targetFileInfo.isEmpty()) return ResponseEntity.status(HttpStatus.GONE).build(); //ファイルが存在しない場合は410 gone
-
-        if (targetFileInfo.get().isDownloadLocked()) { //ファイルがダウンロードロックされている場合
-            if (tokenInfo.isEmpty() || !Objects.equals(fileID, tokenInfo.get().getFileID()) || LocalDateTime.now().isAfter(tokenInfo.get().getExpirationDate())) {
-                log.warn("token not match or expired. fileID:{} ip:{}" ,fileID , ipAddress);
-                return ResponseEntity.status(HttpStatus.GONE).build(); //トークンが存在しないまたはトークンに紐づけされているファイル名に一致しない場合またはトークン期限切れの時は 410 gone
-            }
-        }
+        if (!tokenInfo.getFileID().equals(fileID) || LocalDateTime.now().isAfter(tokenInfo.getExpirationDate()))
+            throw new ResponseStatusException(HttpStatus.GONE); //トークンとファイルID紐づいていない場合,またはトークン期限切れの場合は410
 
         downloadTokenInfoRepository.deleteById(token); //トークン情報を削除
 
@@ -111,7 +141,7 @@ public class DownloadService {
 
         log.info("file downloaded. fileID:{} ip:{}", fileID, ipAddress); //ログを出力
 
-        return createStreamingResponseEntity(fileID, targetFileInfo.get().getFilename());
+        return createStreamingResponseEntity(fileID, projection.getFilename());
     }
 
     /**
@@ -121,8 +151,8 @@ public class DownloadService {
      */
     @IsAdmin
     public ResponseEntity<StreamingResponseBody> adminFileDownload(String fileID) {
-        DownloadFileInfoProjection downloadFileInfo = uploadFileInfoRepository.findByFileID(fileID, DownloadFileInfoProjection.class)
-                .orElseThrow(() -> new TargetFileNotFoundException(fileID));
+        DownloadFileInfoProjection downloadFileInfo = uploadFileInfoRepository.findByFileID(fileID, DownloadFileInfoProjection.class) //ファイル情報が存在しない場合404
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         return createStreamingResponseEntity(fileID, downloadFileInfo.getFilename());
     }
@@ -142,7 +172,7 @@ public class DownloadService {
                 .expirationDate(LocalDateTime.now().plusSeconds(expiration))
                 .build();
 
-        downloadTokenInfoRepository.save(tokenInfo);
+        downloadTokenInfoRepository.save(tokenInfo); //DBにトークン情報を保存
         return tokenInfo.getToken();
     }
 
