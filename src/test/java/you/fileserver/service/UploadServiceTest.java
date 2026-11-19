@@ -30,7 +30,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * UploadService の単体テスト。
+ * UploadService の単体テスト
  * 正常系は実際に files/ 配下へファイルを書き込むため、@AfterEach で作成したファイルを削除している。
  */
 @ExtendWith(MockitoExtension.class)
@@ -61,7 +61,10 @@ class UploadServiceTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        // UploadService のフィールドは private final + コンストラクタ注入のため、
+        // モックをコンストラクタで渡す（引数の順序はフィールド宣言順と同じ）
         uploadService = new UploadService(tusFileUploadService, uploadFileInfoRepository, uploadFilePasswordRepository, passwordEncoder);
+
         Files.createDirectories(Path.of("files"));
     }
 
@@ -111,6 +114,11 @@ class UploadServiceTest {
         ArgumentCaptor<UploadFileInfo> infoCaptor = ArgumentCaptor.forClass(UploadFileInfo.class);
         verify(uploadFileInfoRepository).save(infoCaptor.capture());
         return infoCaptor.getValue();
+    }
+
+    private static CustomUserDetails userDetails(String username) {
+        return new CustomUserDetails(UserAccount.builder()
+                .username(username).password("hashed").role("USER").build());
     }
 
     @Test
@@ -203,23 +211,19 @@ class UploadServiceTest {
         metadata.put("downloadPasswordEnabled", "true");
         metadata.put("deletePassword", "abcd1234");
         metadata.put("downloadPassword", "dlpass12");
-        metadata.put("visibleSetting", "true"); // 不可視設定
         metadata.put("comment", "secret");
         stubCompletedUpload("/api/upload/def456", metadata);
         stubUploadBytes("/api/upload/def456");
         when(passwordEncoder.encode("dlpass12")).thenReturn("hashedDl");
 
-        CustomUserDetails userDetail = new CustomUserDetails(UserAccount.builder()
-                .username("user1").password("hashed").role("USER").build());
-
-        uploadService.upload(request, response, userDetail);
+        uploadService.upload(request, response, userDetails("user1"));
 
         ArgumentCaptor<UploadFileInfo> infoCaptor = ArgumentCaptor.forClass(UploadFileInfo.class);
         verify(uploadFileInfoRepository).save(infoCaptor.capture());
         UploadFileInfo saved = infoCaptor.getValue();
         assertEquals("def456", saved.getFileID());
         assertEquals("user1", saved.getOwner());
-        assertFalse(saved.isVisible()); // visibleSetting=true なら不可視
+        assertTrue(saved.isVisible()); // visibleSetting なしなら公開
         assertTrue(saved.isDownloadLocked());
 
         ArgumentCaptor<UploadFilePassword> passCaptor = ArgumentCaptor.forClass(UploadFilePassword.class);
@@ -228,7 +232,36 @@ class UploadServiceTest {
         assertEquals("hashedDl", passCaptor.getValue().getDownloadPassword());
     }
 
-    // ------------- サニタイズテスト --------------
+    @Test
+    void upload_loggedIn_invisible_downloadLockIgnored() throws Exception {
+        // 非公開ファイルでは downloadPasswordEnabled が読まれず、ロックは無効になる
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("downloadPasswordEnabled", "true");
+        metadata.put("deletePassword", "abcd1234");
+        metadata.put("downloadPassword", "dlpass12");
+        metadata.put("visibleSetting", "true"); // 不可視設定
+        metadata.put("comment", "secret");
+        stubCompletedUpload("/api/upload/def456", metadata);
+        stubUploadBytes("/api/upload/def456");
+
+        uploadService.upload(request, response, userDetails("user1"));
+
+        ArgumentCaptor<UploadFileInfo> infoCaptor = ArgumentCaptor.forClass(UploadFileInfo.class);
+        verify(uploadFileInfoRepository).save(infoCaptor.capture());
+        UploadFileInfo saved = infoCaptor.getValue();
+        assertEquals("def456", saved.getFileID());
+        assertEquals("user1", saved.getOwner());
+        assertFalse(saved.isVisible()); // visibleSetting=true なら不可視
+        assertFalse(saved.isDownloadLocked()); // 非公開ではロックが無効になる
+
+        ArgumentCaptor<UploadFilePassword> passCaptor = ArgumentCaptor.forClass(UploadFilePassword.class);
+        verify(uploadFilePasswordRepository).save(passCaptor.capture());
+        assertEquals("", passCaptor.getValue().getDeletePassword()); // ログイン中は削除パス不要
+        assertEquals("", passCaptor.getValue().getDownloadPassword()); // 非公開ではパス不要
+        verify(passwordEncoder, never()).encode(anyString());
+    }
+
+    // ---------- sanitizeFilename ----------
 
     @Test
     void upload_filename_null_savesUnnamed() throws Exception {
