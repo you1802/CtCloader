@@ -38,7 +38,7 @@ $(function () {
             {
                 data: "owned", render: function (data) {
                     if (data) {
-                        return `<span class="badge text-bg-info p-1 d-inline-block">👤</span>`;
+                        return `<span class="badge text-bg-info p-1 d-inline-block" title="あなたがアップロードしたファイルです">👤</span>`;
                     } else {
                         return "";
                     }
@@ -54,8 +54,8 @@ $(function () {
                 }},
             {
                 data: "downloadLocked", render: function (data) {
-                    if (!data) {
-                        return `<i class="bi bi-file-earmark-lock2"></i>`;
+                    if (data) {
+                        return `<i class="bi bi-file-earmark-lock2" title="要パスワード"></i>`;
                     } else {
                         return "";
                     }
@@ -107,11 +107,46 @@ $(function () {
     const $fileControlPassword = $("#fileControlPassword");
     const $fileDetailModal = $("#fileDetailModal");
     const $fileDetailHeader = $("#fileDetailHeader");
+    const $fileDetailSize = $("#fileDetailSize");
+    const $fileDetailDownloadCount = $("#fileDetailDownloadCount");
+    const $fileDetailUploadDate = $("#fileDetailUploadDate");
+    const $fileDetailLastDownloadDate = $("#fileDetailLastDownloadDate");
+    const $fileDetailComment = $("#fileDetailComment");
+    const $fileDetailDeleteBtn = $("#fileDetailDeleteBtn");
+    const $fileDetailReportBtn = $("#fileDetailReportBtn");
+    const $fileDetailTransferBtn = $("#fileDetailTransferBtn");
+    const $fileDetailDownloadBtn = $("#fileDetailDownloadBtn");
+    const $fileDetailLockIcon = $("#fileDetailLockIcon");
+    const $fileDetailDownloadIcon = $("#fileDetailDownloadIcon");
+    const $fileControlText = $("#fileControlText");
+    const $fileControlForm = $("#fileControlForm");
+
 
     //ファイル詳細モーダル表示用関数
     window.openFileDetailModal = function(row) {
-        const ownedIcon = row.owned ? "<span class=\"badge text-bg-info p-1 d-inline-block\">👤</span>" : "";
-        $fileDetailHeader.html(ownedIcon` ${row.filename}`);
+        // ヘッダー
+        const ownedIcon = row.owned ? '<span class="badge text-bg-info p-1 d-inline-block me-2" title="あなたがアップロードしたファイルです">👤</span>' : '';
+        const safeFilename = DataTable.render.text().display(row.filename); // エスケープ処理
+        $fileDetailHeader.html(`${ownedIcon}${safeFilename}`);
+
+        // ボディ
+        $fileDetailSize.text(formatBytes(row.size));
+        $fileDetailUploadDate.text(row.uploadDate);
+        $fileDetailLastDownloadDate.text(row.uploadDate === row.lastDownloadDate ? "-" : row.lastDownloadDate);
+        $.getJSON(`/api/target-file-detail?fileID=${row.fileID}`)
+            .done(function (json) {
+                $fileDetailComment.text(json.comment);
+                $fileDetailDownloadCount.text(json.downloadCount + " 回");
+            });
+
+        //フッター
+        row.downloadLocked ? $fileDetailDownloadIcon.addClass("d-none") : $fileDetailLockIcon.addClass("d-none");
+
+        $fileDetailDeleteBtn.on("click", function () {
+            $fileDetailModal.modal("hide");
+            fileDeleteModal(row);
+        })
+
         bootstrap.Modal.getOrCreateInstance($fileDetailModal[0]).show();
     };
 
@@ -122,8 +157,15 @@ $(function () {
     })
 
     //ファイル削除用モーダルを呼び出す
-    function fileDeleteModal(fileID) {
-        $fileID.val(fileID);
+    function fileDeleteModal(row) {
+        if (row.owned) {
+            $fileControlForm.addClass("d-none");
+            $fileControlText.text("このファイルを削除しますか？").removeClass("d-none");
+        } else {
+            $fileControlForm.removeClass("d-none");
+            $fileControlText.addClass("d-none");
+        }
+        $fileID.val(row.fileID);
         $fileControlModalTitle.text("ファイルの削除");
         $fileControlExecuteButton.text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
             deleteFile($fileID.val(), $fileControlPassword.val());
@@ -132,10 +174,17 @@ $(function () {
     }
 
     //パスワードロックされたファイルダウンロード用モーダルを呼び出す
-    function lockedFileDownloadModal(fileID) {
-        $fileID.val(fileID);
+    function lockedFileDownloadModal(row) {
+        if (row.owned) {
+            $fileControlForm.addClass("d-none");
+            $fileControlText.text("このファイルをダウンロードしますか？").removeClass("d-none");
+        } else {
+            $fileControlForm.removeClass("d-none");
+            $fileControlText.addClass("d-none");
+        }
+        $fileID.val(row.fileID);
         $fileControlModalTitle.text("ファイルのダウンロード");
-        $fileControlExecuteButton.text("ダウンロード").removeClass("btn-danger").addClass("btn-success").off().on("click", function () {
+        $fileControlExecuteButton.text("ダウンロード").removeClass("btn-danger").addClass("btn-primary").off().on("click", function () {
             downloadFile($fileID.val(), $fileControlPassword.val());
         })
         $fileControlModal.modal("show");
@@ -167,7 +216,7 @@ $(function () {
     }
 
     /**
-     * 削除用関数
+     * ファイル削除用関数
      * @param fileID 削除するファイルid
      * @param fileControlPassword 削除用パスワード
      */

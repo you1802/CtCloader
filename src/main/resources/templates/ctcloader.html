@@ -188,15 +188,16 @@
 </div>
 
 <!-- 削除またはダウンロード用モーダル -->
-<div class="modal fade" id="fileControlModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="fileControlModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="fileControlModalTitle"></h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-target="#fileDetailModal" data-bs-toggle="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form>
+                <p id="fileControlText"></p>
+                <form id="fileControlForm">
                     <div class="mb-3">
                         <label for="fileControlPassword">パスワード</label>
                         <input type="password" class="form-control" id="fileControlPassword">
@@ -205,7 +206,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="button" class="btn btn-secondary" data-bs-target="#fileDetailModal" data-bs-toggle="modal">キャンセル</button>
                 <button type="button" class="btn" data-bs-dismiss="modal" id="fileControlExecuteButton"></button>
             </div>
         </div>
@@ -317,12 +318,7 @@
 </div>
 
 <!-- ファイル詳細モーダル -->
-<!-- Button trigger modal -->
-<!--<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fileDetailModal">-->
-<!--  Launch demo modal-->
-<!--</button>-->
-<!-- Modal -->
-<div class="modal fade" id="fileDetailModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="fileDetailModal" tabindex="-1" aria-labelledby="fileDetailModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -331,12 +327,41 @@
       </div>
       <div class="modal-body">
           <div class="container-fluid">
+              <div class="g-3 my-3 mx-5 p-3 bg-light rounded border">
+                  <div class="row justify-content-around">
+                      <div class="col-4">
+                          <small class="text-muted d-block">ファイルサイズ</small>
+                          <span id="fileDetailSize" class="fw-bold">-</span>
+                      </div>
+                      <div class="col-4">
+                          <small class="text-muted d-block">ダウンロード数</small>
+                          <span id="fileDetailDownloadCount" class="fw-bold">-</span>
+                      </div>
+                  </div>
+                  <div class="row justify-content-around mt-3">
+                      <div class="col-4">
+                          <small class="text-muted d-block">アップロード日時</small>
+                          <span id="fileDetailUploadDate">-</span>
+                      </div>
+                      <div class="col-4">
+                          <small class="text-muted d-block text-nowrap">最終ダウンロード日時</small>
+                          <span id="fileDetailLastDownloadDate">-</span>
+                      </div>
+                  </div>
+              </div>
+          </div>
+          <div class="mb-2 mx-3">
+              <label for="fileDetailComment" class="form-label fw-bold text-secondary small">投稿者コメント</label>
+              <textarea id="fileDetailComment" class="form-control" style="resize: none" readonly placeholder="コメントがありません。"></textarea>
 
           </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
+          <button type="button" id="fileDetailReportBtn" class="btn btn-secondary"><i class="bi bi-exclamation-triangle"></i> 問題を報告</button>
+          <button type="button" id="fileDetailDeleteBtn" class="btn btn-danger"><i class="bi bi-trash"></i> 削除</button>
+
+          <button type="button" id="fileDetailTransferBtn" class="btn btn-info ms-auto">転送 <i class="bi bi-send"></i></button>
+        <button type="button" id="fileDetailDownloadBtn" class="btn btn-primary"><i class="bi bi-lock-fill text-warning" id="lockIcon"></i> ダウンロード <i class="bi bi-download" id="downloadIcon"></i></button>
       </div>
     </div>
   </div>

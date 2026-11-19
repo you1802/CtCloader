@@ -21,3 +21,8 @@ div.dt-container .dt-layout-table {
     min-width: 100px;
     width: 100%;
 }
+textarea {
+    field-sizing: content;
+    min-height: 1lh;
+    max-height: 4lh;
+}
