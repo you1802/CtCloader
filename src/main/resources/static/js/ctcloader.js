@@ -123,7 +123,13 @@ $(function () {
 
 
     //ファイル詳細モーダル表示用関数
+    let isModalOpenProcessing = false;
+
     window.openFileDetailModal = function(row) {
+        if (isModalOpenProcessing) return;  // 既に処理中なら何もしない
+        spinner.show();
+        isModalOpenProcessing = true;
+        const modalInstance = bootstrap.Modal.getOrCreateInstance($fileDetailModal[0]);
         // ヘッダー
         const ownedIcon = row.owned ? '<span class="badge text-bg-info p-1 d-inline-block me-2" title="あなたがアップロードしたファイルです">👤</span>' : '';
         const safeFilename = DataTable.render.text().display(row.filename); // エスケープ処理
@@ -133,21 +139,49 @@ $(function () {
         $fileDetailSize.text(formatBytes(row.size));
         $fileDetailUploadDate.text(row.uploadDate);
         $fileDetailLastDownloadDate.text(row.uploadDate === row.lastDownloadDate ? "-" : row.lastDownloadDate);
-        $.getJSON(`/api/target-file-detail?fileID=${row.fileID}`)
-            .done(function (json) {
-                $fileDetailComment.text(json.comment);
-                $fileDetailDownloadCount.text(json.downloadCount + " 回");
-            });
 
-        //フッター
-        row.downloadLocked ? $fileDetailDownloadIcon.addClass("d-none") : $fileDetailLockIcon.addClass("d-none");
 
-        $fileDetailDeleteBtn.on("click", function () {
-            $fileDetailModal.modal("hide");
+        // フッター
+        // 問題を報告ボタン
+
+        // 削除ボタン
+        $fileDetailDeleteBtn.off().on("click", function () {
+            modalInstance.hide();
             fileDeleteModal(row);
         })
+        // ダウンロードボタン
+        if (row.downloadLocked) {
+            $fileDetailDownloadIcon.addClass("d-none");
+            $fileDetailLockIcon.removeClass("d-none");
+        } else {
+            $fileDetailDownloadIcon.removeClass("d-none");
+            $fileDetailLockIcon.addClass("d-none");
+        }
+        $fileDetailDownloadBtn.off().on("click", function () {
+            modalInstance.hide();
+            lockedFileDownloadModal(row);
+        })
 
-        bootstrap.Modal.getOrCreateInstance($fileDetailModal[0]).show();
+        $.getJSON(`/api/target-file-detail?fileID=${row.fileID}`)
+            .done(function (json) {
+                if (!json) {
+                    showToast("このファイルは表示できません", "danger");
+                    return;
+                }
+                $fileDetailComment.text(json.comment);
+                $fileDetailDownloadCount.text(json.downloadCount + " 回");
+
+                modalInstance.show();
+            })
+            .fail(function () {
+                showToast("通信エラー", "danger");
+            })
+            .always(function () {
+                spinner.hide();
+                isModalOpenProcessing = false;
+            });
+
+
     };
 
 
@@ -167,7 +201,7 @@ $(function () {
         }
         $fileID.val(row.fileID);
         $fileControlModalTitle.text("ファイルの削除");
-        $fileControlExecuteButton.text("削除").removeClass("btn-success").addClass("btn-danger").off().on("click", function () {
+        $fileControlExecuteButton.text("削除").removeClass("btn-primary").addClass("btn-danger").off().on("click", function () {
             deleteFile($fileID.val(), $fileControlPassword.val());
         })
         $fileControlModal.modal("show");
@@ -175,7 +209,7 @@ $(function () {
 
     //パスワードロックされたファイルダウンロード用モーダルを呼び出す
     function lockedFileDownloadModal(row) {
-        if (row.owned) {
+        if (!row.downloadLocked || row.owned) {
             $fileControlForm.addClass("d-none");
             $fileControlText.text("このファイルをダウンロードしますか？").removeClass("d-none");
         } else {
@@ -539,11 +573,7 @@ $(function () {
     const $serverProgressBar = $("#serverProgressBar");
     const $userProgressBar = $("#userProgressBar");
 
-    //スピナー表示用関数
-    const spinner = {
-        show: function () {$loadingSpinner.removeClass("d-none");},
-        hide: function () {$loadingSpinner.addClass("d-none");}
-    };
+
 
     //ログイン状態による表示ボタンの切替
     /**
@@ -760,6 +790,12 @@ $(function () {
             spinner.hide();
         });
     });
+
+    //スピナー表示用関数
+    const spinner = {
+        show: function () {$loadingSpinner.removeClass("d-none");},
+        hide: function () {$loadingSpinner.addClass("d-none");}
+    };
 
     /**
      * バーの見た目を変更
