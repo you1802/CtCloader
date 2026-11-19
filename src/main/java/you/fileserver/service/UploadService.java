@@ -54,24 +54,29 @@ public class UploadService {
         //終了時の処理
         if (uploadInfo != null && !uploadInfo.isUploadInProgress()) {
             Map<String, String> metaData = uploadInfo.getMetadata(); //ユーザーから送信されたメタデータを取得
-            boolean downloadPasswordEnabled = Boolean.parseBoolean(metaData.get("downloadPasswordEnabled"));//ダウンロードパスワードが有効かどうか
+            boolean downloadPasswordEnabled = false; //ダウンロードパスワード有効か
             boolean login = userDetail != null; //ログイン中かどうか
+            boolean visible = !(Boolean.parseBoolean(metaData.get("visibleSetting")) && login); //公開設定、非公開設定はログイン中のみ有効
+            String owner = login ? userDetail.getUsername() : ""; //アップロードしたユーザー名
 
-            String deletePassword = metaData.get("deletePassword");
-            String downloadPassword = metaData.get("downloadPassword");
+            String deletePassword = metaData.get("deletePassword"); //削除用パスワード
+            String downloadPassword = metaData.get("downloadPassword"); //ダウンロード用パスワード
 
-            //パスワードの正規表現最終チェック(通常の使用ではこれを満たすことはない)
-            if (!login) { //ログイン中ではない場合
-                if (!deletePassword.matches(FILE_PASSWORD_REGEX)) { //正規表現チェック
-                    log.warn("file delete password regex not match password:{}", deletePassword); //ログを出力
-                    return;
+            if (visible) { //公開設定の場合
+                downloadPasswordEnabled = Boolean.parseBoolean(metaData.get("downloadPasswordEnabled")); //ダウンロードパスワードが有効かどうか
+                //パスワードの正規表現最終チェック(通常の使用ではここで弾かれることはない)
+                if (!login) { //ログイン中ではない場合
+                    if (!deletePassword.matches(FILE_PASSWORD_REGEX)) { //正規表現チェック
+                        log.warn("file delete password regex not match password:{}", deletePassword); //ログを出力
+                        return;
+                    }
                 }
-            }
 
-            if (downloadPasswordEnabled) { //ダウンロードパスワードロックが有効の場合
-                if (!downloadPassword.matches(FILE_PASSWORD_REGEX)) { //正規表現チェック
-                    log.warn("file download password regex not match password:{}", downloadPassword); //ログを出力
-                    return;
+                if (downloadPasswordEnabled) { //ダウンロードパスワードロックが有効の場合
+                    if (!downloadPassword.matches(FILE_PASSWORD_REGEX)) { //正規表現チェック
+                        log.warn("file download password regex not match password:{}", downloadPassword); //ログを出力
+                        return;
+                    }
                 }
             }
 
@@ -82,21 +87,11 @@ public class UploadService {
 
             Files.copy(is, Path.of(FILE_PATH, fileID)); //保存用ファイル名(ID)でファイルを保存
 
-            String ownerName; //ログイン中のユーザー名
-            boolean visible; //可視化設定
-            if (login) {
-                ownerName = userDetail.getUsername();
-                visible = !Boolean.parseBoolean(metaData.get("visibleSetting"));
-            } else {
-                ownerName = "";
-                visible = true;
-            }
-
             LocalDateTime now = LocalDateTime.now();
 
             //データベースにファイル情報を登録
             UploadFileInfo fileInfo = UploadFileInfo.builder()
-                    .owner(ownerName)
+                    .owner(owner)
                     .filename(filename)
                     .fileID(fileID)
                     .size(uploadInfo.getLength())
@@ -114,7 +109,7 @@ public class UploadService {
             UploadFilePassword ufp = UploadFilePassword.builder()
                     .fileID(fileID)
                     .deletePassword(login ? "" : passwordEncoder.encode(deletePassword)) //ログイン中なら削除パスは不要
-                    .downloadPassword(downloadPasswordEnabled ? passwordEncoder.encode(downloadPassword) : "") //ダウンロードロックされてない場合はパス不要
+                    .downloadPassword(downloadPasswordEnabled ? passwordEncoder.encode(downloadPassword) : "") //ダウンロードロックされてない場合,または非公開の場合はパス不要
                     .build();
             uploadFilePasswordRepository.save(ufp);
 
@@ -129,7 +124,7 @@ public class UploadService {
      * @return 無害化されたファイル名
      */
     private String sanitizeFilename(String filename) {
-        if (filename == null || filename.isBlank()) return "unnamed"; //ファイルネームがNULLか空の場合はunnamed
+        if (filename == null || filename.isBlank()) return "unnamed"; //NULL・空・空白のみの場合はunnamed
         String sanitized = filename.replaceAll("\\p{Cntrl}", "") // 制御文字を除去
                 .replace(" ", "-"); //スペースは-に変換
         if (sanitized.isEmpty()) return "unnamed"; //制御文字のみのファイルの場合空になるのでその時はunnamed
