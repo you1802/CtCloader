@@ -215,13 +215,24 @@ class AuthServiceTest {
 
     @Test
     void adminDeleteUser_returns200() {
+        when(userAccountRepository.findById("testuser")).thenReturn(Optional.of(
+                UserAccount.builder().username("testuser").password("hashed").role("USER").build()));
         when(uploadFileInfoRepository.findByOwner(eq("testuser"), eq(DeleteFileInfoProjection.class)))
                 .thenReturn(List.of());
-
         DefaultApiResponse response = authService.adminDeleteUser("testuser");
-
         assertEquals(200, response.getCode());
         verify(userAccountRepository).deleteById("testuser");
+    }
+
+    @Test
+    void adminDeleteUser_admin_returns400() {
+        when(userAccountRepository.findById("admin")).thenReturn(Optional.of(
+                UserAccount.builder().username("admin").password("hashed").role("ADMIN").build()));
+        DefaultApiResponse response = authService.adminDeleteUser("admin");
+        assertEquals(400, response.getCode());
+        assertEquals("管理者用アカウントは削除できません。", response.getMessage());
+        verify(uploadFileInfoRepository, never()).findByOwner(anyString(), any());
+        verify(userAccountRepository, never()).deleteById(anyString());
     }
 
     @Test

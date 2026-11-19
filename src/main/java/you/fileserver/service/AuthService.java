@@ -151,7 +151,7 @@ public class AuthService {
         if (user.isPresent() && user.get().getRole().equals(AUTH_ADMIN)) return new DefaultApiResponse(400, "管理者用アカウントは削除できません。"); //管理者用アカウントの場合は削除不可
 
         deleteUser(username); //同じクラスからのメソッド呼び出しはspring aopを迂回できる(@IsUserチェックを迂回)
-        return new DefaultApiResponse(200, "対象のユーザーを情報を削除しました。");
+        return new DefaultApiResponse(200, "対象のユーザー情報を削除しました。");
     }
 
     /**
