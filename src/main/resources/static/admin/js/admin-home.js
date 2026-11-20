@@ -80,7 +80,10 @@ $(function () {
 
     // ファイル一覧の列定義（AdminForumFileDetail）。ユーザーファイル一覧でも使い回す
     const fileColumns = [
-        { data: 'filename' },
+        {
+            data: 'filename',
+            render: $.fn.dataTable.render.text()
+        },
         {
             data: 'size',
             render: function (data) { return formatSize(data); }
@@ -99,8 +102,12 @@ $(function () {
                 if (!data) {
                     return '-';
                 }
-                const escaped = $('<div>').text(data).html();
-                return '<button type="button" class="btn btn-link p-0 owner-link" data-username="' + escaped + '">' + escaped + '</button>';
+                return $('<button>', {
+                    type: 'button',
+                    'class': 'btn btn-link p-0 owner-link',
+                    'data-username': data,
+                    text: data
+                }).prop('outerHTML');
             }
         },
         {
@@ -136,7 +143,7 @@ $(function () {
                 return '<div class="btn-group btn-group-sm" role="group">' +
                     '<button type="button" class="btn btn-outline-primary btn-detail" data-file-id="' + row.fileID + '">詳細</button>' +
                     '<button type="button" class="btn btn-outline-secondary btn-download" data-file-id="' + row.fileID + '">ダウンロード</button>' +
-                    '<button type="button" class="btn btn-outline-danger btn-delete-file" data-file-id="' + row.fileID + '" data-filename="' + $('<div>').text(row.filename).html() + '">削除</button>' +
+                    '<button type="button" class="btn btn-outline-danger btn-delete-file" data-file-id="' + row.fileID + '" data-filename="' + $('<div>').text(row.filename).text() + '">削除</button>' +
                     '</div>';
             }
         }
@@ -164,7 +171,10 @@ $(function () {
             dataSrc: ''
         },
         columns: [
-            { data: 'username' },
+            {
+                data: 'username',
+                render: $.fn.dataTable.render.text()
+            },
             {
                 data: 'lastLoginAt',
                 render: function (data) { return formatDateTime(data); }
