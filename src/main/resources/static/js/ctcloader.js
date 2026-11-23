@@ -326,6 +326,7 @@ $(function () {
 
     const $uploadComment = $("#uploadComment");
 
+    const $setDeletePasswordGroup = $("#setDeletePasswordGroup");
     const $setDeletePassword = $("#setDeletePassword");
     const $setDeletePassword_div = $("#setDeletePassword_div");
     const $confirmSetDeletePassword = $("#confirmSetDeletePassword");
@@ -333,6 +334,7 @@ $(function () {
     const $downloadPasswordEnabled = $("#downloadPasswordEnabled");
     const $downloadPasswordEnabledLabel = $("#downloadPasswordEnabledLabel");
     const $visibleSetting = $("#visibleSetting");
+    const $visibleSettingLabel = $("#visibleSettingLabel");
 
     const $setDownloadPasswordGroup = $("#setDownloadPasswordGroup");
     const $setDownloadPassword = $("#setDownloadPassword");
@@ -355,6 +357,10 @@ $(function () {
                 files[fileId].meta.visibleSetting = $visibleSetting.prop("checked");
                 files[fileId].meta.comment = $uploadComment.val();
             })
+        },
+        restrictions: {
+            maxFileSize: 5 * 1024 * 1024 * 1024, //1ファイルサイズ上限(5G)
+            maxNumberOfFiles: 1 //最大ファイル数(1)
         }
     })
         .use(Dashboard, {
@@ -395,6 +401,24 @@ $(function () {
     /*
     アップロードモーダルのUI関係
      */
+
+    //不可視設定のチェック時の処理
+    $visibleSetting.on("change", function () {
+        if ($visibleSetting.prop("checked")) {
+            $setDownloadPasswordGroup.addClass("d-none", true);
+            $setDeletePasswordGroup.addClass("d-none", true);
+            $downloadPasswordEnabled.addClass("is-readonly");
+            $downloadPasswordEnabledLabel.addClass("is-readonly");
+        } else {
+            $setDeletePasswordGroup.removeClass("d-none", false);
+            $downloadPasswordEnabled.removeClass("is-readonly");
+            $downloadPasswordEnabledLabel.removeClass("is-readonly");
+            if ($downloadPasswordEnabled.prop("checked")) {
+                $setDownloadPasswordGroup.removeClass("d-none", false);
+            }
+        }
+        switchUploadButton();
+    })
 
     //以下削除用パスワードのバリデーションチェック
     $setDeletePassword
@@ -469,14 +493,24 @@ $(function () {
         const {totalProgress} = uppy.getState();
         if (totalProgress > 0) return; //アップロード中かアップロード完了時は処理しない
 
-        if ($downloadPasswordEnabled.prop("checked")) {
-            if (uppy.getFiles().length > 0 &&  $setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid") && $setDownloadPassword[0].checkValidity() && $confirmSetDownloadPassword.hasClass("is-valid")) {
+        if (uppy.getFiles().length === 0) { //アップロードするファイルがない場合は無効に
+            $uploadButton.prop("disabled", true);
+            return;
+        }
+
+        if ($visibleSetting.prop("checked")) { //不可視設定ONの場合は有効に
+            $uploadButton.prop("disabled", false);
+            return;
+        }
+
+        if ($downloadPasswordEnabled.prop("checked")) { //ダウンロードパスワードを設定する場合は,削除バスと一緒にバリデーションチェックし通れば有効に
+            if ($setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid") && $setDownloadPassword[0].checkValidity() && $confirmSetDownloadPassword.hasClass("is-valid")) {
                 $uploadButton.prop("disabled", false);
             } else {
                 $uploadButton.prop("disabled", true);
             }
-        } else {
-            if (uppy.getFiles().length > 0 &&  $setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid")) {
+        } else { //ダウンロードパスワードを設定しない場合は,削除パスのみバリデーションチェック
+            if ($setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid")) {
                 $uploadButton.prop("disabled", false);
             } else {
                 $uploadButton.prop("disabled", true);
@@ -486,12 +520,14 @@ $(function () {
 
     //アップロードボタンを押したとき条件を満たしていればアップロードし、パスワードを編集不可にする
     $uploadButton.on("click", function () {
-        //共通のバリデーションチェック(ファイルが存在しダウンロードパスワードが有効かどうか)
-        if (!(uppy.getFiles().length > 0 && $setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid"))) return;
+        if (!$visibleSetting.prop("checked")) { //不可視設定オフの場合
+            //共通のバリデーションチェック(ファイルが存在しダウンロードパスワードが有効かどうか)
+            if (!(uppy.getFiles().length > 0 && $setDeletePassword[0].checkValidity() && $confirmSetDeletePassword.hasClass("is-valid"))) return;
 
-        //ダウンロードパスワードを設定してる場合のバリデーション
-        if ($downloadPasswordEnabled.prop("checked")) {
-            if (!($setDownloadPassword[0].checkValidity() && $confirmSetDownloadPassword.hasClass("is-valid"))) return;
+            //ダウンロードパスワードを設定してる場合のバリデーション
+            if ($downloadPasswordEnabled.prop("checked")) {
+                if (!($setDownloadPassword[0].checkValidity() && $confirmSetDownloadPassword.hasClass("is-valid"))) return;
+            }
         }
 
         //フォームを編集不可に
@@ -500,6 +536,8 @@ $(function () {
         $setDeletePassword.prop("readOnly", true).addClass("is-valid");
         $confirmSetDeletePassword.prop("readOnly", true);
 
+        $visibleSetting.addClass("is-readonly");
+        $visibleSettingLabel.addClass("is-readonly");
         $downloadPasswordEnabled.addClass("is-readonly");
         $downloadPasswordEnabledLabel.addClass("is-readonly");
 
@@ -528,9 +566,12 @@ $(function () {
         $setDeletePassword.removeClass("is-valid").prop("readOnly", false);
         $setDeletePassword_div.removeClass("was-validated");
 
+        $visibleSetting.removeClass("is-readonly");
+        $visibleSettingLabel.removeClass("is-readonly");
         $downloadPasswordEnabled.removeClass("is-readonly");
         $downloadPasswordEnabledLabel.removeClass("is-readonly");
         $setDownloadPasswordGroup.addClass("d-none");
+        $setDeletePasswordGroup.removeClass("d-none");
 
         $setDownloadPassword.removeClass("is-valid").prop("readOnly", false);
         $confirmSetDownloadPassword.removeClass("is-valid is-invalid").prop("readOnly", false);
