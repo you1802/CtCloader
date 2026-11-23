@@ -18,6 +18,7 @@ import you.fileserver.repository.UploadFilePasswordRepository;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.BreakIterator;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -87,7 +88,7 @@ public class UploadService {
 
             Files.copy(is, Path.of(FILE_PATH, fileID)); //保存用ファイル名(ID)でファイルを保存
 
-            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime now = LocalDateTime.now(); //現在時刻を取得
 
             //データベースにファイル情報を登録
             UploadFileInfo fileInfo = UploadFileInfo.builder()
@@ -98,7 +99,7 @@ public class UploadService {
                     .uploadDate(now)
                     .visible(visible)
                     .downloadLocked(downloadPasswordEnabled)
-                    .comment(metaData.get("comment"))
+                    .comment(truncateComment(metaData.get("comment")))
                     .ipAddress(request.getRemoteAddr())
                     .downloadCount(0)
                     .lastDownloadDate(now)
@@ -129,5 +130,23 @@ public class UploadService {
                 .replace(" ", "-"); //スペースは-に変換
         if (sanitized.isEmpty()) return "unnamed"; //制御文字のみのファイルの場合空になるのでその時はunnamed
         return sanitized.length() > 255 ? sanitized.substring(0, 255) : sanitized; //ファイル名は２５５文字まで
+    }
+
+    /**
+     * コメントをサロゲートペアや書記素クラスタを考慮しつつ１００文字までに制限する(超えた場合は100文字で切って…を付けて返す)
+     * @param comment コメント
+     * @return 編集済みのコメント
+     */
+    private String truncateComment(String comment) {
+        if (comment == null) return null; //nullならnullをかえす。
+
+        BreakIterator breakIterator = BreakIterator.getCharacterInstance(Locale.JAPANESE); //文字単位の境界を判定するイテレータを取得
+        breakIterator.setText(comment); //コメントをセット
+
+        int endIndex = breakIterator.next(100); //先頭から数えて100個目の境界の位置を取得
+
+        if (endIndex == BreakIterator.DONE || endIndex == comment.length()) return comment; //見た目上の文字数の長さが100以下ならコメントをそのままかえす
+
+        return comment.substring(0, endIndex) + "…"; //100以上の時は100で切って…を付けて返す
     }
 }
