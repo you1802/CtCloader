@@ -641,8 +641,12 @@ $(function () {
             .done(function (json) {
                 if (json.user === "ゲスト") {
                     navbarChange(false);
+                    $visibleSetting.addClass("is-readonly");
+                    $visibleSettingLabel.addClass("is-readonly");
                 } else {
                     navbarChange(true, json.user);
+                    $visibleSetting.removeClass("is-readonly");
+                    $visibleSettingLabel.removeClass("is-readonly");
                 }
                 $(document).off('ajaxStop');
             });
