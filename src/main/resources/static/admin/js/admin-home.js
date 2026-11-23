@@ -80,7 +80,10 @@ $(function () {
 
     // ファイル一覧の列定義（AdminForumFileDetail）。ユーザーファイル一覧でも使い回す
     const fileColumns = [
-        { data: 'filename' },
+        {
+            data: 'filename',
+            render: $.fn.dataTable.render.text()
+        },
         {
             data: 'size',
             render: function (data) { return formatSize(data); }
@@ -99,8 +102,12 @@ $(function () {
                 if (!data) {
                     return '-';
                 }
-                const escaped = $('<div>').text(data).html();
-                return '<button type="button" class="btn btn-link p-0 owner-link" data-username="' + escaped + '">' + escaped + '</button>';
+                return $('<button>', {
+                    type: 'button',
+                    'class': 'btn btn-link p-0 owner-link',
+                    'data-username': data,
+                    text: data
+                }).prop('outerHTML');
             }
         },
         {
@@ -133,11 +140,11 @@ $(function () {
             orderable: false,
             searchable: false,
             render: function (data, type, row) {
-                return '<div class="btn-group btn-group-sm" role="group">' +
-                    '<button type="button" class="btn btn-outline-primary btn-detail" data-file-id="' + row.fileID + '">詳細</button>' +
-                    '<button type="button" class="btn btn-outline-secondary btn-download" data-file-id="' + row.fileID + '">ダウンロード</button>' +
-                    '<button type="button" class="btn btn-outline-danger btn-delete-file" data-file-id="' + row.fileID + '" data-filename="' + $('<div>').text(row.filename).html() + '">削除</button>' +
-                    '</div>';
+                const $group = $('<div>').addClass('btn-group btn-group-sm').attr('role', 'group');
+                $group.append($('<button>', { type: 'button', 'class': 'btn btn-outline-primary btn-detail', 'data-file-id': row.fileID, text: '詳細' }));
+                $group.append($('<button>', { type: 'button', 'class': 'btn btn-outline-secondary btn-download', 'data-file-id': row.fileID, text: 'ダウンロード' }));
+                $group.append($('<button>', { type: 'button', 'class': 'btn btn-outline-danger btn-delete-file', 'data-file-id': row.fileID, 'data-filename': row.filename, text: '削除' }));
+                return $group.prop('outerHTML');
             }
         }
     ];
@@ -164,7 +171,10 @@ $(function () {
             dataSrc: ''
         },
         columns: [
-            { data: 'username' },
+            {
+                data: 'username',
+                render: $.fn.dataTable.render.text()
+            },
             {
                 data: 'lastLoginAt',
                 render: function (data) { return formatDateTime(data); }
@@ -174,10 +184,10 @@ $(function () {
                 orderable: false,
                 searchable: false,
                 render: function (data, type, row) {
-                    return '<div class="btn-group btn-group-sm" role="group">' +
-                        '<button type="button" class="btn btn-outline-primary btn-user-detail" data-username="' + row.username + '">詳細</button>' +
-                        '<button type="button" class="btn btn-outline-danger btn-delete-user" data-username="' + row.username + '">削除</button>' +
-                        '</div>';
+                    const $group = $('<div>').addClass('btn-group btn-group-sm').attr('role', 'group');
+                    $group.append($('<button>', { type: 'button', 'class': 'btn btn-outline-primary btn-user-detail', 'data-username': row.username, text: '詳細' }));
+                    $group.append($('<button>', { type: 'button', 'class': 'btn btn-outline-danger btn-delete-user', 'data-username': row.username, text: '削除' }));
+                    return $group.prop('outerHTML');
                 }
             }
         ],
@@ -305,7 +315,7 @@ $(function () {
     $('#fileTable tbody, #userFileTable tbody')
         .on('click', '.owner-link', function (e) {
             e.preventDefault();
-            var username = $(this).data('username');
+            const username = $(this).data('username');
             // ユーザータブに切り替えて、そのユーザーの詳細を表示する
             bootstrap.Tab.getOrCreateInstance($('#users-tab')[0]).show();
             loadUserDetail(username);

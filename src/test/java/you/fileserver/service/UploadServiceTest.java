@@ -116,6 +116,24 @@ class UploadServiceTest {
         return infoCaptor.getValue();
     }
 
+    private UploadFileInfo uploadAsGuestWithComment(String uri, String comment) throws Exception {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("downloadPasswordEnabled", "false");
+        metadata.put("deletePassword", "abcd1234");
+        if (comment != null) metadata.put("comment", comment);
+        stubCompletedUpload(uri, metadata);
+        stubUploadBytes(uri);
+        when(passwordEncoder.encode("abcd1234")).thenReturn("hashedDelete");
+
+
+        uploadService.upload(request, response, null);
+
+
+        ArgumentCaptor<UploadFileInfo> infoCaptor = ArgumentCaptor.forClass(UploadFileInfo.class);
+        verify(uploadFileInfoRepository).save(infoCaptor.capture());
+        return infoCaptor.getValue();
+    }
+
     private static CustomUserDetails userDetails(String username) {
         return new CustomUserDetails(UserAccount.builder()
                 .username(username).password("hashed").role("USER").build());
@@ -293,5 +311,34 @@ class UploadServiceTest {
         UploadFileInfo saved = uploadAsGuestWithFilename("/api/upload/abc123", longName);
         assertEquals(255, saved.getFilename().length());
         assertTrue(saved.getFilename().startsWith("aaa"));
+    }
+
+    @Test
+    void upload_comment_null_savesNull() throws Exception {
+        UploadFileInfo saved = uploadAsGuestWithComment("/api/upload/abc123", null);
+        assertNull(saved.getComment());
+    }
+
+
+    @Test
+    void upload_comment_exactly100Chars_unchanged() throws Exception {
+        String comment = "あ".repeat(100);
+        UploadFileInfo saved = uploadAsGuestWithComment("/api/upload/abc123", comment);
+        assertEquals(comment, saved.getComment());
+    }
+
+
+    @Test
+    void upload_comment_over100Chars_truncatedWithEllipsis() throws Exception {
+        UploadFileInfo saved = uploadAsGuestWithComment("/api/upload/abc123", "あ".repeat(150));
+        assertEquals("あ".repeat(100) + "…", saved.getComment());
+    }
+
+
+    @Test
+    void upload_comment_emojiAtBoundary_notSplit() throws Exception {
+        String comment = "あ".repeat(99) + "😀" + "あ".repeat(50);
+        UploadFileInfo saved = uploadAsGuestWithComment("/api/upload/abc123", comment);
+        assertEquals("あ".repeat(99) + "😀" + "…", saved.getComment());
     }
 }
