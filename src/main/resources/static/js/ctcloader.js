@@ -120,6 +120,12 @@ $(function () {
     const $fileDetailDownloadIcon = $("#fileDetailDownloadIcon");
     const $fileControlText = $("#fileControlText");
     const $fileControlForm = $("#fileControlForm");
+    const $fileReportModal = $("#fileReportModal");
+    const $fileReportForm = $("#fileReportForm");
+    const $fileReportBtn = $("#fileReportBtn");
+    const $fileReportCloseBtn = $("#fileReportCloseBtn");
+    const $fileTransferModal = $("#fileTransferModal");
+
 
 
     //ファイル詳細モーダル表示用関数
@@ -143,12 +149,20 @@ $(function () {
 
         // フッター
         // 問題を報告ボタン
+        $fileDetailReportBtn.off().on("click", function () {
+            modalInstance.hide();
+            fileReportModal(row);
+        })
 
         // 削除ボタン
         $fileDetailDeleteBtn.off().on("click", function () {
             modalInstance.hide();
             fileDeleteModal(row);
         })
+
+        // 転送ボタン
+
+
         // ダウンロードボタン
         if (row.downloadLocked) {
             $fileDetailDownloadIcon.addClass("d-none");
@@ -161,7 +175,7 @@ $(function () {
             modalInstance.hide();
             lockedFileDownloadModal(row);
         })
-
+        // 通信処理
         $.getJSON(`/api/target-file-detail?fileID=${row.fileID}`)
             .done(function (json) {
                 if (!json) {
@@ -189,6 +203,28 @@ $(function () {
     $fileControlModal.on("hidden.bs.modal", function () {
         $fileControlPassword.val("");
     })
+
+    // 問題を報告モーダルも呼び出す
+    function fileReportModal(row) {
+        $fileReportForm.val("");
+        $fileReportBtn.off().on("click", function () {
+            spinner.show();
+            $.ajax({
+                url: "/api/file_report",
+                method: "POST",
+                dataType: "json",
+                data: { fileID: row.fileID, comment: $fileReportForm.val() },
+            }).done(function (data) {
+                if (data.code === 200) showToast(data.message, "success");
+                $fileReportCloseBtn.trigger("click");
+            }).fail(function () {
+                showToast("通信エラー", "danger");
+            }).always(function () {
+                spinner.hide();
+            })
+        })
+        $fileReportModal.modal("show");
+    }
 
     //ファイル削除用モーダルを呼び出す
     function fileDeleteModal(row) {
@@ -572,8 +608,6 @@ $(function () {
     const $userProgressBarArea = $("#userProgressBarArea");
     const $serverProgressBar = $("#serverProgressBar");
     const $userProgressBar = $("#userProgressBar");
-
-
 
     //ログイン状態による表示ボタンの切替
     /**
