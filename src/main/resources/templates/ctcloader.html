@@ -190,8 +190,48 @@
     </div>
 </div>
 
+<!-- 問題を報告モーダル -->
+<div class="modal fade" id="fileReportModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="fileReportModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="fileReportModalTitle">問題を報告</h1>
+        <button type="button" class="btn-close" data-bs-target="#fileDetailModal" data-bs-toggle="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+          <label for="fileReportForm" class="form-label">問題の詳細</label>
+          <textarea type="text" class="form-control" id="fileReportForm" style="resize: none" name="comment" placeholder="内容を記入してください。"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="fileReportCloseBtn" data-bs-target="#fileDetailModal" data-bs-toggle="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="fileReportBtn">送信</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 転送モーダル -->
+<div class="modal fade" id="fileTransferModal" tabindex="-1" aria-labelledby="fileTransferModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="fileTransferModalLabel">ファイル転送</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+          <label for="fileTransferForm" class="form-label">転送</label>
+          <input class="form-control form-control-sm" id="fileTransferForm" type="text" readonly>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 削除またはダウンロード用モーダル -->
-<div class="modal fade" id="fileControlModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="fileControlModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="fileControlModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
