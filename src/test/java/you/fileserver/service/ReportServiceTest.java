@@ -16,6 +16,7 @@ import static org.mockito.Mockito.*;
 /**
  * ReportService の単体テスト。保存1件＋固定レスポンスだけの
  * 薄いサービスなので、保存内容の検証が中心。
+ * truncateCommentはアップロード時のコメントの処理と同じ処理なのでそちらでカバー
  */
 @ExtendWith(MockitoExtension.class)
 class ReportServiceTest {
