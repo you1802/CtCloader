@@ -45,6 +45,8 @@ public class ReportService {
 
         int endIndex = breakIterator.next(100); //先頭から数えて100個目の境界の位置を取得
 
+        if (endIndex >= 255) return comment.substring(0, 254) + "…"; //通常のコメントならまず超えないが、DBが255charまでなのでエラー対策
+
         if (endIndex == BreakIterator.DONE || endIndex == comment.length()) return comment; //見た目上の文字数の長さが100以下ならコメントをそのままかえす
 
         return comment.substring(0, endIndex) + "…"; //100以上の時は100で切って…を付けて返す
